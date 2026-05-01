@@ -1,0 +1,21 @@
+# Build artifacts and dependencies
+node_modules/
+build/
+dist/
+*.tsbuildinfo
+
+# Source documents (not part of the deployed app)
+*.docx
+*.pdf
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Logs and local-only files
+*.log
+.env
+.env.local

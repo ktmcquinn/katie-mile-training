@@ -1,6 +1,0 @@
-node_modules/
-build/
-*.docx
-*.pdf
-.DS_Store
-Thumbs.db
