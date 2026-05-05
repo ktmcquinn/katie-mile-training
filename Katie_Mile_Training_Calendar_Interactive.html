@@ -1861,9 +1861,50 @@
             <button type="button" class="btn" id="cloudSignUp">
               Create account
             </button>
+            <button type="button" class="btn" id="cloudForgotPassword" style="font-size:12px">
+              Forgot password?
+            </button>
             <span class="cloud-meta" id="cloudAuthMsg"></span>
           </div>
         </form>
+
+        <!-- Password recovery form: shown when arriving from a "reset password" email -->
+        <div id="cloudRecoveryForm" class="cloud-row config" style="display: none">
+          <div style="font-weight:600;color:var(--info-text);font-size:13px;padding:8px 12px;background:var(--log-bg);border:1px solid var(--log-border);border-radius:8px;margin-bottom:8px">
+            Password reset link confirmed. Set a new password below.
+          </div>
+          <div class="config-fields">
+            <div>
+              <label>New password</label>
+              <input
+                type="password"
+                id="newPassword"
+                placeholder="At least 6 characters"
+                autocomplete="new-password"
+                minlength="6"
+              />
+            </div>
+            <div>
+              <label>Confirm new password</label>
+              <input
+                type="password"
+                id="newPasswordConfirm"
+                placeholder="Re-type"
+                autocomplete="new-password"
+                minlength="6"
+              />
+            </div>
+          </div>
+          <div class="cloud-row" style="margin-top: 4px">
+            <button type="button" class="btn btn-primary" id="cloudSetPassword">
+              Set new password
+            </button>
+            <button type="button" class="btn" id="cloudCancelRecovery">
+              Cancel
+            </button>
+            <span class="cloud-meta" id="cloudRecoveryMsg"></span>
+          </div>
+        </div>
 
         <!-- Signed-in controls -->
         <div class="cloud-row" id="cloudSignedInRow" style="display: none">
@@ -4994,6 +5035,13 @@
           }
           // Listen for auth changes
           supaClient.auth.onAuthStateChange((event, session) => {
+            // Password reset link from email — Supabase fires PASSWORD_RECOVERY
+            // and gives us a temporary session. Show the "set new password" form.
+            if (event === "PASSWORD_RECOVERY") {
+              if (session && session.user) supaUser = session.user;
+              showPasswordRecovery();
+              return;
+            }
             if (session && session.user) {
               supaUser = session.user;
               onSignedIn();
@@ -5010,6 +5058,7 @@
 
       function onSignedIn() {
         document.getElementById("cloudAuthForm").style.display = "none";
+        document.getElementById("cloudRecoveryForm").style.display = "none";
         document.getElementById("cloudSignedInRow").style.display = "flex";
         document.getElementById("cloudUserLabel").textContent =
           `Signed in as ${supaUser.email}`;
@@ -5020,8 +5069,99 @@
       }
       function onSignedOut() {
         document.getElementById("cloudAuthForm").style.display = "flex";
+        document.getElementById("cloudRecoveryForm").style.display = "none";
         document.getElementById("cloudSignedInRow").style.display = "none";
         setCloudStatus("signed-out", "Sign in to enable sync");
+      }
+
+      // Password reset / recovery flow
+      function showPasswordRecovery() {
+        document.getElementById("cloudAuthForm").style.display = "none";
+        document.getElementById("cloudSignedInRow").style.display = "none";
+        document.getElementById("cloudRecoveryForm").style.display = "flex";
+        setCloudStatus("syncing", "Set a new password to finish");
+        // Scroll into view so the user actually sees the form
+        document
+          .getElementById("cloudRecoveryForm")
+          .scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => {
+          const f = document.getElementById("newPassword");
+          if (f) f.focus();
+        }, 400);
+      }
+
+      function setRecoveryMsg(text, isError) {
+        const el = document.getElementById("cloudRecoveryMsg");
+        if (!el) return;
+        el.style.color = isError ? "#B85450" : "var(--p1)";
+        el.textContent = text;
+      }
+
+      async function setNewPassword() {
+        if (!supaClient) return;
+        const pw1 = document.getElementById("newPassword").value;
+        const pw2 = document.getElementById("newPasswordConfirm").value;
+        if (!pw1 || !pw2) {
+          setRecoveryMsg("Both fields are required.", true);
+          return;
+        }
+        if (pw1.length < 6) {
+          setRecoveryMsg("Password must be at least 6 characters.", true);
+          return;
+        }
+        if (pw1 !== pw2) {
+          setRecoveryMsg("Passwords don't match.", true);
+          return;
+        }
+        setRecoveryMsg("Updating...");
+        const { data, error } = await supaClient.auth.updateUser({
+          password: pw1,
+        });
+        if (error) {
+          setRecoveryMsg(error.message || "Failed to update password.", true);
+          return;
+        }
+        // Success — user is now fully signed in with the new password.
+        // Clean the recovery hash out of the URL so future loads don't re-trigger recovery.
+        if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+        document.getElementById("newPassword").value = "";
+        document.getElementById("newPasswordConfirm").value = "";
+        if (data && data.user) {
+          supaUser = data.user;
+          onSignedIn();
+        }
+      }
+
+      function cancelRecovery() {
+        document.getElementById("newPassword").value = "";
+        document.getElementById("newPasswordConfirm").value = "";
+        // Also sign out the recovery session so we go back to a clean state
+        if (supaClient) supaClient.auth.signOut();
+        if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+        document.getElementById("cloudRecoveryForm").style.display = "none";
+      }
+
+      async function forgotPassword() {
+        if (!supaClient) {
+          setAuthMsg("Not connected to Supabase.", true);
+          return;
+        }
+        const email = document.getElementById("cloudEmail").value.trim();
+        if (!email) {
+          setAuthMsg("Enter your email above first, then click Forgot password.", true);
+          return;
+        }
+        setCloudStatus("syncing", "Sending reset link...");
+        const { error } = await supaClient.auth.resetPasswordForEmail(email, {
+          redirectTo: location.href.split("#")[0],
+        });
+        if (error) {
+          setCloudStatus("signed-out", "Sign in to enable sync");
+          setAuthMsg(error.message || "Failed to send reset email.", true);
+          return;
+        }
+        setCloudStatus("signed-out", "Sign in to enable sync");
+        setAuthMsg("Reset link sent — check your email.");
       }
 
       async function signInWithPassword(e) {
@@ -5283,8 +5423,18 @@
           .getElementById("cloudSignUp")
           .addEventListener("click", signUpWithPassword);
         document
+          .getElementById("cloudForgotPassword")
+          .addEventListener("click", forgotPassword);
+        document
           .getElementById("cloudSignOut")
           .addEventListener("click", signOut);
+        // Password recovery form
+        document
+          .getElementById("cloudSetPassword")
+          .addEventListener("click", setNewPassword);
+        document
+          .getElementById("cloudCancelRecovery")
+          .addEventListener("click", cancelRecovery);
         // Manual sync buttons
         document
           .getElementById("cloudPullNow")
