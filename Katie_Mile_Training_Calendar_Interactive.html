@@ -4797,14 +4797,6 @@
           }
         }
 
-        // Fueling section
-        const fDone = isSectionDone(day, "fueling");
-        html += `<label class="section-h3-label ${fDone ? "section-done" : ""}" data-section-label="fueling">
-            <input type="checkbox" class="task-check section-check" data-section="fueling" ${fDone ? "checked" : ""}>
-            <h3>Fueling cue</h3>
-          </label>
-          <div class="body">${fuelingCue(day, cat, week)}</div>`;
-
         // Workout Log section (skip on rest days where there's nothing to log)
         if (cat !== "rest") {
           const log = getLog(day.date) || {};
@@ -4850,6 +4842,14 @@
       </div>
     </div>`;
         }
+
+        // Fueling section (moved to bottom — reference info, viewed last)
+        const fDone = isSectionDone(day, "fueling");
+        html += `<label class="section-h3-label ${fDone ? "section-done" : ""}" data-section-label="fueling">
+            <input type="checkbox" class="task-check section-check" data-section="fueling" ${fDone ? "checked" : ""}>
+            <h3>Fueling cue</h3>
+          </label>
+          <div class="body">${fuelingCue(day, cat, week)}</div>`;
 
         // Master "all complete" checkbox at the bottom
         const allDone = isDone(day);
