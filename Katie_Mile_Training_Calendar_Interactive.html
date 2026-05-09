@@ -421,14 +421,33 @@
       }
       .week-stat {
         text-align: right;
+        line-height: 1.1;
       }
       .week-stat .miles {
         font-weight: 700;
         font-size: 18px;
       }
+      .week-stat .miles .actual {
+        color: var(--p1);
+      }
+      .week-stat .miles .actual.under {
+        color: var(--muted);
+      }
+      .week-stat .miles .actual.over {
+        color: var(--p3);
+      }
+      .week-stat .miles .sep {
+        color: var(--muted);
+        font-weight: 400;
+        margin: 0 1px;
+      }
+      .week-stat .miles .planned {
+        color: var(--ink);
+      }
       .week-stat .lbl {
         font-size: 11px;
         color: var(--muted);
+        margin-top: 2px;
       }
       .chev {
         color: var(--muted);
@@ -4612,6 +4631,47 @@
       }
 
       // ---------- Weeks ----------
+      // Sum logged distance for run-type days in a week (skip bike + rest)
+      function actualWeekMiles(week) {
+        let total = 0;
+        for (const d of week.days) {
+          const log = LOGS[d.date];
+          if (!log || !log.distance) continue;
+          const cat = categorize(d);
+          if (cat === "bike" || cat === "rest") continue;
+          total += parseFloat(log.distance) || 0;
+        }
+        return total;
+      }
+      // Build the inner HTML for the .week-stat block — actual / planned + label
+      function weekStatHtml(week) {
+        const actual = actualWeekMiles(week);
+        const planned = week.mileage;
+        const fmt = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
+        let cls = "actual";
+        if (actual === 0) cls += " under";
+        else if (actual > planned * 1.05) cls += " over";
+        return `<div class="miles">
+          <span class="${cls}">${fmt(actual)}</span><span class="sep">/</span><span class="planned">${planned}</span>
+        </div>
+        <div class="lbl">miles</div>`;
+      }
+      // Update just the week-stat block for a single week without re-rendering all weeks
+      function refreshWeekStat(week) {
+        const el = document.querySelector(`.week-stat[data-week-num="${week.num}"]`);
+        if (el) el.innerHTML = weekStatHtml(week);
+      }
+      // Find the week that contains a given date (used after a log changes)
+      function weekForDate(date) {
+        for (const w of DATA.weeks) {
+          if (date >= w.start_date && date <= w.end_date) return w;
+        }
+        return null;
+      }
+      function refreshAllWeekStats() {
+        for (const w of DATA.weeks) refreshWeekStat(w);
+      }
+
       function renderWeeks() {
         const todayD = todayClampedISO();
         const root = document.getElementById("weeks");
@@ -4634,7 +4694,7 @@
         </div>
         <div class="bot">${w.theme}</div>
       </div>
-      <div class="week-stat"><div class="miles">${w.mileage}</div><div class="lbl">miles</div></div>
+      <div class="week-stat" data-week-num="${w.num}">${weekStatHtml(w)}</div>
       <div class="chev">▼</div>
     `;
           head.addEventListener("click", () => wEl.classList.toggle("open"));
@@ -5069,6 +5129,9 @@
               `.day[data-date="${day.date}"]`,
             );
             if (dayCard) updateDayCardLog(dayCard, log);
+            // Update the week's actual/planned mileage display
+            const wk = weekForDate(day.date);
+            if (wk) refreshWeekStat(wk);
           });
 
           // Delete button
@@ -5102,6 +5165,9 @@
               `.day[data-date="${day.date}"]`,
             );
             if (dayCard) updateDayCardLog(dayCard, null);
+            // Update the week's actual/planned mileage display
+            const wk = weekForDate(day.date);
+            if (wk) refreshWeekStat(wk);
           });
         }
       }
