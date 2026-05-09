@@ -349,9 +349,17 @@
         min-height: 4px;
         cursor: pointer;
         transition: opacity 0.15s;
+        overflow: hidden;
       }
       .bar:hover {
-        opacity: 0.75;
+        opacity: 0.85;
+      }
+      .bar-fill {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        transition: height 0.3s ease;
       }
       .bar .lbl {
         position: absolute;
@@ -361,6 +369,7 @@
         font-size: 9px;
         color: var(--muted);
         white-space: nowrap;
+        z-index: 2;
       }
       .bar.race {
         background: #b85450;
@@ -4598,6 +4607,16 @@
       }
 
       // ---------- Mileage chart ----------
+      // Convert "#RRGGBB" to "rgba(r,g,b,a)" — used to make planned-bar background translucent
+      function rgbaFromHex(hex, alpha) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r},${g},${b},${alpha})`;
+      }
+      function phaseColorFor(week) {
+        return week.num === 21 ? "#B85450" : DATA.phases[week.phase - 1].color;
+      }
       function renderMilesChart() {
         const max = Math.max(...DATA.weeks.map((w) => w.mileage));
         const chart = document.getElementById("milesChart");
@@ -4605,16 +4624,32 @@
         chart.innerHTML = "";
         axis.innerHTML = "";
         for (const w of DATA.weeks) {
+          const phaseColor = phaseColorFor(w);
+          const actual = actualWeekMiles(w);
+          const planned = w.mileage;
+          const fillPct = planned > 0 ? Math.min(100, (actual / planned) * 100) : 0;
+
           const bar = document.createElement("div");
           bar.className = "bar" + (w.num === 21 ? " race" : "");
-          bar.style.height = `${(w.mileage / max) * 100}%`;
-          bar.style.background =
-            w.num === 21 ? "#B85450" : DATA.phases[w.phase - 1].color;
-          bar.title = `Week ${w.num}: ${w.mileage} mi - ${w.theme}`;
+          bar.dataset.weekNum = w.num;
+          bar.style.height = `${(planned / max) * 100}%`;
+          // Planned bar is translucent; actual fill is solid
+          bar.style.background = rgbaFromHex(phaseColor, 0.25);
+          bar.title = `Week ${w.num}: ${actual.toFixed(1)} / ${planned} mi · ${w.theme}`;
+
+          if (fillPct > 0) {
+            const fill = document.createElement("div");
+            fill.className = "bar-fill";
+            fill.style.background = phaseColor;
+            fill.style.height = `${fillPct}%`;
+            bar.appendChild(fill);
+          }
+
           const lbl = document.createElement("div");
           lbl.className = "lbl";
-          lbl.textContent = w.mileage;
+          lbl.textContent = planned;
           bar.appendChild(lbl);
+
           bar.addEventListener("click", () => {
             const target = document.getElementById(`week-${w.num}`);
             if (target) {
@@ -4670,6 +4705,28 @@
       }
       function refreshAllWeekStats() {
         for (const w of DATA.weeks) refreshWeekStat(w);
+      }
+      // Refresh just one bar in the mileage chart without re-rendering the whole chart
+      function refreshBarFill(week) {
+        const bar = document.querySelector(`.bar[data-week-num="${week.num}"]`);
+        if (!bar) return;
+        const planned = week.mileage;
+        const actual = actualWeekMiles(week);
+        const fillPct = planned > 0 ? Math.min(100, (actual / planned) * 100) : 0;
+        bar.title = `Week ${week.num}: ${actual.toFixed(1)} / ${planned} mi · ${week.theme}`;
+        let fill = bar.querySelector(".bar-fill");
+        if (fillPct === 0) {
+          if (fill) fill.remove();
+          return;
+        }
+        if (!fill) {
+          fill = document.createElement("div");
+          fill.className = "bar-fill";
+          fill.style.background = phaseColorFor(week);
+          // Insert before the label so the label stays on top
+          bar.insertBefore(fill, bar.firstChild);
+        }
+        fill.style.height = `${fillPct}%`;
       }
 
       function renderWeeks() {
@@ -5129,9 +5186,12 @@
               `.day[data-date="${day.date}"]`,
             );
             if (dayCard) updateDayCardLog(dayCard, log);
-            // Update the week's actual/planned mileage display
+            // Update the week's actual/planned mileage display + bar chart fill
             const wk = weekForDate(day.date);
-            if (wk) refreshWeekStat(wk);
+            if (wk) {
+              refreshWeekStat(wk);
+              refreshBarFill(wk);
+            }
           });
 
           // Delete button
@@ -5165,9 +5225,12 @@
               `.day[data-date="${day.date}"]`,
             );
             if (dayCard) updateDayCardLog(dayCard, null);
-            // Update the week's actual/planned mileage display
+            // Update the week's actual/planned mileage display + bar chart fill
             const wk = weekForDate(day.date);
-            if (wk) refreshWeekStat(wk);
+            if (wk) {
+              refreshWeekStat(wk);
+              refreshBarFill(wk);
+            }
           });
         }
       }
