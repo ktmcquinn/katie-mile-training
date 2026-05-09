@@ -4797,8 +4797,10 @@
           }
         }
 
-        // Workout Log section (skip on rest days where there's nothing to log)
-        if (cat !== "rest") {
+        // Workout Log section.
+        // Show on every non-rest day, AND on rest days where you already logged
+        // something (so a log can't get hidden by swapping the day to a rest day).
+        if (cat !== "rest" || hasLog(day.date)) {
           const log = getLog(day.date) || {};
           html += `<div class="log-section">
       <h3>Workout log</h3>
