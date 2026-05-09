@@ -1,7 +1,9 @@
 -- Katie's Mile Training - Supabase schema
 -- Run this once in your Supabase project's SQL Editor (New query → paste → Run).
--- Creates four tables and Row Level Security policies so each authenticated
+-- Creates five tables and Row Level Security policies so each authenticated
 -- user can only read/write their own training data.
+-- Re-running this script is safe — it uses "create if not exists" and
+-- drops/recreates the RLS policies so it's idempotent.
 
 -- =========================================================================
 -- 1) workouts: one row per logged workout (date, distance, pace, RPE, etc.)
@@ -58,12 +60,31 @@ create table if not exists public.day_overrides (
 );
 
 -- =========================================================================
+-- 5) exercise_logs: per-exercise tracking inside strength + mobility routines.
+-- routine_key examples: "strength_A_full_gym", "strength_B_home", "pre_run".
+-- exercise_key examples: "back_squat", "single_leg_rdl", "couch_stretch".
+-- =========================================================================
+create table if not exists public.exercise_logs (
+  user_id       uuid not null references auth.users(id) on delete cascade,
+  date          date not null,
+  routine_key   text not null,
+  exercise_key  text not null,
+  completed     boolean default false,
+  weight        numeric,
+  reps          integer,
+  notes         text,
+  updated_at    timestamptz default now(),
+  primary key (user_id, date, routine_key, exercise_key)
+);
+
+-- =========================================================================
 -- Row Level Security (RLS): each user sees only their own data
 -- =========================================================================
 alter table public.workouts      enable row level security;
 alter table public.completions   enable row level security;
 alter table public.weights       enable row level security;
 alter table public.day_overrides enable row level security;
+alter table public.exercise_logs enable row level security;
 
 -- Drop any existing policies so this script is idempotent
 drop policy if exists "own_workouts_select" on public.workouts;
@@ -74,6 +95,8 @@ drop policy if exists "own_weights_select" on public.weights;
 drop policy if exists "own_weights_modify" on public.weights;
 drop policy if exists "own_overrides_select" on public.day_overrides;
 drop policy if exists "own_overrides_modify" on public.day_overrides;
+drop policy if exists "own_exercise_logs_select" on public.exercise_logs;
+drop policy if exists "own_exercise_logs_modify" on public.exercise_logs;
 
 -- Recreate policies: users can SELECT their own rows and INSERT/UPDATE/DELETE
 -- only rows where user_id matches their auth uid.
@@ -95,6 +118,11 @@ create policy "own_weights_modify" on public.weights
 create policy "own_overrides_select" on public.day_overrides
   for select using (auth.uid() = user_id);
 create policy "own_overrides_modify" on public.day_overrides
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "own_exercise_logs_select" on public.exercise_logs
+  for select using (auth.uid() = user_id);
+create policy "own_exercise_logs_modify" on public.exercise_logs
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- =========================================================================

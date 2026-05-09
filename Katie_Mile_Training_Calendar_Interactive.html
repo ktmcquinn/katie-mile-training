@@ -797,6 +797,103 @@
         color: var(--accent);
       }
 
+      /* ---------- "Open exercise tracker" buttons in main modal ---------- */
+      .open-tracker-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        margin-top: 8px;
+        padding: 6px 12px;
+        background: var(--strength-bg); color: var(--info-text);
+        border: 1px solid var(--log-border); border-radius: 6px;
+        font-size: 13px; font-weight: 600; cursor: pointer;
+        font-family: inherit;
+      }
+      .open-tracker-btn:hover { filter: brightness(0.96); }
+      .open-tracker-btn::after { content: "→"; font-weight: 400; }
+      .open-tracker-btn.routine-tracker {
+        background: var(--routine-bg); color: var(--accent);
+        border-color: var(--border);
+      }
+      .ex-progress-pill {
+        display: inline-block; margin-left: 8px;
+        padding: 2px 8px; background: var(--pace-bg); color: var(--p1);
+        font-size: 11px; font-weight: 700; border-radius: 999px;
+      }
+
+      /* ---------- Exercise tracker sub-modal ---------- */
+      .ex-modal-bg {
+        position: fixed; inset: 0;
+        background: var(--modal-overlay);
+        display: none; align-items: flex-start; justify-content: center;
+        z-index: 200; padding: 20px;
+        overflow-y: auto;
+      }
+      .ex-modal-bg.show { display: flex; }
+      .ex-modal {
+        background: var(--card); color: var(--ink);
+        border-radius: 14px; max-width: 720px; width: 100%;
+        margin: auto;
+        padding: 22px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+      }
+      .ex-modal h2 { margin: 0 0 4px; font-size: 20px; }
+      .ex-modal .ex-meta { color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+      .ex-modal .ex-desc { font-size: 13px; color: var(--ink); margin-bottom: 14px; padding: 10px 12px; background: var(--routine-bg); border-radius: 8px; border-left: 3px solid var(--accent); }
+      .ex-modal .ex-progress { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 10px; }
+      .ex-row {
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        margin-bottom: 10px;
+        background: var(--card);
+        transition: opacity 0.15s, background 0.15s;
+      }
+      .ex-row.done { opacity: 0.65; background: var(--pace-bg); border-color: var(--pace-border); }
+      .ex-row .ex-head {
+        display: flex; align-items: flex-start; gap: 10px;
+      }
+      .ex-row .ex-head input.task-check { margin-top: 2px; flex-shrink: 0; width: 20px; height: 20px; }
+      .ex-row .ex-name {
+        flex: 1; min-width: 0;
+      }
+      .ex-row .ex-name .name {
+        font-weight: 700; font-size: 14px;
+      }
+      .ex-row .ex-name .prescription {
+        font-size: 12px; color: var(--muted); margin-top: 1px;
+      }
+      .ex-row .ex-name .tip {
+        font-size: 12px; color: var(--muted); font-style: italic; margin-top: 4px; line-height: 1.4;
+      }
+      .ex-row.done .name { text-decoration: line-through; }
+      .ex-inputs {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+        margin-top: 10px;
+      }
+      .ex-inputs.full { grid-template-columns: 1fr; }
+      .ex-inputs label {
+        display: block;
+        font-size: 11px; font-weight: 700; color: var(--muted);
+        text-transform: uppercase; letter-spacing: 0.5px;
+        margin-bottom: 3px;
+      }
+      .ex-inputs input, .ex-inputs textarea {
+        width: 100%; padding: 7px 10px;
+        border: 1px solid var(--border); border-radius: 6px;
+        font-size: 14px; font-family: inherit;
+        background: var(--card); color: var(--ink);
+      }
+      .ex-inputs input:focus, .ex-inputs textarea:focus {
+        outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,92,140,0.12);
+      }
+      .ex-inputs textarea { min-height: 50px; resize: vertical; }
+      .ex-modal .ex-actions {
+        display: flex; gap: 8px; flex-wrap: wrap;
+        margin-top: 16px; padding-top: 14px;
+        border-top: 1px solid var(--border);
+        align-items: center;
+      }
+      .ex-modal .ex-actions .ex-status { font-size: 12px; color: var(--p1); font-weight: 600; }
+
       /* ---------- Workout log form ---------- */
       .log-section {
         margin-top: 22px;
@@ -1958,6 +2055,11 @@
 
     <div class="modal-bg" id="modalBg">
       <div class="modal" id="modal"></div>
+    </div>
+
+    <!-- Exercise tracker sub-modal -->
+    <div class="ex-modal-bg" id="exModalBg">
+      <div class="ex-modal" id="exModal"></div>
     </div>
 
     <script>
@@ -3599,6 +3701,125 @@
         shin_protocol: "Shin protocol",
       };
 
+      // ---------- Structured exercise data (for the exercise tracker sub-modal) ----------
+      // Strength routines, restructured into exercise lists.
+      // Single-leg moves are featured prominently because running is a single-leg
+      // sport — Single-leg RDL, step-ups, single-leg glute bridges, single-leg calf
+      // raises directly train the patterns and imbalances that cause running injuries.
+      DATA.strength_routines = {
+        A_full_gym: {
+          label: "Strength A — Full Gym",
+          duration: "~50 min",
+          description: "Heavy bilateral + single-leg foundation. Rest 90-120s between heavy sets.",
+          exercises: [
+            { key: "back_squat", name: "Back squat", prescription: "3x5-8", note: "The bilateral king lift — work up to a top set at RPE 7-8." },
+            { key: "single_leg_rdl", name: "Single-leg Romanian deadlift", prescription: "3x8/leg", note: "The most running-specific lift you'll do. Single-leg posterior chain + balance. Slow eccentric." },
+            { key: "bulgarian_split_squat", name: "Bulgarian split squat", prescription: "3x8/leg", note: "Foundation single-leg quad/glute work. Front shin vertical, drop straight down." },
+            { key: "step_up_knee_drive", name: "Step-up with knee drive", prescription: "3x6/leg", note: "Mimics the running drive phase — drive opposite knee up explosively at the top." },
+            { key: "pull_up_or_pulldown", name: "Pull-up or lat pulldown", prescription: "3x6-10", note: "Upper-body pull keeps shoulders balanced." },
+            { key: "bench_press", name: "Bench press", prescription: "3x6-8", note: "Upper-body push for posture and shoulder health." },
+            { key: "pallof_press", name: "Pallof press", prescription: "3x10/side", note: "Anti-rotation core. Slow + controlled." },
+            { key: "side_plank", name: "Side plank", prescription: "3x30s/side", note: "Lateral core — hips drive sideways stability when running." },
+            { key: "single_leg_calf_raise", name: "Single-leg calf raise", prescription: "2x15/leg", note: "Each running stride is a calf rep. Build calf power directly." },
+          ],
+        },
+        B_home: {
+          label: "Strength B — Home",
+          duration: "~35 min",
+          description: "Single-leg dominant, dumbbell-friendly. 25-30 lb DBs + a band.",
+          exercises: [
+            { key: "bulgarian_split_squat", name: "Bulgarian split squat", prescription: "3x8/leg @ 25-30 lb DBs", note: "Foundation single-leg lift. Drop straight down, front shin vertical." },
+            { key: "single_leg_db_rdl", name: "Single-leg DB Romanian deadlift", prescription: "3x8/leg @ 25 lb", note: "Hinge from the hip. Keep moving leg straight back. Slow eccentric." },
+            { key: "step_up_knee_drive", name: "Step-up with knee drive", prescription: "3x8/leg @ 20 lb DBs", note: "Drive opposite knee up at the top. Use a 12-18 inch box." },
+            { key: "db_bench_press", name: "DB bench press", prescription: "3x10", note: "On floor or bench. Upper push." },
+            { key: "db_row", name: "Single-arm DB row", prescription: "3x10/side", note: "Brace core, don't twist. Pull elbow back along the ribs." },
+            { key: "single_leg_glute_bridge", name: "Single-leg glute bridge", prescription: "3x12/leg", note: "Squeeze glutes hard at the top. Elevate feet on a couch if too easy." },
+            { key: "copenhagen_plank", name: "Copenhagen plank", prescription: "3x20s/side", note: "Top leg on couch. Brutal but builds groin/adductor strength runners need." },
+            { key: "single_leg_calf_raise", name: "Single-leg calf raise", prescription: "2x15/leg", note: "On a step, drop heel below, drive up. Eccentric: 1s up, 3s down." },
+            { key: "tibialis_raise", name: "Tibialis raise (toe raise)", prescription: "2x20", note: "Heels on floor, lift toes — shin pain prevention." },
+          ],
+        },
+        light_taper: {
+          label: "Strength LIGHT — Taper",
+          duration: "~25 min",
+          description: "Maintenance only — keep RPE 5-6. Goal is sharp, not sore.",
+          exercises: [
+            { key: "single_leg_squat", name: "Single-leg bodyweight squat", prescription: "2x8/leg", note: "Pistol regression to a chair. Slow + controlled." },
+            { key: "single_leg_glute_bridge", name: "Single-leg glute bridge", prescription: "2x12/leg", note: "Light activation, not maximal." },
+            { key: "push_up", name: "Push-up", prescription: "2x10-15", note: "On knees if needed." },
+            { key: "band_row", name: "Band row", prescription: "2x12", note: "Light." },
+            { key: "side_plank", name: "Side plank", prescription: "2x30s/side", note: "" },
+            { key: "dead_bug", name: "Dead bug", prescription: "2x10/side", note: "Slow + controlled. Low back pressed to floor." },
+            { key: "single_leg_calf_raise", name: "Single-leg calf raise", prescription: "1x15/leg", note: "Feel-good sets only." },
+          ],
+        },
+      };
+
+      // Routines (mobility / warmup / cooldown), exercise-by-exercise.
+      DATA.routine_exercises = {
+        pre_run: [
+          { key: "easy_walk_2", name: "Easy walk", prescription: "2 min", note: "Get the engine warm." },
+          { key: "leg_swings_fwd", name: "Leg swings front/back", prescription: "10 each leg", note: "" },
+          { key: "leg_swings_side", name: "Leg swings side/side", prescription: "10 each leg", note: "" },
+          { key: "walking_lunges", name: "Walking lunges", prescription: "10 total", note: "" },
+          { key: "high_knees", name: "High knees", prescription: "30 sec", note: "" },
+          { key: "butt_kicks", name: "Butt kicks", prescription: "30 sec", note: "" },
+          { key: "a_skips", name: "A-skips", prescription: "20m x 2", note: "Drive knee up, opposite arm forward." },
+          { key: "ankle_circles", name: "Ankle circles", prescription: "10 each direction", note: "" },
+          { key: "strides", name: "Strides (quality days only)", prescription: "4 x 20 sec", note: "FAST but relaxed. Full walk-back recovery." },
+        ],
+        post_run: [
+          { key: "easy_walk_5", name: "Easy walk to drop HR", prescription: "5 min", note: "" },
+          { key: "calf_stretch", name: "Standing calf stretch", prescription: "30s/side", note: "" },
+          { key: "couch_stretch", name: "Couch stretch (hip flexor)", prescription: "60s/side", note: "CRITICAL for desk-tight hips. Don't skip." },
+          { key: "figure_4", name: "Figure-4 (piriformis)", prescription: "45s/side", note: "" },
+          { key: "hamstring_stretch", name: "Standing hamstring stretch", prescription: "30s/side", note: "" },
+          { key: "childs_pose", name: "Child's pose", prescription: "60 sec", note: "Refuel within 30-60 min after." },
+        ],
+        pre_bike: [
+          { key: "hip_90_90", name: "90/90 hip hold", prescription: "30s/side", note: "" },
+          { key: "deep_squat_hold", name: "Deep squat hold", prescription: "30 sec", note: "" },
+          { key: "knee_to_wall", name: "Knee-to-wall ankle", prescription: "10/side", note: "Improves dorsiflexion." },
+          { key: "cat_cow", name: "Cat-cow", prescription: "x10", note: "Saddle height: knee 25-30° bend at bottom of stroke." },
+        ],
+        post_bike: [
+          { key: "couch_stretch", name: "Couch stretch", prescription: "60s/side", note: "Cycling shortens hip flexors. DO NOT SKIP." },
+          { key: "pigeon", name: "Pigeon pose", prescription: "60s/side", note: "" },
+          { key: "forward_fold", name: "Standing forward fold", prescription: "60 sec", note: "" },
+          { key: "tspine_opener", name: "T-spine opener (foam roller)", prescription: "60 sec", note: "" },
+          { key: "calf_stretch", name: "Calf stretch", prescription: "30s/side", note: "" },
+        ],
+        mobility_daily: [
+          { key: "couch_stretch", name: "Couch stretch", prescription: "60s/side", note: "Anytime — shower, lunch break, before bed." },
+          { key: "hip_90_90", name: "90/90 hip rotation", prescription: "5 reps/side", note: "" },
+          { key: "worlds_greatest", name: "World's greatest stretch", prescription: "5/side", note: "Lunge + reach + twist. Hits everything." },
+          { key: "cat_cow", name: "Cat-cow", prescription: "x10", note: "" },
+          { key: "dead_bug", name: "Dead bug", prescription: "10/side", note: "Slow, low back to floor." },
+        ],
+        desk_breaks: [
+          { key: "squats_10", name: "Bodyweight squats", prescription: "x10", note: "Every 60-90 min during desk work." },
+          { key: "couch_stretch_short", name: "Couch stretch (each side)", prescription: "10s/side", note: "" },
+          { key: "hip_flexor_stretch", name: "Hip flexor stretch", prescription: "30 sec", note: "Sitting 4 hr/day is the root cause of hip tightness." },
+        ],
+        shin_protocol: [
+          { key: "tibialis_raise", name: "Tibialis (toe) raises", prescription: "2x20", note: "Heels on floor, lift toes." },
+          { key: "calf_raises_eccentric", name: "Calf raises (eccentric)", prescription: "2x15", note: "1s up, 3s down. Slow lowering is the magic." },
+          { key: "tibialis_band", name: "Tibialis raises against band", prescription: "2x15", note: "Band around forefoot, dorsiflex against tension." },
+          { key: "ice_shins", name: "Ice shins after running", prescription: "10 min if sore", note: "Skip if no pain." },
+          { key: "foam_roll_calves", name: "Foam roll calves", prescription: "2 min/side", note: "" },
+        ],
+      };
+
+      // Helper: detect which strength routine key from the day's strength text.
+      function detectStrengthKey(strengthText) {
+        if (!strengthText) return null;
+        const t = strengthText.toUpperCase();
+        if (t.startsWith("STRENGTH LIGHT")) return "light_taper";
+        if (t.startsWith("STRENGTH B") || t.includes("(HOME")) return "B_home";
+        if (t.startsWith("STRENGTH A") || t.includes("(FULL GYM")) return "A_full_gym";
+        return null;
+      }
+
       // ---------- Date helpers ----------
       function parseISO(s) {
         const [y, m, d] = s.split("-").map(Number);
@@ -4546,11 +4767,17 @@
         // Strength section (optional)
         if (day.strength) {
           const sDone = isSectionDone(day, "strength");
+          const sKey = detectStrengthKey(day.strength);
+          const sCounts = sKey ? exerciseProgress(day.date, "strength_" + sKey) : null;
           html += `<label class="section-h3-label ${sDone ? "section-done" : ""}" data-section-label="strength">
               <input type="checkbox" class="task-check section-check" data-section="strength" ${sDone ? "checked" : ""}>
               <h3>Strength</h3>
+              ${sCounts ? `<span class="ex-progress-pill">${sCounts.done}/${sCounts.total} done</span>` : ""}
             </label>
             <div class="strength-box">${day.strength}</div>`;
+          if (sKey) {
+            html += `<button type="button" class="open-tracker-btn" data-tracker-kind="strength" data-tracker-key="${sKey}">Track each exercise (weight, reps, notes)</button>`;
+          }
         }
 
         // Routines (each one gets its own checkbox)
@@ -4559,9 +4786,13 @@
           for (const r of day.routines) {
             const rKey = "routine_" + r;
             const rDone = isSectionDone(day, rKey);
+            const rCounts = DATA.routine_exercises[r] ? exerciseProgress(day.date, rKey) : null;
             html += `<label class="routine-check-row ${rDone ? "section-done" : ""}" data-section-label="${rKey}">
                 <input type="checkbox" class="task-check section-check" data-section="${rKey}" ${rDone ? "checked" : ""}>
-                <div class="routine"><b>${ROUTINE_LABELS[r] || r}.</b> ${DATA.routines[r]}</div>
+                <div class="routine"><b>${ROUTINE_LABELS[r] || r}.</b> ${DATA.routines[r]}
+                  ${rCounts ? `<span class="ex-progress-pill" style="margin-left:6px">${rCounts.done}/${rCounts.total} done</span>` : ""}
+                  ${DATA.routine_exercises[r] ? `<br><button type="button" class="open-tracker-btn routine-tracker" data-tracker-kind="routine" data-tracker-key="${r}" style="margin-top:6px">Check off each move</button>` : ""}
+                </div>
               </label>`;
           }
         }
@@ -4669,6 +4900,16 @@
             if (labelEl)
               labelEl.classList.toggle("section-done", e.target.checked);
             refreshMaster();
+          });
+        });
+
+        // Wire the "Open exercise tracker" buttons
+        m.querySelectorAll(".open-tracker-btn").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const kind = btn.dataset.trackerKind;
+            const key = btn.dataset.trackerKey;
+            openExerciseTracker(day, kind, key);
           });
         });
 
@@ -4951,6 +5192,239 @@
     <div style="margin-top:6px;font-size:11px;color:#6B7280"><b>BIA caveat:</b> home-scale body fat % is ±3-5% off true (DEXA) value. Trust the trend over the absolute number. Reweigh weekly, same time/conditions, and look at 4-week rolling averages.</div>
   `;
       }
+
+      // ---------- Exercise log storage (per-exercise tracking) ----------
+      // Schema: EX_LOGS[date][routineKey][exerciseKey] = {completed, weight, reps, notes, updatedAt}
+      // routineKey is "strength_A_full_gym", "strength_B_home", "strength_light_taper",
+      // or a routine key like "pre_run", "post_run", "mobility_daily", etc.
+      const EX_LOG_KEY = "katie-mile-exercise-logs";
+      function loadExerciseLogs() {
+        try {
+          const raw = localStorage.getItem(EX_LOG_KEY);
+          return raw ? JSON.parse(raw) : {};
+        } catch (e) { return {}; }
+      }
+      function persistExerciseLogs() {
+        try { localStorage.setItem(EX_LOG_KEY, JSON.stringify(EX_LOGS)); } catch (e) {}
+        if (typeof scheduleSync === "function") scheduleSync();
+      }
+      let EX_LOGS = loadExerciseLogs();
+
+      function getExerciseList(routineKey) {
+        // routineKey like "strength_A_full_gym" or "pre_run"
+        if (routineKey.startsWith("strength_")) {
+          const sk = routineKey.slice("strength_".length);
+          return DATA.strength_routines[sk] ? DATA.strength_routines[sk].exercises : [];
+        }
+        return DATA.routine_exercises[routineKey] || [];
+      }
+      function getRoutineLabel(routineKey) {
+        if (routineKey.startsWith("strength_")) {
+          const sk = routineKey.slice("strength_".length);
+          return DATA.strength_routines[sk] ? DATA.strength_routines[sk].label : routineKey;
+        }
+        return ROUTINE_LABELS[routineKey] || routineKey;
+      }
+      function getRoutineMeta(routineKey) {
+        if (routineKey.startsWith("strength_")) {
+          const sk = routineKey.slice("strength_".length);
+          return DATA.strength_routines[sk] || {};
+        }
+        return { label: ROUTINE_LABELS[routineKey], description: DATA.routines && DATA.routines[routineKey] };
+      }
+      function exerciseProgress(date, routineKey) {
+        const list = getExerciseList(routineKey);
+        if (!list.length) return null;
+        const dayLogs = (EX_LOGS[date] && EX_LOGS[date][routineKey]) || {};
+        const done = list.filter(ex => dayLogs[ex.key] && dayLogs[ex.key].completed).length;
+        return { done, total: list.length };
+      }
+      function getExerciseLog(date, routineKey, exerciseKey) {
+        return (EX_LOGS[date] && EX_LOGS[date][routineKey] && EX_LOGS[date][routineKey][exerciseKey]) || null;
+      }
+      function setExerciseLog(date, routineKey, exerciseKey, log) {
+        if (!EX_LOGS[date]) EX_LOGS[date] = {};
+        if (!EX_LOGS[date][routineKey]) EX_LOGS[date][routineKey] = {};
+        EX_LOGS[date][routineKey][exerciseKey] = { ...log, updatedAt: new Date().toISOString() };
+        persistExerciseLogs();
+      }
+      function clearExerciseLog(date, routineKey, exerciseKey) {
+        if (EX_LOGS[date] && EX_LOGS[date][routineKey]) {
+          delete EX_LOGS[date][routineKey][exerciseKey];
+          if (Object.keys(EX_LOGS[date][routineKey]).length === 0) delete EX_LOGS[date][routineKey];
+          if (Object.keys(EX_LOGS[date]).length === 0) delete EX_LOGS[date];
+          persistExerciseLogs();
+        }
+      }
+
+      // ---------- Exercise tracker sub-modal ----------
+      // routineKey: for strength → "strength_A_full_gym", "strength_B_home", "strength_light_taper"
+      //             for routines → "pre_run", "post_run", "mobility_daily", etc.
+      function openExerciseTracker(day, kind, key) {
+        const routineKey = kind === "strength" ? "strength_" + key : key;
+        const exercises = getExerciseList(routineKey);
+        const meta = getRoutineMeta(routineKey);
+        const isStrength = kind === "strength";
+        if (!exercises.length) return;
+
+        const m = document.getElementById("exModal");
+        let html = `<button class="close" onclick="closeExerciseTracker()" style="float:right;cursor:pointer;border:0;background:none;font-size:24px;color:var(--muted);line-height:1;padding:0 4px">×</button>`;
+        html += `<h2>${meta.label || getRoutineLabel(routineKey)}</h2>`;
+        html += `<div class="ex-meta">${fmtDate(day.date, { weekday: "long", month: "long", day: "numeric" })} · ${day.title}${meta.duration ? " · " + meta.duration : ""}</div>`;
+        if (meta.description) html += `<div class="ex-desc">${meta.description}</div>`;
+
+        const counts = exerciseProgress(day.date, routineKey);
+        html += `<div class="ex-progress" id="exProgressLabel"><b>${counts.done}</b>/${counts.total} complete</div>`;
+
+        for (const ex of exercises) {
+          const log = getExerciseLog(day.date, routineKey, ex.key) || {};
+          const done = !!log.completed;
+          html += `<div class="ex-row ${done ? "done" : ""}" data-ex-key="${ex.key}">
+            <div class="ex-head">
+              <input type="checkbox" class="task-check ex-done-check" ${done ? "checked" : ""}>
+              <div class="ex-name">
+                <div class="name">${ex.name}</div>
+                <div class="prescription">${ex.prescription || ""}</div>
+                ${ex.note ? `<div class="tip">${ex.note}</div>` : ""}
+              </div>
+            </div>
+            <div class="ex-inputs ${isStrength ? "" : "full"}">
+              ${isStrength ? `
+                <div>
+                  <label>Weight (lb)</label>
+                  <input type="number" class="ex-weight" step="0.5" min="0" placeholder="—" value="${log.weight ?? ""}">
+                </div>
+                <div>
+                  <label>Reps (last set)</label>
+                  <input type="number" class="ex-reps" min="0" placeholder="—" value="${log.reps ?? ""}">
+                </div>` : ""}
+              <div style="grid-column: 1 / -1">
+                <label>Notes</label>
+                <textarea class="ex-notes" placeholder="How it felt, ready to bump weight, form notes...">${log.notes ? log.notes.replace(/</g, "&lt;") : ""}</textarea>
+              </div>
+            </div>
+          </div>`;
+        }
+
+        html += `<div class="ex-actions">
+          <button type="button" class="btn btn-primary" id="exMarkAll">Mark all done</button>
+          <button type="button" class="btn" id="exClearAll">Clear all</button>
+          <span style="flex:1"></span>
+          <span class="ex-status" id="exStatus"></span>
+          <button type="button" class="btn" id="exClose">Close</button>
+        </div>`;
+
+        m.innerHTML = html;
+        document.getElementById("exModalBg").classList.add("show");
+        document.body.style.overflow = "hidden";
+
+        // Wire each row
+        m.querySelectorAll(".ex-row").forEach((row) => {
+          const exKey = row.dataset.exKey;
+          const cb = row.querySelector(".ex-done-check");
+          const wEl = row.querySelector(".ex-weight");
+          const rEl = row.querySelector(".ex-reps");
+          const nEl = row.querySelector(".ex-notes");
+
+          function persist() {
+            const completed = cb.checked;
+            const weight = wEl && wEl.value !== "" ? parseFloat(wEl.value) : null;
+            const reps = rEl && rEl.value !== "" ? parseInt(rEl.value, 10) : null;
+            const notes = nEl && nEl.value.trim() ? nEl.value.trim() : null;
+            if (!completed && weight == null && reps == null && !notes) {
+              clearExerciseLog(day.date, routineKey, exKey);
+            } else {
+              setExerciseLog(day.date, routineKey, exKey, { completed, weight, reps, notes });
+            }
+            row.classList.toggle("done", completed);
+            updateExProgress(day, routineKey);
+            // Auto-complete the parent section in main modal if all are done
+            propagateToParentSection(day, routineKey);
+          }
+
+          cb.addEventListener("change", persist);
+          if (wEl) wEl.addEventListener("change", persist);
+          if (rEl) rEl.addEventListener("change", persist);
+          if (nEl) nEl.addEventListener("change", persist);
+        });
+
+        // Mark all / Clear all
+        document.getElementById("exMarkAll").addEventListener("click", () => {
+          m.querySelectorAll(".ex-row").forEach((row) => {
+            const cb = row.querySelector(".ex-done-check");
+            if (!cb.checked) { cb.checked = true; cb.dispatchEvent(new Event("change")); }
+          });
+          flashStatus("All marked done");
+        });
+        document.getElementById("exClearAll").addEventListener("click", () => {
+          if (!confirm("Clear all exercise logs for this workout?")) return;
+          m.querySelectorAll(".ex-row").forEach((row) => {
+            const exKey = row.dataset.exKey;
+            row.querySelector(".ex-done-check").checked = false;
+            const w = row.querySelector(".ex-weight"); if (w) w.value = "";
+            const r = row.querySelector(".ex-reps"); if (r) r.value = "";
+            const n = row.querySelector(".ex-notes"); if (n) n.value = "";
+            row.classList.remove("done");
+            clearExerciseLog(day.date, routineKey, exKey);
+          });
+          updateExProgress(day, routineKey);
+          propagateToParentSection(day, routineKey);
+          flashStatus("Cleared");
+        });
+        document.getElementById("exClose").addEventListener("click", closeExerciseTracker);
+      }
+
+      function flashStatus(text) {
+        const el = document.getElementById("exStatus");
+        if (!el) return;
+        el.textContent = text;
+        setTimeout(() => { if (el) el.textContent = ""; }, 1500);
+      }
+      function updateExProgress(day, routineKey) {
+        const counts = exerciseProgress(day.date, routineKey);
+        const lbl = document.getElementById("exProgressLabel");
+        if (lbl) lbl.innerHTML = `<b>${counts.done}</b>/${counts.total} complete`;
+        // Also update the pill in the main modal if it's open
+        // (Main modal will re-render on close anyway)
+      }
+      function propagateToParentSection(day, routineKey) {
+        const counts = exerciseProgress(day.date, routineKey);
+        if (!counts) return;
+        const allDone = counts.done === counts.total;
+        // Map routineKey to the day's section key
+        const sectionKey = routineKey.startsWith("strength_") ? "strength" : "routine_" + routineKey;
+        // Only auto-complete UP — don't uncheck if user manually marked the section done
+        const wasComplete = isSectionDone(day, sectionKey);
+        if (allDone && !wasComplete) {
+          setSectionDone(day, sectionKey, true);
+        } else if (!allDone && wasComplete) {
+          // If they had it complete and now aren't, uncheck
+          setSectionDone(day, sectionKey, false);
+        }
+        // Sync the visible checkbox in the main modal if present
+        const mainCb = document.querySelector(`.section-check[data-section="${sectionKey}"]`);
+        if (mainCb) mainCb.checked = isSectionDone(day, sectionKey);
+        const labelEl = document.querySelector(`[data-section-label="${sectionKey}"]`);
+        if (labelEl) labelEl.classList.toggle("section-done", isSectionDone(day, sectionKey));
+        // Also sync the day card in the week grid
+        const dayCard = document.querySelector(`.day[data-date="${day.date}"]`);
+        if (dayCard) dayCard.classList.toggle("completed", isDone(day));
+      }
+      function closeExerciseTracker() {
+        document.getElementById("exModalBg").classList.remove("show");
+        document.body.style.overflow = "";
+      }
+      // Click outside to close, Esc to close
+      document.addEventListener("click", (e) => {
+        const bg = document.getElementById("exModalBg");
+        if (bg && e.target === bg) closeExerciseTracker();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          const bg = document.getElementById("exModalBg");
+          if (bg && bg.classList.contains("show")) closeExerciseTracker();
+        }
+      });
 
       // ---------- Cloud sync (Supabase) ----------
       const CLOUD_LAST_SYNC_KEY = "katie-mile-cloud-last-sync";
@@ -5240,14 +5714,15 @@
         setCloudStatus("syncing", "Pulling from cloud...");
         try {
           const uid = supaUser.id;
-          const [w, c, weight, ov] = await Promise.all([
+          const [w, c, weight, ov, ex] = await Promise.all([
             supaClient.from("workouts").select("*").eq("user_id", uid),
             supaClient.from("completions").select("*").eq("user_id", uid),
             supaClient.from("weights").select("*").eq("user_id", uid),
             supaClient.from("day_overrides").select("*").eq("user_id", uid),
+            supaClient.from("exercise_logs").select("*").eq("user_id", uid),
           ]);
-          if (w.error || c.error || weight.error || ov.error) {
-            throw w.error || c.error || weight.error || ov.error;
+          if (w.error || c.error || weight.error || ov.error || ex.error) {
+            throw w.error || c.error || weight.error || ov.error || ex.error;
           }
           // Workouts
           LOGS = {};
@@ -5298,6 +5773,20 @@
           }
           persistOverrides();
           applyOverrides();
+          // Exercise logs
+          EX_LOGS = {};
+          for (const r of ex.data) {
+            if (!EX_LOGS[r.date]) EX_LOGS[r.date] = {};
+            if (!EX_LOGS[r.date][r.routine_key]) EX_LOGS[r.date][r.routine_key] = {};
+            EX_LOGS[r.date][r.routine_key][r.exercise_key] = {
+              completed: r.completed,
+              weight: r.weight != null ? parseFloat(r.weight) : null,
+              reps: r.reps,
+              notes: r.notes,
+              updatedAt: r.updated_at,
+            };
+          }
+          try { localStorage.setItem(EX_LOG_KEY, JSON.stringify(EX_LOGS)); } catch (e) {}
           // Re-render everything
           renderWeeks();
           renderToday();
@@ -5357,6 +5846,24 @@
             routines: ov.routines,
             strength: ov.strength,
           }));
+          // Flatten exercise logs into rows
+          const exerciseRows = [];
+          for (const date in EX_LOGS) {
+            for (const routineKey in EX_LOGS[date]) {
+              for (const exerciseKey in EX_LOGS[date][routineKey]) {
+                const log = EX_LOGS[date][routineKey][exerciseKey];
+                exerciseRows.push({
+                  user_id: uid, date,
+                  routine_key: routineKey, exercise_key: exerciseKey,
+                  completed: !!log.completed,
+                  weight: log.weight ?? null,
+                  reps: log.reps ?? null,
+                  notes: log.notes ?? null,
+                  updated_at: log.updatedAt || new Date().toISOString(),
+                });
+              }
+            }
+          }
           const ops = [];
           if (workoutRows.length)
             ops.push(
@@ -5381,6 +5888,12 @@
               supaClient
                 .from("day_overrides")
                 .upsert(overrideRows, { onConflict: "user_id,date" }),
+            );
+          if (exerciseRows.length)
+            ops.push(
+              supaClient
+                .from("exercise_logs")
+                .upsert(exerciseRows, { onConflict: "user_id,date,routine_key,exercise_key" }),
             );
           const results = await Promise.all(ops);
           for (const r of results) if (r.error) throw r.error;
@@ -5630,6 +6143,7 @@
           workoutLogs: LOGS,
           weights: WEIGHTS,
           overrides: OVERRIDES,
+          exerciseLogs: EX_LOGS,
         };
         const date = new Date().toISOString().slice(0, 10);
         downloadFile(
@@ -5675,6 +6189,10 @@
               OVERRIDES = data.overrides;
               persistOverrides();
               applyOverrides();
+            }
+            if (data.exerciseLogs) {
+              EX_LOGS = data.exerciseLogs;
+              try { localStorage.setItem(EX_LOG_KEY, JSON.stringify(EX_LOGS)); } catch (e) {}
             }
             // Re-render everything
             renderWeeks();
