@@ -3988,6 +3988,16 @@
         return `${m}:${String(s).padStart(2, "0")}`;
       }
 
+      // Bike: speed (mph) helpers — distance(mi) / duration(sec) → mph
+      function calcSpeed(distanceMi, totalSec) {
+        if (!distanceMi || !totalSec || distanceMi <= 0 || totalSec <= 0) return null;
+        return (distanceMi / (totalSec / 3600)); // mph
+      }
+      function fmtSpeed(mph) {
+        if (!mph || !isFinite(mph)) return null;
+        return `${mph.toFixed(1)} mph`;
+      }
+
       // ---------- Weight tracking ----------
       const WEIGHT_KEY = "katie-mile-weight-logs";
       const WEIGHT_START = 147.9; // from your reference panel
@@ -4800,18 +4810,23 @@
         // Workout Log section.
         // Show on every non-rest day, AND on rest days where you already logged
         // something (so a log can't get hidden by swapping the day to a rest day).
+        // Form fields adapt for bike days (avg speed + power instead of pace).
         if (cat !== "rest" || hasLog(day.date)) {
           const log = getLog(day.date) || {};
+          const isBike = cat === "bike";
+          const headerNote = isBike
+            ? "Log your bike session. Avg speed auto-calculates from distance + time."
+            : "Log what you actually did. Pace auto-calculates from distance + duration.";
           html += `<div class="log-section">
-      <h3>Workout log</h3>
-      <div class="planned-line">Log what you actually did. Pace auto-calculates from distance + duration.</div>
+      <h3>${isBike ? "Bike log" : "Workout log"}</h3>
+      <div class="planned-line">${headerNote}</div>
       <div class="log-grid">
         <div class="log-field">
           <label>Distance (mi)</label>
-          <input type="number" id="logDistance" step="0.01" min="0" placeholder="3.0" value="${log.distance ?? ""}">
+          <input type="number" id="logDistance" step="0.01" min="0" placeholder="${isBike ? "12.0" : "3.0"}" value="${log.distance ?? ""}">
         </div>
         <div class="log-field">
-          <label>Duration (min : sec)</label>
+          <label>${isBike ? "Time rode (min : sec)" : "Duration (min : sec)"}</label>
           <div class="duration-inputs">
             <input type="number" id="logMin" min="0" placeholder="0" value="${log.minutes ?? ""}">
             <span>:</span>
@@ -4819,9 +4834,13 @@
           </div>
         </div>
         <div class="log-field">
-          <label>Pace</label>
-          <div class="log-pace empty" id="logPaceDisplay">—:—/mi</div>
+          <label>${isBike ? "Avg speed" : "Pace"}</label>
+          <div class="log-pace empty" id="logPaceDisplay">${isBike ? "—.— mph" : "—:—/mi"}</div>
         </div>
+        ${isBike ? `<div class="log-field">
+          <label>Avg power (W)</label>
+          <input type="number" id="logPower" min="0" max="600" placeholder="—" value="${log.avgPower ?? ""}">
+        </div>` : ""}
         <div class="log-field">
           <label>Avg HR (optional)</label>
           <input type="number" id="logHR" min="0" max="250" placeholder="—" value="${log.heartRate ?? ""}">
@@ -4835,7 +4854,7 @@
       </div>
       <div class="log-field" style="margin-top:10px">
         <label>Notes</label>
-        <textarea id="logNotes" placeholder="Weather, how you felt, anything notable...">${log.notes ? log.notes.replace(/</g, "&lt;") : ""}</textarea>
+        <textarea id="logNotes" placeholder="${isBike ? "How the legs felt, class type, anything notable..." : "Weather, how you felt, anything notable..."}">${log.notes ? log.notes.replace(/</g, "&lt;") : ""}</textarea>
       </div>
       <div class="log-actions">
         <button type="button" class="btn btn-primary" id="saveLog">${hasLog(day.date) ? "Update workout" : "Save workout"}</button>
@@ -4941,18 +4960,31 @@
           const notesEl = document.getElementById("logNotes");
           const paceEl = document.getElementById("logPaceDisplay");
           const statusEl = document.getElementById("logStatus");
+          const powerEl = document.getElementById("logPower"); // bike-only, may be null
+          const isBikeForm = cat === "bike";
           let selectedRpe = (getLog(day.date) || {}).rpe ?? null;
 
           function updatePace() {
             const dist = parseFloat(distEl.value);
             const totalSec = durationToSeconds(minEl.value, secEl.value);
-            const sec = calcPace(dist, totalSec);
-            if (sec) {
-              paceEl.textContent = fmtPace(sec);
-              paceEl.classList.remove("empty");
+            if (isBikeForm) {
+              const mph = calcSpeed(dist, totalSec);
+              if (mph) {
+                paceEl.textContent = fmtSpeed(mph);
+                paceEl.classList.remove("empty");
+              } else {
+                paceEl.textContent = "—.— mph";
+                paceEl.classList.add("empty");
+              }
             } else {
-              paceEl.textContent = "—:—/mi";
-              paceEl.classList.add("empty");
+              const sec = calcPace(dist, totalSec);
+              if (sec) {
+                paceEl.textContent = fmtPace(sec);
+                paceEl.classList.remove("empty");
+              } else {
+                paceEl.textContent = "—:—/mi";
+                paceEl.classList.add("empty");
+              }
             }
           }
           distEl.addEventListener("input", updatePace);
@@ -4986,20 +5018,34 @@
               statusEl.style.color = "#B85450";
               return;
             }
-            const paceSec = calcPace(dist, totalSec);
             const log = {
               date: day.date,
               distance: isNaN(dist) ? null : dist,
               minutes: minEl.value ? parseInt(minEl.value, 10) : null,
               seconds: secEl.value ? parseInt(secEl.value, 10) : null,
               durationSec: totalSec || null,
-              paceSecPerMile: paceSec || null,
-              paceLabel: paceSec ? fmtPace(paceSec) : null,
               rpe: selectedRpe,
               heartRate: hrEl.value ? parseInt(hrEl.value, 10) : null,
               notes: notesEl.value.trim() || null,
               loggedAt: new Date().toISOString(),
             };
+            if (isBikeForm) {
+              const mph = calcSpeed(dist, totalSec);
+              log.avgSpeedMph = mph || null;
+              log.avgSpeedLabel = mph ? fmtSpeed(mph) : null;
+              log.avgPower = powerEl && powerEl.value
+                ? parseInt(powerEl.value, 10)
+                : null;
+              log.paceSecPerMile = null;
+              log.paceLabel = null;
+            } else {
+              const paceSec = calcPace(dist, totalSec);
+              log.paceSecPerMile = paceSec || null;
+              log.paceLabel = paceSec ? fmtPace(paceSec) : null;
+              log.avgSpeedMph = null;
+              log.avgSpeedLabel = null;
+              log.avgPower = null;
+            }
             saveLog(day.date, log);
             // Auto-check the workout section since a log = completed workout
             setSectionDone(day, "workout", true);
@@ -5074,8 +5120,11 @@
         }
         const parts = [];
         if (log.distance) parts.push(`${log.distance} mi`);
-        if (log.paceLabel) parts.push(log.paceLabel);
+        // Bike: speed (and optionally power); Run: pace
+        if (log.avgSpeedLabel) parts.push(log.avgSpeedLabel);
+        else if (log.paceLabel) parts.push(log.paceLabel);
         else if (log.durationSec) parts.push(fmtDuration(log.durationSec));
+        if (log.avgPower) parts.push(`${log.avgPower}W`);
         pill.textContent = parts.join(" · ") || "logged";
       }
       function closeModal() {
@@ -5741,6 +5790,9 @@
               durationSec: r.duration_seconds,
               paceSecPerMile: r.pace_seconds_per_mile,
               paceLabel: r.pace_label,
+              avgSpeedMph: r.avg_speed_mph != null ? parseFloat(r.avg_speed_mph) : null,
+              avgSpeedLabel: r.avg_speed_label,
+              avgPower: r.avg_power,
               rpe: r.rpe,
               heartRate: r.heart_rate,
               notes: r.notes,
@@ -5820,6 +5872,9 @@
             duration_seconds: l.durationSec,
             pace_seconds_per_mile: l.paceSecPerMile,
             pace_label: l.paceLabel,
+            avg_speed_mph: l.avgSpeedMph ?? null,
+            avg_speed_label: l.avgSpeedLabel ?? null,
+            avg_power: l.avgPower ?? null,
             rpe: l.rpe,
             heart_rate: l.heartRate,
             notes: l.notes,
@@ -6014,6 +6069,8 @@
           "distance_mi",
           "duration_min_sec",
           "pace_per_mile",
+          "avg_speed_mph",
+          "avg_power_w",
           "rpe",
           "heart_rate_avg",
           "notes",
@@ -6044,6 +6101,8 @@
             log.distance ?? "",
             dur,
             log.paceLabel || "",
+            log.avgSpeedMph != null ? log.avgSpeedMph.toFixed(2) : "",
+            log.avgPower ?? "",
             log.rpe ?? "",
             log.heartRate ?? "",
             log.notes || "",

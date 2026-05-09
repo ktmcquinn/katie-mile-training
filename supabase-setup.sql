@@ -7,6 +7,7 @@
 
 -- =========================================================================
 -- 1) workouts: one row per logged workout (date, distance, pace, RPE, etc.)
+-- Includes bike-specific metrics: avg_speed_mph, avg_speed_label, avg_power.
 -- =========================================================================
 create table if not exists public.workouts (
   user_id                uuid not null references auth.users(id) on delete cascade,
@@ -15,12 +16,19 @@ create table if not exists public.workouts (
   duration_seconds       integer,
   pace_seconds_per_mile  numeric,
   pace_label             text,
+  avg_speed_mph          numeric,
+  avg_speed_label        text,
+  avg_power              integer,
   rpe                    smallint check (rpe between 1 and 10),
   heart_rate             integer,
   notes                  text,
   logged_at              timestamptz default now(),
   primary key (user_id, date)
 );
+-- Add columns if upgrading an existing project (safe to re-run)
+alter table public.workouts add column if not exists avg_speed_mph numeric;
+alter table public.workouts add column if not exists avg_speed_label text;
+alter table public.workouts add column if not exists avg_power integer;
 
 -- =========================================================================
 -- 2) completions: per-day section checkmarks (sections stored as JSONB)
