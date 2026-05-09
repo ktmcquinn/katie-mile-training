@@ -1725,57 +1725,6 @@
         </button>
       </div>
 
-      <div class="weight-card" id="weightCard">
-        <div class="weight-head">
-          <h3>Weight Tracker</h3>
-          <div class="weight-stats" id="weightStats"></div>
-        </div>
-        <div id="weightChart" class="weight-chart"></div>
-        <form id="weightForm" class="weight-form">
-          <div class="weight-fields">
-            <div class="log-field">
-              <label>Date</label>
-              <input type="date" id="weightDate" required />
-            </div>
-            <div class="log-field">
-              <label>Weight (lb)</label>
-              <input
-                type="number"
-                id="weightVal"
-                step="0.1"
-                min="50"
-                max="500"
-                placeholder="147.5"
-                required
-              />
-            </div>
-            <div class="log-field">
-              <label>Body fat % (optional)</label>
-              <input
-                type="number"
-                id="bfPct"
-                step="0.1"
-                min="0"
-                max="60"
-                placeholder="28.7"
-              />
-            </div>
-          </div>
-          <div class="weight-actions">
-            <button type="submit" class="btn btn-primary">Log weight</button>
-            <button type="button" class="btn" id="weightHistoryToggle">
-              View history
-            </button>
-            <span class="weight-status" id="weightStatus"></span>
-          </div>
-        </form>
-        <div
-          id="weightHistory"
-          class="weight-history"
-          style="display: none"
-        ></div>
-      </div>
-
       <div class="miles-card">
         <h3>Weekly Mileage Progression (click a bar to jump to that week)</h3>
         <div id="milesChart" class="miles-chart"></div>
@@ -2048,6 +1997,57 @@
             </li>
           </ol>
         </details>
+      </div>
+
+      <div class="weight-card" id="weightCard">
+        <div class="weight-head">
+          <h3>Weight Tracker</h3>
+          <div class="weight-stats" id="weightStats"></div>
+        </div>
+        <div id="weightChart" class="weight-chart"></div>
+        <form id="weightForm" class="weight-form">
+          <div class="weight-fields">
+            <div class="log-field">
+              <label>Date</label>
+              <input type="date" id="weightDate" required />
+            </div>
+            <div class="log-field">
+              <label>Weight (lb)</label>
+              <input
+                type="number"
+                id="weightVal"
+                step="0.1"
+                min="50"
+                max="500"
+                placeholder="147.5"
+                required
+              />
+            </div>
+            <div class="log-field">
+              <label>Body fat % (optional)</label>
+              <input
+                type="number"
+                id="bfPct"
+                step="0.1"
+                min="0"
+                max="60"
+                placeholder="28.7"
+              />
+            </div>
+          </div>
+          <div class="weight-actions">
+            <button type="submit" class="btn btn-primary">Log weight</button>
+            <button type="button" class="btn" id="weightHistoryToggle">
+              View history
+            </button>
+            <span class="weight-status" id="weightStatus"></span>
+          </div>
+        </form>
+        <div
+          id="weightHistory"
+          class="weight-history"
+          style="display: none"
+        ></div>
       </div>
 
       <footer>Built for Katie · Mile race Sept 19, 2026</footer>
