@@ -1324,6 +1324,178 @@
         align-self: flex-start;
       }
 
+      /* ---------- Trends tab: stat cards, sparklines, period strip ---------- */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      @media (max-width: 600px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+      .stat-card {
+        background: var(--card);
+        border-radius: 12px;
+        padding: 14px 12px;
+        text-align: center;
+        box-shadow: var(--shadow-soft);
+        border-left: 4px solid var(--accent);
+      }
+      .stat-card .stat-value {
+        font-size: 26px;
+        font-weight: 700;
+        color: var(--ink);
+        line-height: 1;
+      }
+      .stat-card .stat-label {
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+        margin-top: 4px;
+      }
+      .stat-card.p1 { border-left-color: var(--p1); }
+      .stat-card.p2 { border-left-color: var(--p2); }
+      .stat-card.p3 { border-left-color: var(--p3); }
+      .stat-card.p5 { border-left-color: var(--p5); }
+
+      .trend-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      @media (max-width: 700px) {
+        .trend-grid { grid-template-columns: 1fr; }
+      }
+      .trend-card {
+        background: var(--card);
+        border-radius: 12px;
+        padding: 14px;
+        box-shadow: var(--shadow-soft);
+      }
+      .trend-card h3 {
+        margin: 0 0 4px;
+        font-size: 13px;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+      .trend-meta {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 8px;
+        min-height: 16px;
+      }
+      .trend-meta .trend-current {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--ink);
+        margin-right: 6px;
+      }
+      .trend-meta .trend-avg {
+        font-size: 11px;
+      }
+      .trend-meta .trend-arrow {
+        font-weight: 700;
+        margin-left: 4px;
+      }
+      .trend-meta .trend-arrow.up { color: var(--p4); }
+      .trend-meta .trend-arrow.down { color: var(--p1); }
+      .trend-meta .trend-arrow.flat { color: var(--muted); }
+      .sparkline {
+        width: 100%;
+        height: 60px;
+        background: var(--chart-bg);
+        border-radius: 6px;
+      }
+      .sparkline svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .sparkline-empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        font-size: 11px;
+        color: var(--muted);
+        font-style: italic;
+      }
+
+      /* Period strip */
+      .period-card {
+        background: var(--card);
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 16px;
+        box-shadow: var(--shadow-soft);
+      }
+      .period-card h3 {
+        margin: 0 0 4px;
+        font-size: 13px;
+        color: #B85450;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+      .period-meta {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 10px;
+      }
+      .period-strip {
+        display: flex;
+        gap: 2px;
+        height: 26px;
+        margin-bottom: 6px;
+      }
+      .period-cell {
+        flex: 1;
+        height: 100%;
+        background: var(--rest);
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        cursor: help;
+      }
+      .period-cell.is-today { box-shadow: 0 0 0 2px var(--accent); }
+      .period-cell.flow-spotting { background: #FEE2E2; border-color: #FCA5A5; }
+      .period-cell.flow-light    { background: #FCA5A5; border-color: #F87171; }
+      .period-cell.flow-medium   { background: #EF4444; border-color: #DC2626; }
+      .period-cell.flow-heavy    { background: #991B1B; border-color: #7F1D1D; }
+      .period-axis {
+        display: flex;
+        font-size: 9px;
+        color: var(--muted);
+        gap: 2px;
+      }
+      .period-axis div {
+        flex: 1;
+        text-align: center;
+      }
+      .period-legend {
+        display: flex;
+        gap: 12px;
+        margin-top: 10px;
+        font-size: 11px;
+        color: var(--muted);
+        flex-wrap: wrap;
+      }
+      .period-legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .period-legend i {
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        display: inline-block;
+        border: 1px solid var(--border);
+      }
+
       /* ---------- Weight tracker ---------- */
       .weight-card {
         background: var(--card);
@@ -2323,6 +2495,58 @@
       <div class="tab-page" id="tab-trends">
       <h2 class="page-title">Trends &amp; Progress</h2>
 
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card p1">
+          <div class="stat-value" id="statTotalMiles">—</div>
+          <div class="stat-label">miles logged</div>
+        </div>
+        <div class="stat-card p2">
+          <div class="stat-value" id="statWorkouts">—</div>
+          <div class="stat-label">workouts</div>
+        </div>
+        <div class="stat-card p3">
+          <div class="stat-value" id="statCheckins">—</div>
+          <div class="stat-label">check-ins</div>
+        </div>
+        <div class="stat-card p5">
+          <div class="stat-value" id="statStreak">—</div>
+          <div class="stat-label">day streak</div>
+        </div>
+      </div>
+
+      <div class="trend-grid">
+        <div class="trend-card">
+          <h3>Body Battery</h3>
+          <div class="trend-meta" id="bbMeta">No data yet</div>
+          <div id="bbChart" class="sparkline"></div>
+        </div>
+        <div class="trend-card">
+          <h3>Resting HR</h3>
+          <div class="trend-meta" id="rhrMeta">No data yet</div>
+          <div id="rhrChart" class="sparkline"></div>
+        </div>
+        <div class="trend-card">
+          <h3>Energy</h3>
+          <div class="trend-meta" id="energyMeta">No data yet</div>
+          <div id="energyChart" class="sparkline"></div>
+        </div>
+      </div>
+
+      <div class="period-card">
+        <h3>Period — last 60 days</h3>
+        <div class="period-meta" id="periodMeta">No bleeding logged yet — mark "Period" in your daily check-in to start tracking.</div>
+        <div class="period-strip" id="periodStrip"></div>
+        <div class="period-axis" id="periodAxis"></div>
+        <div class="period-legend">
+          <span><i style="background:var(--rest)"></i> None</span>
+          <span><i style="background:#FEE2E2;border-color:#FCA5A5"></i> Spotting</span>
+          <span><i style="background:#FCA5A5"></i> Light</span>
+          <span><i style="background:#EF4444"></i> Medium</span>
+          <span><i style="background:#991B1B"></i> Heavy</span>
+        </div>
+      </div>
+
+
       <div class="weight-card" id="weightCard">
         <div class="weight-head">
           <h3>Weight Tracker</h3>
@@ -2470,9 +2694,10 @@
         try { localStorage.setItem(TAB_KEY, name); } catch (e) {}
         // Scroll to top of the newly active tab
         window.scrollTo({ top: 0, behavior: "instant" });
-        // If switching to Trends, redraw weight chart (avoid stale layout)
-        if (name === "trends" && typeof renderWeightChart === "function") {
-          renderWeightChart();
+        // If switching to Trends, render the whole Trends tab (stats, sparklines,
+        // period strip, weight chart) so it's always up-to-date when viewed.
+        if (name === "trends" && typeof renderTrends === "function") {
+          renderTrends();
         }
       }
       function initTabs() {
@@ -4367,6 +4592,259 @@
       function fmtSpeed(mph) {
         if (!mph || !isFinite(mph)) return null;
         return `${mph.toFixed(1)} mph`;
+      }
+
+      // ---------- Trends tab renderers ----------
+      function totalLoggedMiles() {
+        let total = 0;
+        for (const date in LOGS) {
+          const log = LOGS[date];
+          if (log && log.distance) total += parseFloat(log.distance) || 0;
+        }
+        return total;
+      }
+      function countLogs() { return Object.keys(LOGS).length; }
+      function countCheckins() { return Object.keys(CHECKINS).length; }
+
+      // Streak: consecutive days back from today (today included if it has activity)
+      // where there's at least one of: check-in, workout log, or any completion sections.
+      function currentStreak() {
+        let streak = 0;
+        const today = new Date();
+        for (let i = 0; i < 366; i++) {
+          const d = new Date(today);
+          d.setDate(d.getDate() - i);
+          const iso = d.toISOString().slice(0, 10);
+          const hasCheckin = !!CHECKINS[iso];
+          const hasLog = !!LOGS[iso];
+          const hasCompletion =
+            COMPLETED[iso] &&
+            (COMPLETED[iso] === true ||
+              (typeof COMPLETED[iso] === "object" &&
+                Object.keys(COMPLETED[iso]).length > 0));
+          if (hasCheckin || hasLog || hasCompletion) streak++;
+          else {
+            // Allow today to be empty (haven't done anything yet today) — don't break the streak on day 0
+            if (i === 0) continue;
+            break;
+          }
+        }
+        return streak;
+      }
+
+      function renderStatsCards() {
+        const fmt = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
+        const m = document.getElementById("statTotalMiles");
+        const w = document.getElementById("statWorkouts");
+        const c = document.getElementById("statCheckins");
+        const s = document.getElementById("statStreak");
+        if (m) m.textContent = fmt(totalLoggedMiles());
+        if (w) w.textContent = countLogs();
+        if (c) c.textContent = countCheckins();
+        if (s) s.textContent = currentStreak();
+      }
+
+      // Generic SVG sparkline. dataPoints: [{date, value}], opts: {valueRange, lineColor, unit}
+      function renderSparkline(elementId, dataPoints, opts = {}) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        if (!dataPoints || dataPoints.length === 0) {
+          el.innerHTML = `<div class="sparkline-empty">No data yet</div>`;
+          return;
+        }
+        // Last 30 entries, sorted by date
+        const pts = dataPoints
+          .slice()
+          .sort((a, b) => a.date.localeCompare(b.date))
+          .slice(-30);
+        const W = 300, H = 60;
+        const padL = 4, padR = 4, padT = 6, padB = 6;
+        const chartW = W - padL - padR;
+        const chartH = H - padT - padB;
+        const values = pts.map((p) => p.value);
+        const minV = opts.valueRange ? opts.valueRange[0] : Math.min(...values) - 1;
+        const maxV = opts.valueRange ? opts.valueRange[1] : Math.max(...values) + 1;
+        const range = maxV - minV || 1;
+        const xFor = (i) =>
+          pts.length === 1
+            ? padL + chartW / 2
+            : padL + (i / (pts.length - 1)) * chartW;
+        const yFor = (v) => padT + ((maxV - v) / range) * chartH;
+        const line = pts.map((p, i) => `${xFor(i)},${yFor(p.value)}`).join(" ");
+        const color = opts.lineColor || "var(--accent)";
+        let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">`;
+        // Soft area fill below the line
+        svg += `<polygon fill="${color}" fill-opacity="0.15" points="${padL},${H - padB} ${line} ${padL + chartW},${H - padB}"/>`;
+        // Line
+        if (pts.length > 1) {
+          svg += `<polyline points="${line}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+        }
+        // Points (dots)
+        for (let i = 0; i < pts.length; i++) {
+          const cx = xFor(i), cy = yFor(pts[i].value);
+          svg += `<circle cx="${cx}" cy="${cy}" r="2.5" fill="${color}"><title>${pts[i].date}: ${pts[i].value}${opts.unit || ""}</title></circle>`;
+        }
+        svg += `</svg>`;
+        el.innerHTML = svg;
+      }
+
+      // Build dataPoints for a check-in field
+      function checkinPoints(field) {
+        const points = [];
+        for (const date in CHECKINS) {
+          const v = CHECKINS[date][field];
+          if (v != null) points.push({ date, value: v });
+        }
+        return points;
+      }
+
+      function renderRecoveryTrends() {
+        // Body Battery (0–100)
+        const bb = checkinPoints("bodyBattery");
+        renderSparkline("bbChart", bb, {
+          valueRange: [0, 100],
+          lineColor: "var(--p2)",
+        });
+        updateTrendMeta("bbMeta", bb, { unit: "", goodDirection: "up" });
+        // Resting HR (dynamic range)
+        const rhr = checkinPoints("restingHr");
+        renderSparkline("rhrChart", rhr, { lineColor: "var(--p4)", unit: " bpm" });
+        updateTrendMeta("rhrMeta", rhr, { unit: " bpm", goodDirection: "down" });
+        // Energy (1–10)
+        const en = checkinPoints("energy");
+        renderSparkline("energyChart", en, {
+          valueRange: [1, 10],
+          lineColor: "var(--p1)",
+        });
+        updateTrendMeta("energyMeta", en, { unit: "/10", goodDirection: "up" });
+      }
+
+      function updateTrendMeta(elementId, points, opts) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        if (!points || points.length === 0) {
+          el.textContent = "No data yet";
+          return;
+        }
+        const sorted = points.slice().sort((a, b) => a.date.localeCompare(b.date));
+        const latest = sorted[sorted.length - 1].value;
+        // 7-day average (last up-to-7 entries)
+        const last7 = sorted.slice(-7);
+        const avg7 = last7.reduce((s, p) => s + p.value, 0) / last7.length;
+        // Direction of last entry vs 7-day average (skip if only 1 point)
+        let arrow = "";
+        if (sorted.length >= 2) {
+          const diff = latest - avg7;
+          const threshold = opts.unit === " bpm" ? 2 : 0.5;
+          if (Math.abs(diff) < threshold) arrow = `<span class="trend-arrow flat">→</span>`;
+          else if (diff > 0) {
+            const cls = opts.goodDirection === "up" ? "down" : "up";
+            arrow = `<span class="trend-arrow ${cls}">↑</span>`;
+          } else {
+            const cls = opts.goodDirection === "down" ? "down" : "up";
+            // For "down is good" (RHR): a drop is good (green/down).
+            // For "up is good" (BB/Energy): a drop is bad (red/up).
+            arrow = `<span class="trend-arrow ${cls === "down" ? "down" : "up"}">↓</span>`;
+          }
+        }
+        const fmt = (v) => (Number.isInteger(v) ? String(v) : v.toFixed(1));
+        el.innerHTML = `<span class="trend-current">${fmt(latest)}${opts.unit}</span>${arrow}<span class="trend-avg">7-day avg ${fmt(avg7)}</span>`;
+      }
+
+      // Period strip: last 60 days
+      function renderPeriodStrip() {
+        const stripEl = document.getElementById("periodStrip");
+        const axisEl = document.getElementById("periodAxis");
+        const metaEl = document.getElementById("periodMeta");
+        if (!stripEl) return;
+        const today = new Date();
+        const todayISOStr = today.toISOString().slice(0, 10);
+        const cells = [];
+        for (let i = 59; i >= 0; i--) {
+          const d = new Date(today);
+          d.setDate(d.getDate() - i);
+          const iso = d.toISOString().slice(0, 10);
+          const c = CHECKINS[iso];
+          const flow = c ? c.cyclePhase : null;
+          cells.push({ date: iso, day: d.getDate(), month: d.getMonth() + 1, flow, isToday: iso === todayISOStr });
+        }
+        // Strip
+        let stripHtml = "";
+        const flowLabel = {
+          spotting: "Spotting",
+          light: "Light",
+          medium: "Medium",
+          heavy: "Heavy",
+          none: "None",
+        };
+        for (const cell of cells) {
+          const cls = [];
+          if (cell.flow && cell.flow !== "none") cls.push(`flow-${cell.flow}`);
+          if (cell.isToday) cls.push("is-today");
+          const tip = `${cell.date}: ${cell.flow ? flowLabel[cell.flow] || cell.flow : "(no entry)"}`;
+          stripHtml += `<div class="period-cell ${cls.join(" ")}" title="${tip}"></div>`;
+        }
+        stripEl.innerHTML = stripHtml;
+        // Axis: label every 10 days
+        let axisHtml = "";
+        for (let i = 0; i < cells.length; i++) {
+          axisHtml += `<div>${i % 10 === 0 ? `${cells[i].month}/${cells[i].day}` : ""}</div>`;
+        }
+        axisEl.innerHTML = axisHtml;
+        // Meta: last period summary
+        if (metaEl) metaEl.innerHTML = computePeriodMeta();
+      }
+
+      function computePeriodMeta() {
+        // Sorted bleed entries (any non-"none" value)
+        const bleedDays = [];
+        for (const date in CHECKINS) {
+          const c = CHECKINS[date];
+          if (c.cyclePhase && c.cyclePhase !== "none") bleedDays.push(date);
+        }
+        if (!bleedDays.length) {
+          return 'No bleeding logged yet — mark "Period" in your daily check-in to start tracking.';
+        }
+        bleedDays.sort();
+        // Group consecutive days into "periods" (a sequence is broken by a gap of 2+ days)
+        const periods = [];
+        let current = [bleedDays[0]];
+        for (let i = 1; i < bleedDays.length; i++) {
+          const prev = new Date(current[current.length - 1] + "T00:00:00");
+          const cur = new Date(bleedDays[i] + "T00:00:00");
+          const gap = Math.round((cur - prev) / 86400000);
+          if (gap <= 2) current.push(bleedDays[i]);
+          else { periods.push(current); current = [bleedDays[i]]; }
+        }
+        periods.push(current);
+        const lastPeriod = periods[periods.length - 1];
+        const firstDay = lastPeriod[0];
+        const lastDay = lastPeriod[lastPeriod.length - 1];
+        const today = new Date();
+        const lastEnd = new Date(lastDay + "T00:00:00");
+        const daysSince = Math.round((today - lastEnd) / 86400000);
+        const lengthDays = lastPeriod.length;
+        let html = `Last period: <b>${firstDay}</b>`;
+        if (lengthDays > 1) html += ` &ndash; <b>${lastDay}</b> (${lengthDays} days)`;
+        else html += ` (1 day so far)`;
+        if (daysSince === 0) html += ` &middot; happening today`;
+        else if (daysSince > 0) html += ` &middot; ${daysSince} day${daysSince === 1 ? "" : "s"} ago`;
+        // Cycle length (gap between starts of last two periods)
+        if (periods.length >= 2) {
+          const prevStart = new Date(periods[periods.length - 2][0] + "T00:00:00");
+          const thisStart = new Date(firstDay + "T00:00:00");
+          const cycleLen = Math.round((thisStart - prevStart) / 86400000);
+          html += ` &middot; last cycle: <b>${cycleLen}</b> days`;
+        }
+        return html;
+      }
+
+      function renderTrends() {
+        renderStatsCards();
+        renderRecoveryTrends();
+        renderPeriodStrip();
+        if (typeof renderWeightStats === "function") renderWeightStats();
+        if (typeof renderWeightChart === "function") renderWeightChart();
       }
 
       // ---------- Weight tracking ----------
