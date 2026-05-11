@@ -284,10 +284,26 @@
       }
 
       /* ---------- Phase bar ---------- */
+      .phase-bar-card {
+        background: var(--card);
+        border-radius: 12px;
+        padding: 10px 12px 12px;
+        margin-bottom: 16px;
+        box-shadow: var(--shadow-soft);
+      }
+      .phase-bar-card::before {
+        content: "Training Phases";
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+      }
       .phase-bar {
         display: flex;
         gap: 4px;
-        margin-top: 16px;
         border-radius: 8px;
         overflow: hidden;
         height: 36px;
@@ -1790,7 +1806,6 @@
           Sept 19, 2026
         </div>
         <div id="countdown" class="countdown"></div>
-        <div class="phase-bar" id="phaseBar"></div>
       </div>
 
       <div class="today" id="todayCard">
@@ -1825,6 +1840,10 @@
       <!-- ========== TAB: PLAN ========== -->
       <div class="tab-page" id="tab-plan">
       <h2 class="page-title">Training Plan</h2>
+
+      <div class="phase-bar-card">
+        <div class="phase-bar" id="phaseBar"></div>
+      </div>
 
       <div class="miles-card">
         <h3>Weekly Mileage Progression (click a bar to jump to that week)</h3>
