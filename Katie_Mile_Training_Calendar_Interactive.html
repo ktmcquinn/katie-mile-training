@@ -446,6 +446,15 @@
         margin-bottom: 16px;
         border-left: 5px solid var(--accent);
         box-shadow: 0 2px 8px rgba(31, 41, 55, 0.04);
+        cursor: pointer;
+        transition: box-shadow 0.15s, transform 0.1s;
+      }
+      .today:hover {
+        box-shadow: 0 4px 14px rgba(31, 41, 55, 0.1);
+        transform: translateY(-1px);
+      }
+      .today:active {
+        transform: translateY(0);
       }
       .today .head {
         display: flex;
@@ -4986,17 +4995,23 @@
         row.querySelector("input").addEventListener("change", (e) => {
           setDayDone(day, e.target.checked);
           renderToday();
-          // Also update the matching day card in week grid if rendered
-          const dayCard = document.querySelector(
-            `.day[data-date="${day.date}"]`,
-          );
-          if (dayCard) {
-            dayCard.classList.toggle("completed", e.target.checked);
-            const cb = dayCard.querySelector(".task-check");
+          // Sync every matching day card in both This Week + Plan views
+          document.querySelectorAll(`.day[data-date="${day.date}"]`).forEach((el) => {
+            el.classList.toggle("completed", e.target.checked);
+            const cb = el.querySelector(".task-check");
             if (cb) cb.checked = e.target.checked;
-          }
+          });
         });
+        // Stop the checkbox row from bubbling clicks up to the card
+        row.addEventListener("click", (e) => e.stopPropagation());
         todayCard.appendChild(row);
+
+        // Open the full day modal when the Today card is tapped
+        // (Assigning onclick replaces any previous handler — safe to re-render.)
+        todayCard.onclick = (e) => {
+          if (e.target.closest("#todayCheckRow")) return;
+          openModal(day, week);
+        };
       }
 
       // ---------- Mileage chart ----------
