@@ -143,6 +143,71 @@
         max-width: 1200px;
         margin: 0 auto;
         padding: 16px;
+        padding-bottom: 90px; /* room for fixed bottom tab bar */
+      }
+
+      /* ---------- Tab pages + bottom tab bar ---------- */
+      .tab-page {
+        display: none;
+      }
+      .tab-page.active {
+        display: block;
+        animation: fadeIn 0.2s ease;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0.4; transform: translateY(4px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .page-title {
+        font-size: 22px;
+        font-weight: 700;
+        margin: 8px 4px 16px;
+        color: var(--ink);
+      }
+      .tab-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--card);
+        border-top: 1px solid var(--border);
+        display: flex;
+        z-index: 100;
+        box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+        padding-bottom: env(safe-area-inset-bottom, 0); /* iPhone notch / home indicator */
+      }
+      .tab-btn {
+        flex: 1;
+        background: none;
+        border: 0;
+        padding: 10px 4px 8px;
+        cursor: pointer;
+        color: var(--muted);
+        font-family: inherit;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        transition: color 0.15s, background 0.15s;
+      }
+      .tab-btn:hover {
+        color: var(--ink);
+        background: var(--hover-bg);
+      }
+      .tab-btn.active {
+        color: var(--accent);
+      }
+      .tab-btn .tab-icon {
+        font-size: 20px;
+        line-height: 1;
+      }
+      .tab-btn .tab-label {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+      }
+      [data-theme="dark"] .tab-bar {
+        box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.4);
       }
 
       /* ---------- Hero ---------- */
@@ -1707,6 +1772,9 @@
   </head>
   <body>
     <div class="wrap">
+
+      <!-- ========== TAB: TODAY ========== -->
+      <div class="tab-page active" id="tab-today">
       <div class="hero">
         <button
           class="theme-toggle"
@@ -1752,6 +1820,11 @@
           Reset
         </button>
       </div>
+      </div><!-- end #tab-today -->
+
+      <!-- ========== TAB: PLAN ========== -->
+      <div class="tab-page" id="tab-plan">
+      <h2 class="page-title">Training Plan</h2>
 
       <div class="miles-card">
         <h3>Weekly Mileage Progression (click a bar to jump to that week)</h3>
@@ -1856,6 +1929,11 @@
           </details>
         </div>
       </div>
+      </div><!-- end #tab-plan -->
+
+      <!-- ========== TAB: MORE ========== -->
+      <div class="tab-page" id="tab-more">
+      <h2 class="page-title">Settings &amp; Data</h2>
 
       <div class="data-card" id="dataCard">
         <h3>Your Data</h3>
@@ -2026,6 +2104,11 @@
           </ol>
         </details>
       </div>
+      </div><!-- end #tab-more -->
+
+      <!-- ========== TAB: TRENDS ========== -->
+      <div class="tab-page" id="tab-trends">
+      <h2 class="page-title">Trends &amp; Progress</h2>
 
       <div class="weight-card" id="weightCard">
         <div class="weight-head">
@@ -2077,9 +2160,30 @@
           style="display: none"
         ></div>
       </div>
+      </div><!-- end #tab-trends -->
 
       <footer>Built for Katie · Mile race Sept 19, 2026</footer>
     </div>
+
+    <!-- Bottom navigation tab bar -->
+    <nav class="tab-bar" id="tabBar" role="tablist">
+      <button class="tab-btn active" data-tab="today" type="button" role="tab" aria-label="Today">
+        <span class="tab-icon">🏠</span>
+        <span class="tab-label">Today</span>
+      </button>
+      <button class="tab-btn" data-tab="plan" type="button" role="tab" aria-label="Plan">
+        <span class="tab-icon">📅</span>
+        <span class="tab-label">Plan</span>
+      </button>
+      <button class="tab-btn" data-tab="trends" type="button" role="tab" aria-label="Trends">
+        <span class="tab-icon">📊</span>
+        <span class="tab-label">Trends</span>
+      </button>
+      <button class="tab-btn" data-tab="more" type="button" role="tab" aria-label="More">
+        <span class="tab-icon">⚙️</span>
+        <span class="tab-label">More</span>
+      </button>
+    </nav>
 
     <div class="modal-bg" id="modalBg">
       <div class="modal" id="modal"></div>
@@ -2140,6 +2244,32 @@
       }
       // Apply theme immediately so the page boots in the right colors
       applyTheme(loadTheme());
+
+      // ---------- Tabs (bottom nav) ----------
+      const TAB_KEY = "katie-mile-active-tab";
+      function switchTab(name) {
+        document.querySelectorAll(".tab-page").forEach((p) => {
+          p.classList.toggle("active", p.id === `tab-${name}`);
+        });
+        document.querySelectorAll(".tab-btn").forEach((b) => {
+          b.classList.toggle("active", b.dataset.tab === name);
+        });
+        try { localStorage.setItem(TAB_KEY, name); } catch (e) {}
+        // Scroll to top of the newly active tab
+        window.scrollTo({ top: 0, behavior: "instant" });
+        // If switching to Trends, redraw weight chart (avoid stale layout)
+        if (name === "trends" && typeof renderWeightChart === "function") {
+          renderWeightChart();
+        }
+      }
+      function initTabs() {
+        document.querySelectorAll(".tab-btn").forEach((b) => {
+          b.addEventListener("click", () => switchTab(b.dataset.tab));
+        });
+        let saved = "today";
+        try { saved = localStorage.getItem(TAB_KEY) || "today"; } catch (e) {}
+        switchTab(saved);
+      }
 
       const DATA = {
         meta: {
@@ -6461,6 +6591,7 @@
       initWeightForm();
       initDataExport();
       initCloudUI();
+      initTabs();
       fillRef();
 
       // scroll to current week if visible
