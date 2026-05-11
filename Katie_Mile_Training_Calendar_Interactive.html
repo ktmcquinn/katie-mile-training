@@ -283,6 +283,39 @@
         margin-top: 4px;
       }
 
+      /* ---------- This week card (Today tab) ---------- */
+      .this-week-card {
+        background: var(--card);
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 16px;
+        box-shadow: var(--shadow-soft);
+      }
+      .this-week-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 12px;
+        padding: 0 4px;
+      }
+      .this-week-head h3 {
+        margin: 0;
+        font-size: 14px;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .this-week-stat {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .this-week-stat b {
+        color: var(--ink);
+      }
+      .this-week-card .days {
+        padding: 0;
+      }
+
       /* ---------- Phase bar ---------- */
       .phase-bar-card {
         background: var(--card);
@@ -508,6 +541,10 @@
         font-size: 12px;
         color: var(--muted);
         margin-top: 2px;
+        display: none;
+      }
+      .week.open .week-meta .bot {
+        display: block;
       }
       .week-stat {
         text-align: right;
@@ -1835,6 +1872,14 @@
           Reset
         </button>
       </div>
+
+      <div class="this-week-card">
+        <div class="this-week-head">
+          <h3>This week's workouts</h3>
+          <div class="this-week-stat" id="thisWeekStat"></div>
+        </div>
+        <div class="days" id="thisWeekDays"></div>
+      </div>
       </div><!-- end #tab-today -->
 
       <!-- ========== TAB: PLAN ========== -->
@@ -2186,9 +2231,9 @@
 
     <!-- Bottom navigation tab bar -->
     <nav class="tab-bar" id="tabBar" role="tablist">
-      <button class="tab-btn active" data-tab="today" type="button" role="tab" aria-label="Today">
+      <button class="tab-btn active" data-tab="today" type="button" role="tab" aria-label="This Week">
         <span class="tab-icon">🏠</span>
-        <span class="tab-label">Today</span>
+        <span class="tab-label">This Week</span>
       </button>
       <button class="tab-btn" data-tab="plan" type="button" role="tab" aria-label="Plan">
         <span class="tab-icon">📅</span>
@@ -4479,6 +4524,7 @@
         renderWeeks();
         renderToday();
         renderProgress();
+        if (typeof renderThisWeek === "function") renderThisWeek();
       }
       function resetPlan() {
         if (
@@ -4512,6 +4558,7 @@
         renderWeeks();
         renderToday();
         renderProgress();
+        if (typeof renderThisWeek === "function") renderThisWeek();
       }
 
       // Tap-based swap (works on touch screens)
@@ -4895,9 +4942,7 @@
           head.innerHTML = `
       <div class="week-num">W${w.num}</div>
       <div class="week-meta">
-        <div class="top">${fmtDate(w.start_date)} - ${fmtDate(w.end_date)}
-          <span class="phase-pill pp${w.phase}" style="margin-left:6px">P${ph.num}: ${ph.name}</span>
-        </div>
+        <div class="top">${fmtDate(w.start_date)} - ${fmtDate(w.end_date)}</div>
         <div class="bot">${w.theme}</div>
       </div>
       <div class="week-stat" data-week-num="${w.num}">${weekStatHtml(w)}</div>
@@ -4916,24 +4961,36 @@
               : "none";
           });
           for (const d of w.days) {
-            const cat = categorize(d);
-            const dEl = document.createElement("div");
-            dEl.className = `day cat-${cat}`;
-            if (d.date === todayISO()) dEl.classList.add("today");
-            if (cat === "race") dEl.classList.add("race");
-            if (isDone(d)) dEl.classList.add("completed");
-            if (isSwapped(d.date)) dEl.classList.add("swapped");
-            dEl.dataset.cat = cat;
-            dEl.dataset.strength = dayHasStrength(d) ? "1" : "0";
-            dEl.dataset.date = d.date;
-            dEl.setAttribute("draggable", "true");
-            dEl.innerHTML = `
+            const dEl = createDayCard(d, w, { swappable: true });
+            days.appendChild(dEl);
+          }
+          wEl.appendChild(days);
+          root.appendChild(wEl);
+        }
+      }
+
+      // Shared day-card builder. Used by renderWeeks (Plan tab) and renderThisWeek (This Week tab).
+      // opts.swappable: include drag-and-drop + swap-handle (only on Plan tab).
+      function createDayCard(d, w, opts = {}) {
+        const swappable = !!opts.swappable;
+        const cat = categorize(d);
+        const dEl = document.createElement("div");
+        dEl.className = `day cat-${cat}`;
+        if (d.date === todayISO()) dEl.classList.add("today");
+        if (cat === "race") dEl.classList.add("race");
+        if (isDone(d)) dEl.classList.add("completed");
+        if (isSwapped(d.date)) dEl.classList.add("swapped");
+        dEl.dataset.cat = cat;
+        dEl.dataset.strength = dayHasStrength(d) ? "1" : "0";
+        dEl.dataset.date = d.date;
+        if (swappable) dEl.setAttribute("draggable", "true");
+        dEl.innerHTML = `
         <div class="day-top">
           <div class="date-block">
             <div class="dn">${d.day_name}</div>
             <div class="dd">${fmtDate(d.date, { month: "short", day: "numeric" })}</div>
           </div>
-          <span class="swap-handle" title="Drag to another day to swap, or tap two days to swap">⋮⋮</span>
+          ${swappable ? '<span class="swap-handle" title="Drag to another day to swap, or tap two days to swap">⋮⋮</span>' : ""}
           <input type="checkbox" class="task-check" title="Mark all sections complete" ${isDone(d) ? "checked" : ""}>
         </div>
         <div class="dt">${d.title}</div>
@@ -4942,73 +4999,97 @@
           ${dayHasStrength(d) ? '<span class="icon" style="background:#FEF3C7">+ ST</span>' : ""}
         </div>
       `;
-            // Checkbox: don't open modal or trigger drag when interacted with
-            const cb = dEl.querySelector(".task-check");
-            cb.addEventListener("click", (e) => {
-              e.stopPropagation();
-            });
-            cb.addEventListener("change", (e) => {
-              e.stopPropagation();
-              setDayDone(d, e.target.checked);
-              dEl.classList.toggle("completed", e.target.checked);
-              if (d.date === todayClampedISO()) renderToday();
-            });
-            cb.setAttribute("draggable", "false");
+        // Checkbox: don't open modal when interacted with; sync state across both views
+        const cb = dEl.querySelector(".task-check");
+        cb.addEventListener("click", (e) => { e.stopPropagation(); });
+        cb.addEventListener("change", (e) => {
+          e.stopPropagation();
+          setDayDone(d, e.target.checked);
+          // Update every day card with this date (both Plan and This Week tabs)
+          document.querySelectorAll(`.day[data-date="${d.date}"]`).forEach((el) => {
+            el.classList.toggle("completed", e.target.checked);
+            const elCb = el.querySelector(".task-check");
+            if (elCb && elCb !== cb) elCb.checked = e.target.checked;
+          });
+          if (d.date === todayClampedISO()) renderToday();
+        });
+        cb.setAttribute("draggable", "false");
 
-            // Tap-to-swap: swap handle click
-            const handle = dEl.querySelector(".swap-handle");
-            handle.addEventListener("click", (e) => {
-              e.stopPropagation();
-              armOrPerformSwap(d.date, dEl);
-            });
-
-            // HTML5 drag-and-drop for desktop
-            dEl.addEventListener("dragstart", (e) => {
-              // Don't start drag if user clicked the checkbox area
-              if (e.target.classList.contains("task-check")) {
-                e.preventDefault();
-                return;
-              }
-              e.dataTransfer.effectAllowed = "move";
-              e.dataTransfer.setData("text/plain", d.date);
-              dEl.classList.add("dragging");
-            });
-            dEl.addEventListener("dragend", () => {
-              dEl.classList.remove("dragging");
-              // Clean up any lingering drag-over
-              document
-                .querySelectorAll(".day.drag-over")
-                .forEach((el) => el.classList.remove("drag-over"));
-            });
-            dEl.addEventListener("dragover", (e) => {
+        if (swappable) {
+          // Tap-to-swap: swap handle click
+          const handle = dEl.querySelector(".swap-handle");
+          if (handle) handle.addEventListener("click", (e) => {
+            e.stopPropagation();
+            armOrPerformSwap(d.date, dEl);
+          });
+          // HTML5 drag-and-drop for desktop
+          dEl.addEventListener("dragstart", (e) => {
+            if (e.target.classList.contains("task-check")) {
               e.preventDefault();
-              e.dataTransfer.dropEffect = "move";
-              if (!dEl.classList.contains("dragging"))
-                dEl.classList.add("drag-over");
-            });
-            dEl.addEventListener("dragleave", () => {
-              dEl.classList.remove("drag-over");
-            });
-            dEl.addEventListener("drop", (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              dEl.classList.remove("drag-over");
-              const sourceDate = e.dataTransfer.getData("text/plain");
-              if (sourceDate && sourceDate !== d.date)
-                swapDays(sourceDate, d.date);
-            });
+              return;
+            }
+            e.dataTransfer.effectAllowed = "move";
+            e.dataTransfer.setData("text/plain", d.date);
+            dEl.classList.add("dragging");
+          });
+          dEl.addEventListener("dragend", () => {
+            dEl.classList.remove("dragging");
+            document
+              .querySelectorAll(".day.drag-over")
+              .forEach((el) => el.classList.remove("drag-over"));
+          });
+          dEl.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            if (!dEl.classList.contains("dragging"))
+              dEl.classList.add("drag-over");
+          });
+          dEl.addEventListener("dragleave", () => {
+            dEl.classList.remove("drag-over");
+          });
+          dEl.addEventListener("drop", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dEl.classList.remove("drag-over");
+            const sourceDate = e.dataTransfer.getData("text/plain");
+            if (sourceDate && sourceDate !== d.date)
+              swapDays(sourceDate, d.date);
+          });
+        }
 
-            dEl.addEventListener("click", (e) => {
-              e.stopPropagation();
-              openModal(d, w);
-            });
-            // If a workout log exists for this day, show its actual pace pill
-            const existingLog = getLog(d.date);
-            if (existingLog) updateDayCardLog(dEl, existingLog);
-            days.appendChild(dEl);
+        dEl.addEventListener("click", (e) => {
+          e.stopPropagation();
+          openModal(d, w);
+        });
+        const existingLog = getLog(d.date);
+        if (existingLog) updateDayCardLog(dEl, existingLog);
+        return dEl;
+      }
+
+      // Render the current week's day grid on the This Week tab.
+      function renderThisWeek() {
+        const container = document.getElementById("thisWeekDays");
+        const statEl = document.getElementById("thisWeekStat");
+        if (!container) return;
+        const todayD = todayClampedISO();
+        let currentWeek = null;
+        for (const w of DATA.weeks) {
+          if (todayD >= w.start_date && todayD <= w.end_date) {
+            currentWeek = w;
+            break;
           }
-          wEl.appendChild(days);
-          root.appendChild(wEl);
+        }
+        if (!currentWeek) currentWeek = DATA.weeks[0];
+        container.innerHTML = "";
+        for (const d of currentWeek.days) {
+          // No swap handles on This Week — keep this view focused
+          container.appendChild(createDayCard(d, currentWeek, { swappable: false }));
+        }
+        if (statEl) {
+          const actual = actualWeekMiles(currentWeek);
+          const planned = currentWeek.mileage;
+          const fmt = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
+          statEl.innerHTML = `Week ${currentWeek.num} · <b>${fmt(actual)}</b> / ${planned} mi`;
         }
       }
 
@@ -6581,6 +6662,7 @@
         renderWeeks();
         renderToday();
         renderProgress();
+        if (typeof renderThisWeek === "function") renderThisWeek();
       });
 
       // ---------- Boot ----------
@@ -6611,6 +6693,7 @@
       initDataExport();
       initCloudUI();
       initTabs();
+      renderThisWeek();
       fillRef();
 
       // scroll to current week if visible
