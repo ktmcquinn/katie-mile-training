@@ -137,6 +137,18 @@
           -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
           Arial, sans-serif;
         line-height: 1.5;
+        /* Prevent iOS Safari "smart" text auto-sizing — it scales fonts based
+           on page content length and makes the tab-bar labels visibly shrink
+           when switching between long and short tabs. */
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+      }
+      body {
+        /* Make sure every tab fills the viewport — prevents short tabs
+           (like Trends with just the weight card) from showing a big empty
+           gap between content and the bottom tab bar. */
+        min-height: 100vh;
+        min-height: 100dvh; /* dynamic viewport height — better on iOS */
       }
 
       .wrap {
@@ -153,6 +165,11 @@
       .tab-page.active {
         display: block;
         animation: fadeIn 0.2s ease;
+        /* Give every tab at least one viewport's worth of height so short
+           tabs (e.g. Trends with just one card) don't leave empty space
+           below their content. The 120px subtracts the bottom tab bar. */
+        min-height: calc(100vh - 120px);
+        min-height: calc(100dvh - 120px);
       }
       @keyframes fadeIn {
         from { opacity: 0.4; transform: translateY(4px); }
@@ -200,11 +217,16 @@
       .tab-btn .tab-icon {
         font-size: 20px;
         line-height: 1;
+        -webkit-text-size-adjust: none;
+        text-size-adjust: none;
       }
       .tab-btn .tab-label {
         font-size: 11px;
         font-weight: 600;
         letter-spacing: 0.2px;
+        white-space: nowrap;
+        -webkit-text-size-adjust: none;
+        text-size-adjust: none;
       }
       [data-theme="dark"] .tab-bar {
         box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.4);
