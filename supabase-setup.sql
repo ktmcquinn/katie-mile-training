@@ -86,6 +86,22 @@ create table if not exists public.exercise_logs (
 );
 
 -- =========================================================================
+-- 6) checkins: daily morning check-in (Body Battery, RHR, energy, cycle phase).
+-- One row per day. cycle_phase is a free-form text — typical values:
+-- 'menstrual', 'follicular', 'ovulation', 'luteal', or 'na' for not tracking.
+-- =========================================================================
+create table if not exists public.checkins (
+  user_id      uuid not null references auth.users(id) on delete cascade,
+  date         date not null,
+  body_battery integer,
+  resting_hr   integer,
+  energy       smallint,
+  cycle_phase  text,
+  updated_at   timestamptz default now(),
+  primary key (user_id, date)
+);
+
+-- =========================================================================
 -- Row Level Security (RLS): each user sees only their own data
 -- =========================================================================
 alter table public.workouts      enable row level security;
@@ -93,6 +109,7 @@ alter table public.completions   enable row level security;
 alter table public.weights       enable row level security;
 alter table public.day_overrides enable row level security;
 alter table public.exercise_logs enable row level security;
+alter table public.checkins      enable row level security;
 
 -- Drop any existing policies so this script is idempotent
 drop policy if exists "own_workouts_select" on public.workouts;
@@ -105,6 +122,8 @@ drop policy if exists "own_overrides_select" on public.day_overrides;
 drop policy if exists "own_overrides_modify" on public.day_overrides;
 drop policy if exists "own_exercise_logs_select" on public.exercise_logs;
 drop policy if exists "own_exercise_logs_modify" on public.exercise_logs;
+drop policy if exists "own_checkins_select" on public.checkins;
+drop policy if exists "own_checkins_modify" on public.checkins;
 
 -- Recreate policies: users can SELECT their own rows and INSERT/UPDATE/DELETE
 -- only rows where user_id matches their auth uid.
@@ -131,6 +150,11 @@ create policy "own_overrides_modify" on public.day_overrides
 create policy "own_exercise_logs_select" on public.exercise_logs
   for select using (auth.uid() = user_id);
 create policy "own_exercise_logs_modify" on public.exercise_logs
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "own_checkins_select" on public.checkins
+  for select using (auth.uid() = user_id);
+create policy "own_checkins_modify" on public.checkins
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- =========================================================================

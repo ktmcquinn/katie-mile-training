@@ -283,6 +283,84 @@
         margin-top: 4px;
       }
 
+      /* ---------- Daily check-in card ---------- */
+      .checkin-card {
+        background: var(--card);
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-bottom: 16px;
+        border-left: 5px solid var(--p2);
+        box-shadow: var(--shadow-soft);
+      }
+      .checkin-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 12px;
+      }
+      .checkin-head h3 {
+        margin: 0;
+        font-size: 14px;
+        color: var(--p2);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .checkin-date {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .checkin-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+      @media (max-width: 600px) {
+        .checkin-grid { grid-template-columns: 1fr 1fr; }
+      }
+      .checkin-field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .checkin-field label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+      .checkin-field input, .checkin-field select {
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 15px;
+        font-family: inherit;
+        background: var(--card);
+        color: var(--ink);
+        width: 100%;
+      }
+      .checkin-field input:focus, .checkin-field select:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(59,92,140,0.12);
+      }
+      .checkin-field .hint {
+        font-size: 10px;
+        color: var(--muted);
+      }
+      .checkin-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .checkin-status {
+        font-size: 12px;
+        color: var(--p1);
+        font-weight: 600;
+        min-height: 16px;
+      }
+
       /* ---------- This week card (Today tab) ---------- */
       .this-week-card {
         background: var(--card);
@@ -1853,6 +1931,46 @@
         <h2 id="todayTitle">—</h2>
         <div class="detail" id="todayDetail">—</div>
         <div class="badges" id="todayBadges"></div>
+      </div>
+
+      <div class="checkin-card" id="checkinCard">
+        <div class="checkin-head">
+          <h3>Morning check-in</h3>
+          <span class="checkin-date" id="checkinDate"></span>
+        </div>
+        <div class="checkin-grid">
+          <div class="checkin-field">
+            <label for="ciBodyBattery">Body Battery</label>
+            <input type="number" id="ciBodyBattery" min="1" max="100" placeholder="—" inputmode="numeric">
+            <span class="hint">1–100 (Garmin)</span>
+          </div>
+          <div class="checkin-field">
+            <label for="ciRHR">Resting HR</label>
+            <input type="number" id="ciRHR" min="30" max="120" placeholder="—" inputmode="numeric">
+            <span class="hint">bpm, on wake</span>
+          </div>
+          <div class="checkin-field">
+            <label for="ciEnergy">Energy</label>
+            <input type="number" id="ciEnergy" min="1" max="10" placeholder="—" inputmode="numeric">
+            <span class="hint">1–10 feeling</span>
+          </div>
+          <div class="checkin-field">
+            <label for="ciCycle">Cycle phase</label>
+            <select id="ciCycle">
+              <option value="">—</option>
+              <option value="menstrual">Menstrual</option>
+              <option value="follicular">Follicular</option>
+              <option value="ovulation">Ovulation</option>
+              <option value="luteal">Luteal</option>
+              <option value="na">Not tracking</option>
+            </select>
+            <span class="hint">phase today</span>
+          </div>
+        </div>
+        <div class="checkin-actions">
+          <button type="button" class="btn btn-primary" id="ciSave">Save check-in</button>
+          <span class="checkin-status" id="ciStatus"></span>
+        </div>
       </div>
 
       <div class="progress-card" id="progressCard">
@@ -4425,6 +4543,85 @@
         });
       }
 
+      // ---------- Daily check-in (Body Battery, RHR, cycle phase, energy) ----------
+      // Storage: CHECKINS[date] = { bodyBattery, restingHr, energy, cyclePhase, updatedAt }
+      const CHECKIN_KEY = "katie-mile-checkins";
+      function loadCheckins() {
+        try {
+          const raw = localStorage.getItem(CHECKIN_KEY);
+          return raw ? JSON.parse(raw) : {};
+        } catch (e) { return {}; }
+      }
+      function persistCheckins() {
+        try { localStorage.setItem(CHECKIN_KEY, JSON.stringify(CHECKINS)); } catch (e) {}
+        if (typeof scheduleSync === "function") scheduleSync();
+      }
+      let CHECKINS = loadCheckins();
+      function getCheckin(date) { return CHECKINS[date] || null; }
+      function setCheckin(date, data) {
+        CHECKINS[date] = { ...data, updatedAt: new Date().toISOString() };
+        persistCheckins();
+      }
+      function deleteCheckinFor(date) {
+        delete CHECKINS[date];
+        persistCheckins();
+      }
+
+      // Render the check-in form (populate fields from today's entry if it exists)
+      function renderCheckin() {
+        const dateEl = document.getElementById("checkinDate");
+        if (!dateEl) return;
+        const today = todayISO();
+        const todayDisplay = (() => {
+          try {
+            return new Date(today + "T00:00:00").toLocaleDateString("en-US", {
+              weekday: "long", month: "long", day: "numeric"
+            });
+          } catch (e) { return today; }
+        })();
+        dateEl.textContent = todayDisplay;
+        const c = getCheckin(today) || {};
+        document.getElementById("ciBodyBattery").value = c.bodyBattery ?? "";
+        document.getElementById("ciRHR").value = c.restingHr ?? "";
+        document.getElementById("ciEnergy").value = c.energy ?? "";
+        document.getElementById("ciCycle").value = c.cyclePhase ?? "";
+        // Update Save button text based on whether today is already logged
+        const btn = document.getElementById("ciSave");
+        if (btn) btn.textContent = getCheckin(today) ? "Update check-in" : "Save check-in";
+      }
+
+      function saveCheckin() {
+        const today = todayISO();
+        const bb = document.getElementById("ciBodyBattery").value;
+        const rhr = document.getElementById("ciRHR").value;
+        const en = document.getElementById("ciEnergy").value;
+        const phase = document.getElementById("ciCycle").value;
+        const statusEl = document.getElementById("ciStatus");
+        if (!bb && !rhr && !en && !phase) {
+          statusEl.style.color = "#B85450";
+          statusEl.textContent = "Fill in at least one field before saving.";
+          setTimeout(() => { if (statusEl) statusEl.textContent = ""; }, 3000);
+          return;
+        }
+        setCheckin(today, {
+          bodyBattery: bb ? parseInt(bb, 10) : null,
+          restingHr: rhr ? parseInt(rhr, 10) : null,
+          energy: en ? parseInt(en, 10) : null,
+          cyclePhase: phase || null,
+        });
+        statusEl.style.color = "var(--p1)";
+        statusEl.textContent = "Saved!";
+        setTimeout(() => { if (statusEl) statusEl.textContent = ""; }, 2000);
+        const btn = document.getElementById("ciSave");
+        if (btn) btn.textContent = "Update check-in";
+      }
+
+      function initCheckin() {
+        const btn = document.getElementById("ciSave");
+        if (btn) btn.addEventListener("click", saveCheckin);
+        renderCheckin();
+      }
+
       // ---------- Day-swap (rearrange plan) ----------
       const OVERRIDE_KEY = "katie-mile-day-overrides";
       function loadOverrides() {
@@ -6124,15 +6321,16 @@
         setCloudStatus("syncing", "Pulling from cloud...");
         try {
           const uid = supaUser.id;
-          const [w, c, weight, ov, ex] = await Promise.all([
+          const [w, c, weight, ov, ex, ci] = await Promise.all([
             supaClient.from("workouts").select("*").eq("user_id", uid),
             supaClient.from("completions").select("*").eq("user_id", uid),
             supaClient.from("weights").select("*").eq("user_id", uid),
             supaClient.from("day_overrides").select("*").eq("user_id", uid),
             supaClient.from("exercise_logs").select("*").eq("user_id", uid),
+            supaClient.from("checkins").select("*").eq("user_id", uid),
           ]);
-          if (w.error || c.error || weight.error || ov.error || ex.error) {
-            throw w.error || c.error || weight.error || ov.error || ex.error;
+          if (w.error || c.error || weight.error || ov.error || ex.error || ci.error) {
+            throw w.error || c.error || weight.error || ov.error || ex.error || ci.error;
           }
           // Workouts
           LOGS = {};
@@ -6200,10 +6398,24 @@
             };
           }
           try { localStorage.setItem(EX_LOG_KEY, JSON.stringify(EX_LOGS)); } catch (e) {}
+          // Check-ins
+          CHECKINS = {};
+          for (const r of ci.data) {
+            CHECKINS[r.date] = {
+              bodyBattery: r.body_battery,
+              restingHr: r.resting_hr,
+              energy: r.energy,
+              cyclePhase: r.cycle_phase,
+              updatedAt: r.updated_at,
+            };
+          }
+          try { localStorage.setItem(CHECKIN_KEY, JSON.stringify(CHECKINS)); } catch (e) {}
+          if (typeof renderCheckin === "function") renderCheckin();
           // Re-render everything
           renderWeeks();
           renderToday();
           renderProgress();
+          if (typeof renderThisWeek === "function") renderThisWeek();
           renderWeightStats();
           renderWeightChart();
           const histEl = document.getElementById("weightHistory");
@@ -6262,6 +6474,16 @@
             routines: ov.routines,
             strength: ov.strength,
           }));
+          // Check-ins (morning Body Battery, RHR, energy, cycle phase)
+          const checkinRows = Object.entries(CHECKINS).map(([date, c]) => ({
+            user_id: uid,
+            date,
+            body_battery: c.bodyBattery ?? null,
+            resting_hr: c.restingHr ?? null,
+            energy: c.energy ?? null,
+            cycle_phase: c.cyclePhase ?? null,
+            updated_at: c.updatedAt || new Date().toISOString(),
+          }));
           // Flatten exercise logs into rows
           const exerciseRows = [];
           for (const date in EX_LOGS) {
@@ -6310,6 +6532,12 @@
               supaClient
                 .from("exercise_logs")
                 .upsert(exerciseRows, { onConflict: "user_id,date,routine_key,exercise_key" }),
+            );
+          if (checkinRows.length)
+            ops.push(
+              supaClient
+                .from("checkins")
+                .upsert(checkinRows, { onConflict: "user_id,date" }),
             );
           const results = await Promise.all(ops);
           for (const r of results) if (r.error) throw r.error;
@@ -6564,6 +6792,7 @@
           weights: WEIGHTS,
           overrides: OVERRIDES,
           exerciseLogs: EX_LOGS,
+          checkins: CHECKINS,
         };
         const date = new Date().toISOString().slice(0, 10);
         downloadFile(
@@ -6613,6 +6842,11 @@
             if (data.exerciseLogs) {
               EX_LOGS = data.exerciseLogs;
               try { localStorage.setItem(EX_LOG_KEY, JSON.stringify(EX_LOGS)); } catch (e) {}
+            }
+            if (data.checkins) {
+              CHECKINS = data.checkins;
+              try { localStorage.setItem(CHECKIN_KEY, JSON.stringify(CHECKINS)); } catch (e) {}
+              if (typeof renderCheckin === "function") renderCheckin();
             }
             // Re-render everything
             renderWeeks();
@@ -6692,6 +6926,7 @@
       initWeightForm();
       initDataExport();
       initCloudUI();
+      initCheckin();
       initTabs();
       renderThisWeek();
       fillRef();
