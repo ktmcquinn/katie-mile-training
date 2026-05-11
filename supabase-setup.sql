@@ -86,9 +86,10 @@ create table if not exists public.exercise_logs (
 );
 
 -- =========================================================================
--- 6) checkins: daily morning check-in (Body Battery, RHR, energy, cycle phase).
+-- 6) checkins: daily morning check-in (Body Battery, RHR, energy, period).
 -- One row per day. cycle_phase is a free-form text — typical values:
--- 'menstrual', 'follicular', 'ovulation', 'luteal', or 'na' for not tracking.
+-- 'none', 'spotting', 'light', 'medium', 'heavy'. (Tracks bleeding + flow
+-- intensity, which is more useful than phase guesses for irregular cycles.)
 -- =========================================================================
 create table if not exists public.checkins (
   user_id      uuid not null references auth.users(id) on delete cascade,

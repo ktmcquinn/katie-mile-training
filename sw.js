@@ -1,6 +1,6 @@
 // Katie's Mile Training - Service Worker
 // Bump CACHE_VERSION whenever the HTML changes to force clients to get the new version.
-const CACHE_VERSION = "v2.2.1";
+const CACHE_VERSION = "v2.2.2";
 const CACHE_NAME = `mile-training-${CACHE_VERSION}`;
 
 // Files to pre-cache on install. Anything not in this list will be cached on first fetch.
