@@ -86,6 +86,23 @@ create table if not exists public.exercise_logs (
 );
 
 -- =========================================================================
+-- 7) meals: food log entries (one row per meal/snack — multiple per day OK).
+-- =========================================================================
+create table if not exists public.meals (
+  id          uuid primary key,
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  date        date not null,
+  name        text,
+  calories    integer,
+  protein     numeric,
+  carbs       numeric,
+  fat         numeric,
+  fiber       numeric,
+  logged_at   timestamptz default now()
+);
+create index if not exists meals_user_date_idx on public.meals(user_id, date);
+
+-- =========================================================================
 -- 6) checkins: daily morning check-in (Body Battery, RHR, energy, period).
 -- One row per day. cycle_phase is a free-form text — typical values:
 -- 'none', 'spotting', 'light', 'medium', 'heavy'. (Tracks bleeding + flow
@@ -111,6 +128,7 @@ alter table public.weights       enable row level security;
 alter table public.day_overrides enable row level security;
 alter table public.exercise_logs enable row level security;
 alter table public.checkins      enable row level security;
+alter table public.meals         enable row level security;
 
 -- Drop any existing policies so this script is idempotent
 drop policy if exists "own_workouts_select" on public.workouts;
@@ -125,6 +143,8 @@ drop policy if exists "own_exercise_logs_select" on public.exercise_logs;
 drop policy if exists "own_exercise_logs_modify" on public.exercise_logs;
 drop policy if exists "own_checkins_select" on public.checkins;
 drop policy if exists "own_checkins_modify" on public.checkins;
+drop policy if exists "own_meals_select" on public.meals;
+drop policy if exists "own_meals_modify" on public.meals;
 
 -- Recreate policies: users can SELECT their own rows and INSERT/UPDATE/DELETE
 -- only rows where user_id matches their auth uid.
@@ -156,6 +176,11 @@ create policy "own_exercise_logs_modify" on public.exercise_logs
 create policy "own_checkins_select" on public.checkins
   for select using (auth.uid() = user_id);
 create policy "own_checkins_modify" on public.checkins
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "own_meals_select" on public.meals
+  for select using (auth.uid() = user_id);
+create policy "own_meals_modify" on public.meals
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- =========================================================================
