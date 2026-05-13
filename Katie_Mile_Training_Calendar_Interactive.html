@@ -4793,7 +4793,6 @@
         if (day.strength) sections.push("strength");
         if (day.routines)
           for (const r of day.routines) sections.push("routine_" + r);
-        sections.push("fueling");
         return sections;
       }
       function isSectionDone(day, key) {
@@ -6657,13 +6656,7 @@
     </div>`;
         }
 
-        // Fueling section (moved to bottom — reference info, viewed last)
-        const fDone = isSectionDone(day, "fueling");
-        html += `<label class="section-h3-label ${fDone ? "section-done" : ""}" data-section-label="fueling">
-            <input type="checkbox" class="task-check section-check" data-section="fueling" ${fDone ? "checked" : ""}>
-            <h3>Fueling cue</h3>
-          </label>
-          <div class="body">${fuelingCue(day, cat, week)}</div>`;
+        // Fueling cue removed — daily nutrition lives on the Fuel tab now.
 
         // Master "all complete" checkbox at the bottom
         const allDone = isDone(day);
