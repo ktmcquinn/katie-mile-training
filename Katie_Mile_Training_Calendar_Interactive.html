@@ -333,7 +333,7 @@
       }
       .checkin-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr 1fr;
+        grid-template-columns: repeat(3, 1fr);
         gap: 10px;
         margin-bottom: 12px;
       }
@@ -1363,11 +1363,14 @@
 
       .trend-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: 10px;
         margin-bottom: 16px;
       }
-      @media (max-width: 700px) {
+      @media (max-width: 900px) {
+        .trend-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+      @media (max-width: 500px) {
         .trend-grid { grid-template-columns: 1fr; }
       }
       .trend-card {
@@ -2402,6 +2405,16 @@
             <span class="hint">1–10 feeling</span>
           </div>
           <div class="checkin-field">
+            <label for="ciWeight">Weight (lb)</label>
+            <input type="number" id="ciWeight" min="50" max="500" step="0.1" placeholder="—" inputmode="decimal">
+            <span class="hint">morning weigh-in</span>
+          </div>
+          <div class="checkin-field">
+            <label for="ciBodyFat">Body fat %</label>
+            <input type="number" id="ciBodyFat" min="5" max="60" step="0.1" placeholder="—" inputmode="decimal">
+            <span class="hint">optional</span>
+          </div>
+          <div class="checkin-field">
             <label for="ciCycle">Period</label>
             <select id="ciCycle">
               <option value="">—</option>
@@ -2412,11 +2425,6 @@
               <option value="heavy">Heavy</option>
             </select>
             <span class="hint">bleeding today</span>
-          </div>
-          <div class="checkin-field">
-            <label for="ciWeight">Weight (lb)</label>
-            <input type="number" id="ciWeight" min="50" max="500" step="0.1" placeholder="—" inputmode="decimal">
-            <span class="hint">morning weigh-in</span>
           </div>
         </div>
         <div class="checkin-actions">
@@ -2884,6 +2892,11 @@
           <div class="trend-meta" id="energyMeta">No data yet</div>
           <div id="energyChart" class="sparkline"></div>
         </div>
+        <div class="trend-card">
+          <h3>Weight</h3>
+          <div class="trend-meta" id="weightSlMeta">No data yet</div>
+          <div id="weightSlChart" class="sparkline"></div>
+        </div>
       </div>
 
       <div class="period-card">
@@ -2901,56 +2914,6 @@
       </div>
 
 
-      <div class="weight-card" id="weightCard">
-        <div class="weight-head">
-          <h3>Weight Tracker</h3>
-          <div class="weight-stats" id="weightStats"></div>
-        </div>
-        <div id="weightChart" class="weight-chart"></div>
-        <form id="weightForm" class="weight-form">
-          <div class="weight-fields">
-            <div class="log-field">
-              <label>Date</label>
-              <input type="date" id="weightDate" required />
-            </div>
-            <div class="log-field">
-              <label>Weight (lb)</label>
-              <input
-                type="number"
-                id="weightVal"
-                step="0.1"
-                min="50"
-                max="500"
-                placeholder="147.5"
-                required
-              />
-            </div>
-            <div class="log-field">
-              <label>Body fat % (optional)</label>
-              <input
-                type="number"
-                id="bfPct"
-                step="0.1"
-                min="0"
-                max="60"
-                placeholder="28.7"
-              />
-            </div>
-          </div>
-          <div class="weight-actions">
-            <button type="submit" class="btn btn-primary">Log weight</button>
-            <button type="button" class="btn" id="weightHistoryToggle">
-              View history
-            </button>
-            <span class="weight-status" id="weightStatus"></span>
-          </div>
-        </form>
-        <div
-          id="weightHistory"
-          class="weight-history"
-          style="display: none"
-        ></div>
-      </div>
       </div><!-- end #tab-trends -->
 
       <footer>Built for Katie · Mile race Sept 19, 2026</footer>
@@ -4968,8 +4931,8 @@
       function countLogs() { return Object.keys(LOGS).length; }
       function countCheckins() { return Object.keys(CHECKINS).length; }
 
-      // Streak: consecutive days back from today (today included if it has activity)
-      // where there's at least one of: check-in, workout log, or any completion sections.
+      // Streak: consecutive days back from today where a morning check-in was saved.
+      // Today is "free" — not having checked in yet today doesn't break the streak.
       function currentStreak() {
         let streak = 0;
         const today = new Date();
@@ -4977,17 +4940,9 @@
           const d = new Date(today);
           d.setDate(d.getDate() - i);
           const iso = d.toISOString().slice(0, 10);
-          const hasCheckin = !!CHECKINS[iso];
-          const hasLog = !!LOGS[iso];
-          const hasCompletion =
-            COMPLETED[iso] &&
-            (COMPLETED[iso] === true ||
-              (typeof COMPLETED[iso] === "object" &&
-                Object.keys(COMPLETED[iso]).length > 0));
-          if (hasCheckin || hasLog || hasCompletion) streak++;
+          if (CHECKINS[iso]) streak++;
           else {
-            // Allow today to be empty (haven't done anything yet today) — don't break the streak on day 0
-            if (i === 0) continue;
+            if (i === 0) continue; // today doesn't count against streak
             break;
           }
         }
@@ -5079,6 +5034,49 @@
           lineColor: "var(--p1)",
         });
         updateTrendMeta("energyMeta", en, { unit: "/10", goodDirection: "up" });
+        // Weight (lb) — uses WEIGHTS store; down is "good" given deficit phase
+        const wts = weightPoints();
+        renderSparkline("weightSlChart", wts, { lineColor: "var(--p5)", unit: " lb" });
+        updateWeightTrendMeta("weightSlMeta", wts);
+      }
+
+      // Build weight data points from WEIGHTS store
+      function weightPoints() {
+        const points = [];
+        for (const date in WEIGHTS) {
+          const w = WEIGHTS[date];
+          if (w && w.weight != null) points.push({ date, value: parseFloat(w.weight) });
+        }
+        return points;
+      }
+
+      // Weight-specific meta line: shows current weight, BF% if known, and 7-day avg.
+      // Direction-of-good is "down" since user is in a planned deficit through phases 1-3.
+      function updateWeightTrendMeta(elementId, points) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        if (!points || points.length === 0) {
+          el.textContent = "No data yet";
+          return;
+        }
+        const sorted = points.slice().sort((a, b) => a.date.localeCompare(b.date));
+        const latest = sorted[sorted.length - 1];
+        const last7 = sorted.slice(-7);
+        const avg7 = last7.reduce((s, p) => s + p.value, 0) / last7.length;
+        // BF % from same-date entry
+        const bf = WEIGHTS[latest.date] && WEIGHTS[latest.date].bodyFat;
+        // Direction (down = good for weight; tolerance 0.3 lb)
+        let arrow = "";
+        if (sorted.length >= 2) {
+          const diff = latest.value - avg7;
+          if (Math.abs(diff) < 0.3) arrow = `<span class="trend-arrow flat">→</span>`;
+          else if (diff > 0) arrow = `<span class="trend-arrow up">↑</span>`;
+          else arrow = `<span class="trend-arrow down">↓</span>`;
+        }
+        let html = `<span class="trend-current">${latest.value.toFixed(1)} lb</span>`;
+        if (bf != null) html += `<span class="trend-avg">${parseFloat(bf).toFixed(1)}% BF</span> `;
+        html += `${arrow}<span class="trend-avg">7-day avg ${avg7.toFixed(1)}</span>`;
+        el.innerHTML = html;
       }
 
       function updateTrendMeta(elementId, points, opts) {
@@ -5205,8 +5203,6 @@
         renderStatsCards();
         renderRecoveryTrends();
         renderPeriodStrip();
-        if (typeof renderWeightStats === "function") renderWeightStats();
-        if (typeof renderWeightChart === "function") renderWeightChart();
       }
 
       // ---------- Fuel: nutrition tracking (PCOS-aware) ----------
@@ -5810,12 +5806,12 @@
         document.getElementById("ciRHR").value = c.restingHr ?? "";
         document.getElementById("ciEnergy").value = c.energy ?? "";
         document.getElementById("ciCycle").value = c.cyclePhase ?? "";
-        // Pull weight from the WEIGHTS store (so morning weigh-in stays in sync with weight tracker)
+        // Pull weight + BF% from the WEIGHTS store (in sync with Trends weight sparkline)
         const weightEl = document.getElementById("ciWeight");
-        if (weightEl) {
-          const todayW = WEIGHTS && WEIGHTS[today];
-          weightEl.value = todayW ? todayW.weight : "";
-        }
+        const bfEl = document.getElementById("ciBodyFat");
+        const todayW = WEIGHTS && WEIGHTS[today];
+        if (weightEl) weightEl.value = todayW && todayW.weight != null ? todayW.weight : "";
+        if (bfEl) bfEl.value = todayW && todayW.bodyFat != null ? todayW.bodyFat : "";
         // Update Save button text based on whether today is already logged
         const btn = document.getElementById("ciSave");
         if (btn) btn.textContent = (getCheckin(today) || (WEIGHTS && WEIGHTS[today])) ? "Update check-in" : "Save check-in";
@@ -5828,14 +5824,15 @@
         const en = document.getElementById("ciEnergy").value;
         const phase = document.getElementById("ciCycle").value;
         const weight = document.getElementById("ciWeight").value;
+        const bf = document.getElementById("ciBodyFat").value;
         const statusEl = document.getElementById("ciStatus");
-        if (!bb && !rhr && !en && !phase && !weight) {
+        if (!bb && !rhr && !en && !phase && !weight && !bf) {
           statusEl.style.color = "#B85450";
           statusEl.textContent = "Fill in at least one field before saving.";
           setTimeout(() => { if (statusEl) statusEl.textContent = ""; }, 3000);
           return;
         }
-        // Save check-in fields (only the ones related to check-in proper)
+        // Save check-in fields (the ones that belong to CHECKINS proper)
         if (bb || rhr || en || phase) {
           setCheckin(today, {
             bodyBattery: bb ? parseInt(bb, 10) : null,
@@ -5844,16 +5841,16 @@
             cyclePhase: phase || null,
           });
         }
-        // Save weight separately to the WEIGHTS store
-        // (this is the same store the Trends weight chart reads from, so
-        //  the morning weigh-in here automatically appears in the chart)
-        if (weight && typeof setWeight === "function") {
-          // setWeight expects (date, weight, bodyFat) — keep existing BF % untouched
+        // Save weight + body fat to the WEIGHTS store (same store the Trends
+        // weight sparkline reads from — morning weigh-in flows straight there).
+        if ((weight || bf) && typeof setWeight === "function") {
           const existing = WEIGHTS && WEIGHTS[today];
-          setWeight(today, weight, existing ? existing.bodyFat : null);
-          // Refresh the Trends weight UI if it's been rendered
-          if (typeof renderWeightStats === "function") renderWeightStats();
-          if (typeof renderWeightChart === "function") renderWeightChart();
+          const finalWeight = weight ? parseFloat(weight) : (existing ? existing.weight : null);
+          const finalBf = bf ? parseFloat(bf) : (existing ? existing.bodyFat : null);
+          // setWeight requires a weight value — only call it if we have one
+          if (finalWeight != null && !isNaN(finalWeight)) {
+            setWeight(today, finalWeight, finalBf);
+          }
         }
         statusEl.style.color = "var(--p1)";
         statusEl.textContent = "Saved!";
