@@ -1599,6 +1599,57 @@
         box-shadow: 0 0 0 3px rgba(59,92,140,0.12);
       }
 
+      /* Recent foods quick-add */
+      .recent-foods {
+        margin-bottom: 12px;
+      }
+      .recent-label {
+        font-size: 11px;
+        color: var(--muted);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 6px;
+      }
+      .recent-chips {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .recent-chip {
+        padding: 7px 12px;
+        background: var(--routine-bg);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        font-size: 13px;
+        cursor: pointer;
+        color: var(--ink);
+        font-family: inherit;
+        white-space: nowrap;
+        transition: background 0.15s, border-color 0.15s, color 0.15s;
+      }
+      .recent-chip:hover {
+        background: var(--pace-bg);
+        border-color: var(--pace-border);
+        color: var(--p1);
+      }
+      .recent-chip .chip-cal {
+        font-weight: 700;
+        margin-left: 4px;
+        color: var(--muted);
+      }
+      .recent-chip:hover .chip-cal { color: var(--p1); }
+      .recent-chip .chip-count {
+        display: inline-block;
+        margin-left: 5px;
+        padding: 1px 6px;
+        font-size: 10px;
+        font-weight: 700;
+        background: var(--accent);
+        color: white;
+        border-radius: 999px;
+      }
+
       .fuel-meal-list { margin-top: 8px; }
       .fuel-meal-row {
         display: grid;
@@ -2362,6 +2413,11 @@
             </select>
             <span class="hint">bleeding today</span>
           </div>
+          <div class="checkin-field">
+            <label for="ciWeight">Weight (lb)</label>
+            <input type="number" id="ciWeight" min="50" max="500" step="0.1" placeholder="—" inputmode="decimal">
+            <span class="hint">morning weigh-in</span>
+          </div>
         </div>
         <div class="checkin-actions">
           <button type="button" class="btn btn-primary" id="ciSave">Save check-in</button>
@@ -2431,6 +2487,7 @@
       <!-- Add meal form -->
       <div class="fuel-card">
         <h3>Log a meal or snack</h3>
+        <div class="recent-foods" id="recentFoods" style="display:none"></div>
         <form class="fuel-form" id="fuelForm" autocomplete="off">
           <div class="ff-field name-field">
             <label>What you ate</label>
@@ -5326,6 +5383,61 @@
         return target;
       }
 
+      // Build a list of recent unique foods sorted by frequency, then recency.
+      // De-duplicate by name+cal+macros so "Oatmeal 350 cal" appears once even if logged daily.
+      function recentUniqueFoods(limit = 12) {
+        const seen = new Map();
+        const dates = Object.keys(MEALS).sort().reverse();
+        for (const date of dates) {
+          for (const m of (MEALS[date] || [])) {
+            const key = `${(m.name || "").toLowerCase().trim()}|${m.cal || 0}|${m.p || 0}|${m.c || 0}|${m.f || 0}|${m.fiber || 0}`;
+            if (!seen.has(key)) {
+              seen.set(key, {
+                name: m.name, cal: m.cal, p: m.p, c: m.c, f: m.f, fiber: m.fiber,
+                count: 1, lastDate: date,
+              });
+            } else {
+              seen.get(key).count++;
+            }
+          }
+        }
+        return Array.from(seen.values())
+          .sort((a, b) => b.count - a.count || b.lastDate.localeCompare(a.lastDate))
+          .slice(0, limit);
+      }
+
+      function renderRecentChips() {
+        const el = document.getElementById("recentFoods");
+        if (!el) return;
+        const items = recentUniqueFoods(12);
+        if (!items.length) { el.style.display = "none"; return; }
+        el.style.display = "";
+        let html = `<div class="recent-label">Recent — tap to log again</div><div class="recent-chips">`;
+        for (let i = 0; i < items.length; i++) {
+          const m = items[i];
+          const safeName = (m.name || "(unnamed)").replace(/</g, "&lt;");
+          const countBadge = m.count > 1 ? `<span class="chip-count">${m.count}</span>` : "";
+          html += `<button type="button" class="recent-chip" data-idx="${i}">${safeName}<span class="chip-cal">${m.cal} cal</span>${countBadge}</button>`;
+        }
+        html += `</div>`;
+        el.innerHTML = html;
+        el.querySelectorAll(".recent-chip").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const item = items[parseInt(btn.dataset.idx, 10)];
+            if (!item) return;
+            const meal = {
+              id: (crypto.randomUUID ? crypto.randomUUID() : Date.now() + "-" + Math.random().toString(36).slice(2)),
+              name: item.name,
+              cal: item.cal,
+              p: item.p, c: item.c, f: item.f, fiber: item.fiber,
+              loggedAt: new Date().toISOString(),
+            };
+            addMeal(todayISO(), meal);
+            renderFuel();
+          });
+        });
+      }
+
       function renderFuelMeals() {
         const listEl = document.getElementById("fuelMealList");
         if (!listEl) return;
@@ -5408,6 +5520,7 @@
       function renderFuel() {
         const target = renderFuelTarget();
         if (!target) return;
+        renderRecentChips();
         renderFuelMeals();
         renderFuelProgress(target);
         renderFuelEA(target);
@@ -5697,9 +5810,15 @@
         document.getElementById("ciRHR").value = c.restingHr ?? "";
         document.getElementById("ciEnergy").value = c.energy ?? "";
         document.getElementById("ciCycle").value = c.cyclePhase ?? "";
+        // Pull weight from the WEIGHTS store (so morning weigh-in stays in sync with weight tracker)
+        const weightEl = document.getElementById("ciWeight");
+        if (weightEl) {
+          const todayW = WEIGHTS && WEIGHTS[today];
+          weightEl.value = todayW ? todayW.weight : "";
+        }
         // Update Save button text based on whether today is already logged
         const btn = document.getElementById("ciSave");
-        if (btn) btn.textContent = getCheckin(today) ? "Update check-in" : "Save check-in";
+        if (btn) btn.textContent = (getCheckin(today) || (WEIGHTS && WEIGHTS[today])) ? "Update check-in" : "Save check-in";
       }
 
       function saveCheckin() {
@@ -5708,19 +5827,34 @@
         const rhr = document.getElementById("ciRHR").value;
         const en = document.getElementById("ciEnergy").value;
         const phase = document.getElementById("ciCycle").value;
+        const weight = document.getElementById("ciWeight").value;
         const statusEl = document.getElementById("ciStatus");
-        if (!bb && !rhr && !en && !phase) {
+        if (!bb && !rhr && !en && !phase && !weight) {
           statusEl.style.color = "#B85450";
           statusEl.textContent = "Fill in at least one field before saving.";
           setTimeout(() => { if (statusEl) statusEl.textContent = ""; }, 3000);
           return;
         }
-        setCheckin(today, {
-          bodyBattery: bb ? parseInt(bb, 10) : null,
-          restingHr: rhr ? parseInt(rhr, 10) : null,
-          energy: en ? parseInt(en, 10) : null,
-          cyclePhase: phase || null,
-        });
+        // Save check-in fields (only the ones related to check-in proper)
+        if (bb || rhr || en || phase) {
+          setCheckin(today, {
+            bodyBattery: bb ? parseInt(bb, 10) : null,
+            restingHr: rhr ? parseInt(rhr, 10) : null,
+            energy: en ? parseInt(en, 10) : null,
+            cyclePhase: phase || null,
+          });
+        }
+        // Save weight separately to the WEIGHTS store
+        // (this is the same store the Trends weight chart reads from, so
+        //  the morning weigh-in here automatically appears in the chart)
+        if (weight && typeof setWeight === "function") {
+          // setWeight expects (date, weight, bodyFat) — keep existing BF % untouched
+          const existing = WEIGHTS && WEIGHTS[today];
+          setWeight(today, weight, existing ? existing.bodyFat : null);
+          // Refresh the Trends weight UI if it's been rendered
+          if (typeof renderWeightStats === "function") renderWeightStats();
+          if (typeof renderWeightChart === "function") renderWeightChart();
+        }
         statusEl.style.color = "var(--p1)";
         statusEl.textContent = "Saved!";
         setTimeout(() => { if (statusEl) statusEl.textContent = ""; }, 2000);
