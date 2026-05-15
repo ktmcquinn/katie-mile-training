@@ -1251,6 +1251,37 @@
         outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,92,140,0.12);
       }
       .ex-inputs textarea { min-height: 50px; resize: vertical; }
+
+      /* Set checkboxes for strength exercises (replaces the reps free-field) */
+      .set-checkboxes {
+        display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+        padding: 6px 0 2px;
+      }
+      .set-checkbox {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 6px 12px;
+        background: var(--card);
+        border: 1.5px solid var(--border);
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--muted);
+        user-select: none;
+        transition: background 0.15s, border-color 0.15s, color 0.15s;
+      }
+      .set-checkbox:hover { border-color: var(--accent); color: var(--accent); }
+      .set-checkbox input {
+        width: 16px; height: 16px;
+        cursor: pointer; margin: 0;
+        accent-color: var(--p1);
+      }
+      .set-checkbox.checked {
+        background: var(--pace-bg);
+        border-color: var(--pace-border);
+        color: var(--p1);
+      }
+
       .ex-modal .ex-actions {
         display: flex; gap: 8px; flex-wrap: wrap;
         margin-top: 16px; padding-top: 14px;
@@ -7342,6 +7373,14 @@
         }
         return { label: ROUTINE_LABELS[routineKey], description: DATA.routines && DATA.routines[routineKey] };
       }
+      // Parse the leading set count from a prescription string.
+      // "3x8" → 3, "3 x 30s/side" → 3, "2x15" → 2. Returns 0 if no pattern.
+      function parseSetCount(prescription) {
+        if (!prescription) return 0;
+        const m = String(prescription).match(/^(\d+)\s*[x×]\s*/i);
+        return m ? parseInt(m[1], 10) : 0;
+      }
+
       function exerciseProgress(date, routineKey) {
         const list = getExerciseList(routineKey);
         if (!list.length) return null;
@@ -7389,6 +7428,18 @@
         for (const ex of exercises) {
           const log = getExerciseLog(day.date, routineKey, ex.key) || {};
           const done = !!log.completed;
+          const setCount = isStrength ? parseSetCount(ex.prescription) : 0;
+          // setsCompleted: array of booleans, one per set (strength only)
+          const savedSets = Array.isArray(log.setsCompleted) ? log.setsCompleted : [];
+          // Build set checkboxes HTML
+          let setBoxesHtml = "";
+          for (let i = 0; i < setCount; i++) {
+            const setChecked = !!savedSets[i];
+            setBoxesHtml += `<label class="set-checkbox ${setChecked ? "checked" : ""}">
+              <input type="checkbox" class="ex-set" data-set-idx="${i}" ${setChecked ? "checked" : ""}>
+              <span>Set ${i + 1}</span>
+            </label>`;
+          }
           html += `<div class="ex-row ${done ? "done" : ""}" data-ex-key="${ex.key}">
             <div class="ex-head">
               <input type="checkbox" class="task-check ex-done-check" ${done ? "checked" : ""}>
@@ -7405,13 +7456,15 @@
                   <input type="number" class="ex-weight" step="0.5" min="0" placeholder="—" value="${log.weight ?? ""}">
                 </div>
                 <div>
-                  <label>Reps (last set)</label>
-                  <input type="number" class="ex-reps" min="0" placeholder="—" value="${log.reps ?? ""}">
-                </div>` : ""}
-              <div style="grid-column: 1 / -1">
-                <label>Notes</label>
-                <textarea class="ex-notes" placeholder="How it felt, ready to bump weight, form notes...">${log.notes ? log.notes.replace(/</g, "&lt;") : ""}</textarea>
-              </div>
+                  <label>Sets done</label>
+                  <div class="set-checkboxes">${setBoxesHtml || `<span style="font-size:12px;color:var(--muted)">—</span>`}</div>
+                </div>
+              ` : `
+                <div style="grid-column: 1 / -1">
+                  <label>Notes</label>
+                  <textarea class="ex-notes" placeholder="How it felt, form notes...">${log.notes ? log.notes.replace(/</g, "&lt;") : ""}</textarea>
+                </div>
+              `}
             </div>
           </div>`;
         }
@@ -7433,28 +7486,49 @@
           const exKey = row.dataset.exKey;
           const cb = row.querySelector(".ex-done-check");
           const wEl = row.querySelector(".ex-weight");
-          const rEl = row.querySelector(".ex-reps");
           const nEl = row.querySelector(".ex-notes");
+          const setBoxes = Array.from(row.querySelectorAll(".ex-set"));
 
           function persist() {
             const completed = cb.checked;
             const weight = wEl && wEl.value !== "" ? parseFloat(wEl.value) : null;
-            const reps = rEl && rEl.value !== "" ? parseInt(rEl.value, 10) : null;
+            const setsCompleted = setBoxes.length > 0 ? setBoxes.map((s) => s.checked) : null;
             const notes = nEl && nEl.value.trim() ? nEl.value.trim() : null;
-            if (!completed && weight == null && reps == null && !notes) {
+            const anySet = setsCompleted && setsCompleted.some((v) => v);
+            if (!completed && weight == null && !anySet && !notes) {
               clearExerciseLog(day.date, routineKey, exKey);
             } else {
-              setExerciseLog(day.date, routineKey, exKey, { completed, weight, reps, notes });
+              setExerciseLog(day.date, routineKey, exKey, { completed, weight, setsCompleted, notes });
             }
             row.classList.toggle("done", completed);
             updateExProgress(day, routineKey);
-            // Auto-complete the parent section in main modal if all are done
             propagateToParentSection(day, routineKey);
           }
 
-          cb.addEventListener("change", persist);
+          // Master done checkbox: toggling syncs all set checkboxes too
+          cb.addEventListener("change", () => {
+            if (setBoxes.length > 0) {
+              setBoxes.forEach((s) => {
+                s.checked = cb.checked;
+                const lbl = s.closest(".set-checkbox");
+                if (lbl) lbl.classList.toggle("checked", cb.checked);
+              });
+            }
+            persist();
+          });
+
+          // Each set checkbox: when all are checked, master auto-checks
+          setBoxes.forEach((s) => {
+            s.addEventListener("change", () => {
+              const lbl = s.closest(".set-checkbox");
+              if (lbl) lbl.classList.toggle("checked", s.checked);
+              const allChecked = setBoxes.every((x) => x.checked);
+              cb.checked = allChecked;
+              persist();
+            });
+          });
+
           if (wEl) wEl.addEventListener("change", persist);
-          if (rEl) rEl.addEventListener("change", persist);
           if (nEl) nEl.addEventListener("change", persist);
         });
 
@@ -7472,8 +7546,12 @@
             const exKey = row.dataset.exKey;
             row.querySelector(".ex-done-check").checked = false;
             const w = row.querySelector(".ex-weight"); if (w) w.value = "";
-            const r = row.querySelector(".ex-reps"); if (r) r.value = "";
             const n = row.querySelector(".ex-notes"); if (n) n.value = "";
+            row.querySelectorAll(".ex-set").forEach((s) => {
+              s.checked = false;
+              const lbl = s.closest(".set-checkbox");
+              if (lbl) lbl.classList.remove("checked");
+            });
             row.classList.remove("done");
             clearExerciseLog(day.date, routineKey, exKey);
           });
@@ -7501,24 +7579,41 @@
         const counts = exerciseProgress(day.date, routineKey);
         if (!counts) return;
         const allDone = counts.done === counts.total;
-        // Map routineKey to the day's section key
         const sectionKey = routineKey.startsWith("strength_") ? "strength" : "routine_" + routineKey;
-        // Only auto-complete UP — don't uncheck if user manually marked the section done
         const wasComplete = isSectionDone(day, sectionKey);
         if (allDone && !wasComplete) {
           setSectionDone(day, sectionKey, true);
         } else if (!allDone && wasComplete) {
-          // If they had it complete and now aren't, uncheck
           setSectionDone(day, sectionKey, false);
         }
-        // Sync the visible checkbox in the main modal if present
-        const mainCb = document.querySelector(`.section-check[data-section="${sectionKey}"]`);
-        if (mainCb) mainCb.checked = isSectionDone(day, sectionKey);
-        const labelEl = document.querySelector(`[data-section-label="${sectionKey}"]`);
-        if (labelEl) labelEl.classList.toggle("section-done", isSectionDone(day, sectionKey));
-        // Also sync the day card in the week grid
-        const dayCard = document.querySelector(`.day[data-date="${day.date}"]`);
-        if (dayCard) dayCard.classList.toggle("completed", isDone(day));
+        // Sync the main modal's nested layout (child checkbox + group state)
+        const mainCb = document.querySelector(`.child-check[data-section="${sectionKey}"]`);
+        if (mainCb) {
+          const newDone = isSectionDone(day, sectionKey);
+          mainCb.checked = newDone;
+          const childRow = mainCb.closest(".modal-child");
+          if (childRow) childRow.classList.toggle("child-done", newDone);
+          // Recompute the parent group's checkbox/indeterminate state
+          const groupEl = mainCb.closest(".modal-group");
+          if (groupEl) {
+            const groupCb = groupEl.querySelector(".group-check");
+            const childCbs = groupEl.querySelectorAll(".child-check");
+            const total = childCbs.length;
+            const done = Array.from(childCbs).filter((c) => c.checked).length;
+            if (groupCb) {
+              if (total === 0) { groupCb.checked = false; groupCb.indeterminate = false; }
+              else if (done === total) { groupCb.checked = true; groupCb.indeterminate = false; }
+              else if (done === 0) { groupCb.checked = false; groupCb.indeterminate = false; }
+              else { groupCb.checked = false; groupCb.indeterminate = true; }
+            }
+            const head = groupEl.querySelector(".modal-group-head");
+            if (head) head.classList.toggle("group-done", total > 0 && done === total);
+          }
+        }
+        // Sync the day card in both week grids (Plan + This Week)
+        document.querySelectorAll(`.day[data-date="${day.date}"]`).forEach((el) => {
+          el.classList.toggle("completed", isDone(day));
+        });
       }
       function closeExerciseTracker() {
         document.getElementById("exModalBg").classList.remove("show");
