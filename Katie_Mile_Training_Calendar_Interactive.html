@@ -992,6 +992,116 @@
         color: var(--p1);
       }
 
+      /* ---------- Nested group layout inside the day modal ---------- */
+      .modal-group {
+        margin: 14px 0;
+        padding: 12px 14px 8px;
+        background: var(--routine-bg);
+        border-radius: 10px;
+      }
+      .modal-group-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        user-select: none;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 8px;
+      }
+      .modal-group-head .task-check {
+        width: 22px;
+        height: 22px;
+        flex-shrink: 0;
+      }
+      .modal-group-head h3 {
+        margin: 0 !important;
+        font-size: 15px;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .modal-group-head.group-done h3 {
+        color: var(--p1);
+        text-decoration: line-through;
+        opacity: 0.7;
+      }
+      .modal-group-children {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .modal-child {
+        display: flex;
+        gap: 10px;
+        padding: 10px 12px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        align-items: flex-start;
+      }
+      .modal-child.child-done {
+        opacity: 0.65;
+        background: var(--pace-bg);
+        border-color: var(--pace-border);
+      }
+      .modal-child .child-check {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+      .modal-child-body {
+        flex: 1;
+        min-width: 0;
+      }
+      .modal-child-title {
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--ink);
+        line-height: 1.3;
+      }
+      .modal-child.child-done .modal-child-title { text-decoration: line-through; }
+      .modal-child-desc {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 4px;
+        line-height: 1.4;
+      }
+      .modal-child-progress {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 1px 7px;
+        font-size: 10px;
+        font-weight: 700;
+        background: var(--pace-bg);
+        color: var(--p1);
+        border-radius: 999px;
+        vertical-align: middle;
+      }
+      .modal-child-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 8px;
+        padding: 6px 12px;
+        background: var(--strength-bg);
+        color: var(--info-text);
+        border: 1px solid var(--log-border);
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .modal-child-btn:hover { filter: brightness(0.96); }
+      .modal-child-btn::after { content: "→"; font-weight: 400; }
+      .modal-child-btn.log-btn {
+        background: var(--modal-info-bg);
+        color: var(--accent);
+        border-color: var(--modal-info-border);
+      }
+
       /* Per-section checkboxes inside modal */
       .section-h3-label {
         display: flex;
@@ -2952,6 +3062,11 @@
       <div class="ex-modal" id="exModal"></div>
     </div>
 
+    <!-- Workout log sub-modal -->
+    <div class="ex-modal-bg" id="logModalBg">
+      <div class="ex-modal" id="logModal"></div>
+    </div>
+
     <script>
       // =========================================================================
       // Supabase config — fill these in ONCE with your project's values.
@@ -4635,6 +4750,19 @@
         post_run: "post",
         post_bike: "post",
         desk_breaks: "after_hours",
+      };
+
+      // Short one-line descriptions for each routine (full prescription lives
+      // in the "Check off each move" exercise tracker sub-modal).
+      const ROUTINE_SHORT_DESC = {
+        pre_run: "10-min dynamic warmup: leg swings, lunges, high knees, A-skips.",
+        post_run: "10-min cooldown + key stretches (couch, figure-4, hamstring).",
+        pre_bike: "5-min hip openers + ankle mobility before riding.",
+        post_bike: "8-min stretches — cycling shortens hip flexors, don't skip.",
+        mobility_daily: "5-10 min daily mobility — couch stretch, 90/90, dead bug.",
+        desk_breaks: "Every 60-90 min during desk work: squats + couch stretch.",
+        shin_protocol: "Toe raises, eccentric calf raises, tibialis work for shin health.",
+        core: "10-12 min runner core: plank, dead bug, Pallof, glute bridge.",
       };
 
       // ---------- Structured exercise data (for the exercise tracker sub-modal) ----------
@@ -6619,20 +6747,6 @@
         html += `<h2>${day.title}</h2>`;
         html += `<div class="meta">${fmtDate(day.date, { weekday: "long", month: "long", day: "numeric", year: "numeric" })} · Week ${week.num} · Phase ${ph.num}: ${ph.name} · <b>${cat.toUpperCase()}</b> · <span class="section-progress" id="modalSectionProgress"><b>${counts.done}</b>/${counts.total} sections done</span></div>`;
 
-        // Build a single routine-row's HTML (used in chronological ordering below)
-        function routineRowHtml(r) {
-          const rKey = "routine_" + r;
-          const rDone = isSectionDone(day, rKey);
-          const rCounts = DATA.routine_exercises[r] ? exerciseProgress(day.date, rKey) : null;
-          return `<label class="routine-check-row ${rDone ? "section-done" : ""}" data-section-label="${rKey}">
-              <input type="checkbox" class="task-check section-check" data-section="${rKey}" ${rDone ? "checked" : ""}>
-              <div class="routine"><b>${ROUTINE_LABELS[r] || r}.</b> ${DATA.routines[r] || ""}
-                ${rCounts ? `<span class="ex-progress-pill" style="margin-left:6px">${rCounts.done}/${rCounts.total} done</span>` : ""}
-                ${DATA.routine_exercises[r] ? `<br><button type="button" class="open-tracker-btn routine-tracker" data-tracker-kind="routine" data-tracker-key="${r}" style="margin-top:6px">Check off each move</button>` : ""}
-              </div>
-            </label>`;
-        }
-
         // Group routines by chronological phase
         const byPhase = { anytime: [], pre: [], core: [], post: [], after_hours: [] };
         for (const r of (day.routines || [])) {
@@ -6640,101 +6754,103 @@
           byPhase[phase].push(r);
         }
 
-        // 1. Anytime routines (morning mobility, shin protocol)
-        for (const r of byPhase.anytime) html += routineRowHtml(r);
-
-        // 2. Pre-workout warmup
-        for (const r of byPhase.pre) html += routineRowHtml(r);
-
-        // 3. Workout section (the day's main activity)
-        const wDone = isSectionDone(day, "workout");
-        html += `<label class="section-h3-label ${wDone ? "section-done" : ""}" data-section-label="workout">
-            <input type="checkbox" class="task-check section-check" data-section="workout" ${wDone ? "checked" : ""}>
-            <h3>Workout</h3>
-          </label>
-          <div class="body">${day.detail}</div>`;
-
-        // Workout Log section.
-        // Show on every non-rest day, AND on rest days where you already logged
-        // something (so a log can't get hidden by swapping the day to a rest day).
-        // Form fields adapt for bike days (avg speed + power instead of pace).
-        if (cat !== "rest" || hasLog(day.date)) {
-          const log = getLog(day.date) || {};
-          const isBike = cat === "bike";
-          const headerNote = isBike
-            ? "Log your bike session. Avg speed auto-calculates from distance + time."
-            : "Log what you actually did. Pace auto-calculates from distance + duration.";
-          html += `<div class="log-section">
-      <h3>${isBike ? "Bike log" : "Workout log"}</h3>
-      <div class="planned-line">${headerNote}</div>
-      <div class="log-grid">
-        <div class="log-field">
-          <label>Distance (mi)</label>
-          <input type="number" id="logDistance" step="0.01" min="0" placeholder="${isBike ? "12.0" : "3.0"}" value="${log.distance ?? ""}">
-        </div>
-        <div class="log-field">
-          <label>${isBike ? "Time rode (min : sec)" : "Duration (min : sec)"}</label>
-          <div class="duration-inputs">
-            <input type="number" id="logMin" min="0" placeholder="0" value="${log.minutes ?? ""}">
-            <span>:</span>
-            <input type="number" id="logSec" min="0" max="59" placeholder="00" value="${log.seconds ?? ""}">
-          </div>
-        </div>
-        <div class="log-field">
-          <label>${isBike ? "Avg speed" : "Pace"}</label>
-          <div class="log-pace empty" id="logPaceDisplay">${isBike ? "—.— mph" : "—:—/mi"}</div>
-        </div>
-        ${isBike ? `<div class="log-field">
-          <label>Avg power (W)</label>
-          <input type="number" id="logPower" min="0" max="600" placeholder="—" value="${log.avgPower ?? ""}">
-        </div>` : ""}
-        <div class="log-field">
-          <label>Avg HR (optional)</label>
-          <input type="number" id="logHR" min="0" max="250" placeholder="—" value="${log.heartRate ?? ""}">
-        </div>
-      </div>
-      <div class="log-field">
-        <label>How it felt (RPE 1-10)</label>
-        <div class="rpe-buttons" id="rpeButtons">
-          ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => `<button type="button" class="rpe-btn ${log.rpe === n ? "selected" : ""}" data-rpe="${n}">${n}</button>`).join("")}
-        </div>
-      </div>
-      <div class="log-field" style="margin-top:10px">
-        <label>Notes</label>
-        <textarea id="logNotes" placeholder="${isBike ? "How the legs felt, class type, anything notable..." : "Weather, how you felt, anything notable..."}">${log.notes ? log.notes.replace(/</g, "&lt;") : ""}</textarea>
-      </div>
-      <div class="log-actions">
-        <button type="button" class="btn btn-primary" id="saveLog">${hasLog(day.date) ? "Update workout" : "Save workout"}</button>
-        <button type="button" class="btn btn-danger" id="deleteLog" style="${hasLog(day.date) ? "" : "display:none"}">Delete log</button>
-        <span class="log-status" id="logStatus"></span>
-      </div>
-    </div>`;
+        // ---- Child renderers (used inside top-level groups) ----
+        function childRoutineHtml(r) {
+          const rKey = "routine_" + r;
+          const rDone = isSectionDone(day, rKey);
+          const rCounts = DATA.routine_exercises[r] ? exerciseProgress(day.date, rKey) : null;
+          const progressPill = rCounts ? `<span class="modal-child-progress">${rCounts.done}/${rCounts.total}</span>` : "";
+          const trackerBtn = DATA.routine_exercises[r]
+            ? `<button type="button" class="modal-child-btn" data-tracker-kind="routine" data-tracker-key="${r}">Check off each move</button>`
+            : "";
+          return `<label class="modal-child ${rDone ? "child-done" : ""}" data-section-key="${rKey}">
+              <input type="checkbox" class="task-check child-check" data-section="${rKey}" ${rDone ? "checked" : ""}>
+              <div class="modal-child-body">
+                <div class="modal-child-title">${ROUTINE_LABELS[r] || r}${progressPill}</div>
+                <div class="modal-child-desc">${ROUTINE_SHORT_DESC[r] || (DATA.routines[r] || "").slice(0, 120)}</div>
+                ${trackerBtn}
+              </div>
+            </label>`;
         }
 
-        // 4. Strength (if any) — done after the main workout
-        if (day.strength) {
+        function workoutChildHtml() {
+          const wDone = isSectionDone(day, "workout");
+          const isBikeW = cat === "bike";
+          const hasLogged = hasLog(day.date);
+          const logBtnLabel = hasLogged ? "Edit log" : (isBikeW ? "Log bike workout" : "Log workout");
+          const logBtn = (cat !== "rest" || hasLogged)
+            ? `<button type="button" class="modal-child-btn log-btn" id="openLogBtn">${logBtnLabel}</button>`
+            : "";
+          return `<label class="modal-child ${wDone ? "child-done" : ""}" data-section-key="workout">
+              <input type="checkbox" class="task-check child-check" data-section="workout" ${wDone ? "checked" : ""}>
+              <div class="modal-child-body">
+                <div class="modal-child-title">${day.title}</div>
+                <div class="modal-child-desc">${day.detail}</div>
+                ${logBtn}
+              </div>
+            </label>`;
+        }
+
+        function strengthChildHtml() {
           const sDone = isSectionDone(day, "strength");
           const sKey = detectStrengthKey(day.strength);
           const sCounts = sKey ? exerciseProgress(day.date, "strength_" + sKey) : null;
-          html += `<label class="section-h3-label ${sDone ? "section-done" : ""}" data-section-label="strength">
-              <input type="checkbox" class="task-check section-check" data-section="strength" ${sDone ? "checked" : ""}>
-              <h3>Strength</h3>
-              ${sCounts ? `<span class="ex-progress-pill">${sCounts.done}/${sCounts.total} done</span>` : ""}
-            </label>
-            <div class="strength-box">${day.strength}</div>`;
-          if (sKey) {
-            html += `<button type="button" class="open-tracker-btn" data-tracker-kind="strength" data-tracker-key="${sKey}">Track each exercise (weight, reps, notes)</button>`;
-          }
+          const progressPill = sCounts ? `<span class="modal-child-progress">${sCounts.done}/${sCounts.total}</span>` : "";
+          const meta = sKey ? DATA.strength_routines[sKey] : null;
+          const title = meta ? meta.label : "Strength";
+          const desc = meta ? `${meta.description} (${meta.duration})` : day.strength.split(":")[0];
+          const trackerBtn = sKey
+            ? `<button type="button" class="modal-child-btn" data-tracker-kind="strength" data-tracker-key="${sKey}">Check off each exercise</button>`
+            : "";
+          return `<label class="modal-child ${sDone ? "child-done" : ""}" data-section-key="strength">
+              <input type="checkbox" class="task-check child-check" data-section="strength" ${sDone ? "checked" : ""}>
+              <div class="modal-child-body">
+                <div class="modal-child-title">${title}${progressPill}</div>
+                <div class="modal-child-desc">${desc}</div>
+                ${trackerBtn}
+              </div>
+            </label>`;
         }
 
-        // 5. Core (if any) — between workout/strength and post-routines
-        for (const r of byPhase.core) html += routineRowHtml(r);
+        function renderGroup(id, title, childrenHtml) {
+          if (!childrenHtml) return "";
+          return `<div class="modal-group" data-group-id="${id}">
+            <label class="modal-group-head">
+              <input type="checkbox" class="task-check group-check" data-group-id="${id}">
+              <h3>${title}</h3>
+            </label>
+            <div class="modal-group-children">${childrenHtml}</div>
+          </div>`;
+        }
 
-        // 6. Post-workout cooldown
-        for (const r of byPhase.post) html += routineRowHtml(r);
+        // ---- Build top-level groups ----
+        // 1. Morning Mobility (anytime routines: mobility_daily, shin_protocol)
+        if (byPhase.anytime.length) {
+          html += renderGroup("morning", "Morning Mobility", byPhase.anytime.map(childRoutineHtml).join(""));
+        }
 
-        // 7. After-hours routines (desk breaks)
-        for (const r of byPhase.after_hours) html += routineRowHtml(r);
+        // 2. Cardio (pre-warmup + workout + post-cooldown)
+        const hasWorkout = cat !== "rest";
+        if (byPhase.pre.length || hasWorkout || byPhase.post.length || hasLog(day.date)) {
+          let cardioChildren = "";
+          for (const r of byPhase.pre) cardioChildren += childRoutineHtml(r);
+          if (hasWorkout || hasLog(day.date)) cardioChildren += workoutChildHtml();
+          for (const r of byPhase.post) cardioChildren += childRoutineHtml(r);
+          html += renderGroup("cardio", "Cardio", cardioChildren);
+        }
+
+        // 3. Strength (formal strength routine + core)
+        if (day.strength || byPhase.core.length) {
+          let strengthChildren = "";
+          if (day.strength) strengthChildren += strengthChildHtml();
+          for (const r of byPhase.core) strengthChildren += childRoutineHtml(r);
+          html += renderGroup("strength-group", "Strength", strengthChildren);
+        }
+
+        // 4. Throughout the Day (desk breaks)
+        if (byPhase.after_hours.length) {
+          html += renderGroup("anytime-group", "Throughout the Day", byPhase.after_hours.map(childRoutineHtml).join(""));
+        }
 
         // Master "all complete" checkbox at the bottom
         const allDone = isDone(day);
@@ -6774,213 +6890,277 @@
           if (day.date === todayClampedISO()) renderToday();
         }
 
-        // Wire the per-section checkboxes
-        m.querySelectorAll(".section-check").forEach((cb) => {
+        // Reflect group checkbox state from child states (checked/indeterminate/unchecked)
+        function refreshGroupStates() {
+          m.querySelectorAll(".modal-group").forEach((groupEl) => {
+            const groupCb = groupEl.querySelector(".group-check");
+            const childCbs = groupEl.querySelectorAll(".child-check");
+            const total = childCbs.length;
+            const done = Array.from(childCbs).filter((c) => c.checked).length;
+            if (total === 0) {
+              groupCb.checked = false; groupCb.indeterminate = false;
+            } else if (done === total) {
+              groupCb.checked = true; groupCb.indeterminate = false;
+            } else if (done === 0) {
+              groupCb.checked = false; groupCb.indeterminate = false;
+            } else {
+              groupCb.checked = false; groupCb.indeterminate = true;
+            }
+            const head = groupEl.querySelector(".modal-group-head");
+            if (head) head.classList.toggle("group-done", total > 0 && done === total);
+          });
+        }
+
+        // Wire child checkboxes
+        m.querySelectorAll(".child-check").forEach((cb) => {
           cb.addEventListener("click", (e) => e.stopPropagation());
           cb.addEventListener("change", (e) => {
             const key = e.target.dataset.section;
             setSectionDone(day, key, e.target.checked);
-            // toggle the visual "done" style on its label row
-            const labelEl = m.querySelector(`[data-section-label="${key}"]`);
-            if (labelEl)
-              labelEl.classList.toggle("section-done", e.target.checked);
+            const parentLabel = e.target.closest(".modal-child");
+            if (parentLabel) parentLabel.classList.toggle("child-done", e.target.checked);
+            refreshGroupStates();
             refreshMaster();
           });
         });
 
-        // Wire the "Open exercise tracker" buttons
-        m.querySelectorAll(".open-tracker-btn").forEach((btn) => {
-          btn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            const kind = btn.dataset.trackerKind;
-            const key = btn.dataset.trackerKey;
-            openExerciseTracker(day, kind, key);
+        // Wire group checkboxes (toggle all children in the group)
+        m.querySelectorAll(".group-check").forEach((cb) => {
+          cb.addEventListener("click", (e) => e.stopPropagation());
+          cb.addEventListener("change", (e) => {
+            const v = e.target.checked;
+            const groupEl = e.target.closest(".modal-group");
+            if (!groupEl) return;
+            groupEl.querySelectorAll(".child-check").forEach((c) => {
+              c.checked = v;
+              setSectionDone(day, c.dataset.section, v);
+              const parentLabel = c.closest(".modal-child");
+              if (parentLabel) parentLabel.classList.toggle("child-done", v);
+            });
+            refreshGroupStates();
+            refreshMaster();
           });
         });
 
-        // Wire the master checkbox - toggle ALL sections at once
+        // Wire exercise tracker buttons (inside child items)
+        m.querySelectorAll(".modal-child-btn[data-tracker-kind]").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            openExerciseTracker(day, btn.dataset.trackerKind, btn.dataset.trackerKey);
+          });
+        });
+
+        // Wire workout log button → opens log sub-modal
+        const logBtn = document.getElementById("openLogBtn");
+        if (logBtn) {
+          logBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            openWorkoutLogModal(day, week);
+          });
+        }
+
+        // Wire master checkbox — toggle EVERY child + every group
         const mcb = document.getElementById("modalCheck");
         if (mcb) {
           mcb.addEventListener("change", (e) => {
             const v = e.target.checked;
             setDayDone(day, v);
-            // sync every per-section checkbox + visual style
-            m.querySelectorAll(".section-check").forEach((c) => {
+            m.querySelectorAll(".child-check").forEach((c) => {
               c.checked = v;
-              const key = c.dataset.section;
-              const labelEl = m.querySelector(`[data-section-label="${key}"]`);
-              if (labelEl) labelEl.classList.toggle("section-done", v);
+              const parentLabel = c.closest(".modal-child");
+              if (parentLabel) parentLabel.classList.toggle("child-done", v);
             });
+            refreshGroupStates();
             refreshMaster();
           });
         }
 
-        // Wire the workout log form (skip on rest days where it isn't rendered)
-        const distEl = document.getElementById("logDistance");
-        if (distEl) {
-          const minEl = document.getElementById("logMin");
-          const secEl = document.getElementById("logSec");
-          const hrEl = document.getElementById("logHR");
-          const notesEl = document.getElementById("logNotes");
-          const paceEl = document.getElementById("logPaceDisplay");
-          const statusEl = document.getElementById("logStatus");
-          const powerEl = document.getElementById("logPower"); // bike-only, may be null
-          const isBikeForm = cat === "bike";
-          let selectedRpe = (getLog(day.date) || {}).rpe ?? null;
-
-          function updatePace() {
-            const dist = parseFloat(distEl.value);
-            const totalSec = durationToSeconds(minEl.value, secEl.value);
-            if (isBikeForm) {
-              const mph = calcSpeed(dist, totalSec);
-              if (mph) {
-                paceEl.textContent = fmtSpeed(mph);
-                paceEl.classList.remove("empty");
-              } else {
-                paceEl.textContent = "—.— mph";
-                paceEl.classList.add("empty");
-              }
-            } else {
-              const sec = calcPace(dist, totalSec);
-              if (sec) {
-                paceEl.textContent = fmtPace(sec);
-                paceEl.classList.remove("empty");
-              } else {
-                paceEl.textContent = "—:—/mi";
-                paceEl.classList.add("empty");
-              }
-            }
-          }
-          distEl.addEventListener("input", updatePace);
-          minEl.addEventListener("input", updatePace);
-          secEl.addEventListener("input", updatePace);
-          updatePace();
-
-          // RPE button selection
-          m.querySelectorAll(".rpe-btn").forEach((btn) => {
-            btn.addEventListener("click", (e) => {
-              e.stopPropagation();
-              m.querySelectorAll(".rpe-btn").forEach((b) =>
-                b.classList.remove("selected"),
-              );
-              btn.classList.add("selected");
-              selectedRpe = parseInt(btn.dataset.rpe, 10);
-            });
-          });
-
-          // Save button
-          document.getElementById("saveLog").addEventListener("click", () => {
-            const dist = parseFloat(distEl.value);
-            const totalSec = durationToSeconds(minEl.value, secEl.value);
-            if (
-              !dist &&
-              !totalSec &&
-              selectedRpe == null &&
-              !notesEl.value.trim()
-            ) {
-              statusEl.textContent = "Add at least one field before saving.";
-              statusEl.style.color = "#B85450";
-              return;
-            }
-            const log = {
-              date: day.date,
-              distance: isNaN(dist) ? null : dist,
-              minutes: minEl.value ? parseInt(minEl.value, 10) : null,
-              seconds: secEl.value ? parseInt(secEl.value, 10) : null,
-              durationSec: totalSec || null,
-              rpe: selectedRpe,
-              heartRate: hrEl.value ? parseInt(hrEl.value, 10) : null,
-              notes: notesEl.value.trim() || null,
-              loggedAt: new Date().toISOString(),
-            };
-            if (isBikeForm) {
-              const mph = calcSpeed(dist, totalSec);
-              log.avgSpeedMph = mph || null;
-              log.avgSpeedLabel = mph ? fmtSpeed(mph) : null;
-              log.avgPower = powerEl && powerEl.value
-                ? parseInt(powerEl.value, 10)
-                : null;
-              log.paceSecPerMile = null;
-              log.paceLabel = null;
-            } else {
-              const paceSec = calcPace(dist, totalSec);
-              log.paceSecPerMile = paceSec || null;
-              log.paceLabel = paceSec ? fmtPace(paceSec) : null;
-              log.avgSpeedMph = null;
-              log.avgSpeedLabel = null;
-              log.avgPower = null;
-            }
-            saveLog(day.date, log);
-            // Auto-check the workout section since a log = completed workout
-            setSectionDone(day, "workout", true);
-            const wCb = m.querySelector(
-              '.section-check[data-section="workout"]',
-            );
-            if (wCb) wCb.checked = true;
-            const wLbl = m.querySelector('[data-section-label="workout"]');
-            if (wLbl) wLbl.classList.add("section-done");
-            // Show status, reveal delete button, refresh master + day card
-            statusEl.style.color = "var(--p1)";
-            statusEl.textContent = "Saved!";
-            setTimeout(() => {
-              if (statusEl) statusEl.textContent = "";
-            }, 2000);
-            document.getElementById("saveLog").textContent = "Update workout";
-            document.getElementById("deleteLog").style.display = "";
-            refreshMaster();
-            // Update day-card actual-pace pill in the week grid
-            const dayCard = document.querySelector(
-              `.day[data-date="${day.date}"]`,
-            );
-            if (dayCard) updateDayCardLog(dayCard, log);
-            // Update the week's actual/planned mileage display + bar chart fill
-            const wk = weekForDate(day.date);
-            if (wk) {
-              refreshWeekStat(wk);
-              refreshBarFill(wk);
-            }
-          });
-
-          // Delete button
-          document.getElementById("deleteLog").addEventListener("click", () => {
-            if (
-              !confirm(
-                "Delete this workout log? Your completion checkmarks will stay.",
-              )
-            )
-              return;
-            deleteLog(day.date);
-            distEl.value = "";
-            minEl.value = "";
-            secEl.value = "";
-            hrEl.value = "";
-            notesEl.value = "";
-            m.querySelectorAll(".rpe-btn").forEach((b) =>
-              b.classList.remove("selected"),
-            );
-            selectedRpe = null;
-            updatePace();
-            document.getElementById("saveLog").textContent = "Save workout";
-            document.getElementById("deleteLog").style.display = "none";
-            statusEl.style.color = "var(--muted)";
-            statusEl.textContent = "Log deleted.";
-            setTimeout(() => {
-              if (statusEl) statusEl.textContent = "";
-            }, 2000);
-            // Remove pace pill from day card
-            const dayCard = document.querySelector(
-              `.day[data-date="${day.date}"]`,
-            );
-            if (dayCard) updateDayCardLog(dayCard, null);
-            // Update the week's actual/planned mileage display + bar chart fill
-            const wk = weekForDate(day.date);
-            if (wk) {
-              refreshWeekStat(wk);
-              refreshBarFill(wk);
-            }
-          });
-        }
+        // Initial computation of group states from current child states
+        refreshGroupStates();
       }
+
+      // Workout log sub-modal — opens from the "Log workout" / "Edit log"
+      // button inside the day modal. Replaces the old inline log form.
+      function openWorkoutLogModal(day, week) {
+        const cat = categorize(day);
+        const log = getLog(day.date) || {};
+        const isBike = cat === "bike";
+        const m = document.getElementById("logModal");
+        let html = `<button class="close" onclick="closeWorkoutLogModal()" style="float:right;cursor:pointer;border:0;background:none;font-size:24px;color:var(--muted);line-height:1;padding:0 4px">×</button>`;
+        html += `<h2>${isBike ? "Bike log" : "Workout log"}</h2>`;
+        html += `<div class="ex-meta">${fmtDate(day.date, { weekday: "long", month: "long", day: "numeric" })} · ${day.title}</div>`;
+        html += `<div class="ex-desc">${isBike ? "Log your bike session. Avg speed auto-calculates from distance + time." : "Log what you actually did. Pace auto-calculates from distance + duration."}</div>`;
+        html += `<div class="log-grid">
+          <div class="log-field">
+            <label>Distance (mi)</label>
+            <input type="number" id="logDistance" step="0.01" min="0" placeholder="${isBike ? "12.0" : "3.0"}" value="${log.distance ?? ""}">
+          </div>
+          <div class="log-field">
+            <label>${isBike ? "Time rode (min : sec)" : "Duration (min : sec)"}</label>
+            <div class="duration-inputs">
+              <input type="number" id="logMin" min="0" placeholder="0" value="${log.minutes ?? ""}">
+              <span>:</span>
+              <input type="number" id="logSec" min="0" max="59" placeholder="00" value="${log.seconds ?? ""}">
+            </div>
+          </div>
+          <div class="log-field">
+            <label>${isBike ? "Avg speed" : "Pace"}</label>
+            <div class="log-pace empty" id="logPaceDisplay">${isBike ? "—.— mph" : "—:—/mi"}</div>
+          </div>
+          ${isBike ? `<div class="log-field">
+            <label>Avg power (W)</label>
+            <input type="number" id="logPower" min="0" max="600" placeholder="—" value="${log.avgPower ?? ""}">
+          </div>` : ""}
+          <div class="log-field">
+            <label>Avg HR (optional)</label>
+            <input type="number" id="logHR" min="0" max="250" placeholder="—" value="${log.heartRate ?? ""}">
+          </div>
+        </div>
+        <div class="log-field">
+          <label>How it felt (RPE 1-10)</label>
+          <div class="rpe-buttons" id="rpeButtons">
+            ${[1,2,3,4,5,6,7,8,9,10].map((n) => `<button type="button" class="rpe-btn ${log.rpe === n ? "selected" : ""}" data-rpe="${n}">${n}</button>`).join("")}
+          </div>
+        </div>
+        <div class="log-field" style="margin-top:10px">
+          <label>Notes</label>
+          <textarea id="logNotes" placeholder="${isBike ? "How the legs felt, class type, anything notable..." : "Weather, how you felt, anything notable..."}">${log.notes ? log.notes.replace(/</g, "&lt;") : ""}</textarea>
+        </div>
+        <div class="log-actions">
+          <button type="button" class="btn btn-primary" id="saveLog">${hasLog(day.date) ? "Update workout" : "Save workout"}</button>
+          <button type="button" class="btn btn-danger" id="deleteLog" style="${hasLog(day.date) ? "" : "display:none"}">Delete log</button>
+          <button type="button" class="btn" id="logCloseBtn">Close</button>
+          <span class="log-status" id="logStatus"></span>
+        </div>`;
+
+        m.innerHTML = html;
+        document.getElementById("logModalBg").classList.add("show");
+
+        // Wire the form
+        const distEl = document.getElementById("logDistance");
+        const minEl = document.getElementById("logMin");
+        const secEl = document.getElementById("logSec");
+        const hrEl = document.getElementById("logHR");
+        const notesEl = document.getElementById("logNotes");
+        const paceEl = document.getElementById("logPaceDisplay");
+        const statusEl = document.getElementById("logStatus");
+        const powerEl = document.getElementById("logPower");
+        let selectedRpe = (getLog(day.date) || {}).rpe ?? null;
+
+        function updatePace() {
+          const dist = parseFloat(distEl.value);
+          const totalSec = durationToSeconds(minEl.value, secEl.value);
+          if (isBike) {
+            const mph = calcSpeed(dist, totalSec);
+            if (mph) { paceEl.textContent = fmtSpeed(mph); paceEl.classList.remove("empty"); }
+            else { paceEl.textContent = "—.— mph"; paceEl.classList.add("empty"); }
+          } else {
+            const sec = calcPace(dist, totalSec);
+            if (sec) { paceEl.textContent = fmtPace(sec); paceEl.classList.remove("empty"); }
+            else { paceEl.textContent = "—:—/mi"; paceEl.classList.add("empty"); }
+          }
+        }
+        distEl.addEventListener("input", updatePace);
+        minEl.addEventListener("input", updatePace);
+        secEl.addEventListener("input", updatePace);
+        updatePace();
+
+        m.querySelectorAll(".rpe-btn").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            m.querySelectorAll(".rpe-btn").forEach((b) => b.classList.remove("selected"));
+            btn.classList.add("selected");
+            selectedRpe = parseInt(btn.dataset.rpe, 10);
+          });
+        });
+
+        document.getElementById("saveLog").addEventListener("click", () => {
+          const dist = parseFloat(distEl.value);
+          const totalSec = durationToSeconds(minEl.value, secEl.value);
+          if (!dist && !totalSec && selectedRpe == null && !notesEl.value.trim()) {
+            statusEl.textContent = "Add at least one field before saving.";
+            statusEl.style.color = "#B85450";
+            return;
+          }
+          const newLog = {
+            date: day.date,
+            distance: isNaN(dist) ? null : dist,
+            minutes: minEl.value ? parseInt(minEl.value, 10) : null,
+            seconds: secEl.value ? parseInt(secEl.value, 10) : null,
+            durationSec: totalSec || null,
+            rpe: selectedRpe,
+            heartRate: hrEl.value ? parseInt(hrEl.value, 10) : null,
+            notes: notesEl.value.trim() || null,
+            loggedAt: new Date().toISOString(),
+          };
+          if (isBike) {
+            const mph = calcSpeed(dist, totalSec);
+            newLog.avgSpeedMph = mph || null;
+            newLog.avgSpeedLabel = mph ? fmtSpeed(mph) : null;
+            newLog.avgPower = powerEl && powerEl.value ? parseInt(powerEl.value, 10) : null;
+            newLog.paceSecPerMile = null; newLog.paceLabel = null;
+          } else {
+            const paceSec = calcPace(dist, totalSec);
+            newLog.paceSecPerMile = paceSec || null;
+            newLog.paceLabel = paceSec ? fmtPace(paceSec) : null;
+            newLog.avgSpeedMph = null; newLog.avgSpeedLabel = null; newLog.avgPower = null;
+          }
+          saveLog(day.date, newLog);
+          // Auto-check workout section + sync main modal UI
+          setSectionDone(day, "workout", true);
+          const wCb = document.querySelector('.child-check[data-section="workout"]');
+          if (wCb) wCb.checked = true;
+          const wChild = document.querySelector('.modal-child[data-section-key="workout"]');
+          if (wChild) wChild.classList.add("child-done");
+          // Day card update across all views
+          document.querySelectorAll(`.day[data-date="${day.date}"]`).forEach((el) => updateDayCardLog(el, newLog));
+          // Week stat + bar fill
+          const wk = weekForDate(day.date);
+          if (wk) { refreshWeekStat(wk); refreshBarFill(wk); }
+          statusEl.style.color = "var(--p1)";
+          statusEl.textContent = "Saved!";
+          setTimeout(() => { if (statusEl) statusEl.textContent = ""; }, 2000);
+          document.getElementById("saveLog").textContent = "Update workout";
+          document.getElementById("deleteLog").style.display = "";
+        });
+
+        document.getElementById("deleteLog").addEventListener("click", () => {
+          if (!confirm("Delete this workout log? Your completion checkmarks will stay.")) return;
+          deleteLog(day.date);
+          distEl.value = ""; minEl.value = ""; secEl.value = ""; hrEl.value = ""; notesEl.value = "";
+          m.querySelectorAll(".rpe-btn").forEach((b) => b.classList.remove("selected"));
+          selectedRpe = null;
+          updatePace();
+          document.getElementById("saveLog").textContent = "Save workout";
+          document.getElementById("deleteLog").style.display = "none";
+          statusEl.style.color = "var(--muted)";
+          statusEl.textContent = "Log deleted.";
+          setTimeout(() => { if (statusEl) statusEl.textContent = ""; }, 2000);
+          document.querySelectorAll(`.day[data-date="${day.date}"]`).forEach((el) => updateDayCardLog(el, null));
+          const wk = weekForDate(day.date);
+          if (wk) { refreshWeekStat(wk); refreshBarFill(wk); }
+        });
+
+        document.getElementById("logCloseBtn").addEventListener("click", closeWorkoutLogModal);
+      }
+
+      function closeWorkoutLogModal() {
+        const bg = document.getElementById("logModalBg");
+        if (bg) bg.classList.remove("show");
+      }
+      // Click-outside + Escape close handlers for workout log sub-modal
+      document.addEventListener("click", (e) => {
+        const bg = document.getElementById("logModalBg");
+        if (bg && e.target === bg) closeWorkoutLogModal();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          const bg = document.getElementById("logModalBg");
+          if (bg && bg.classList.contains("show")) closeWorkoutLogModal();
+        }
+      });
 
       // Update or remove the actual-pace pill on a day card
       function updateDayCardLog(dayCard, log) {
