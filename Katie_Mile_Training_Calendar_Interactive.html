@@ -5521,14 +5521,39 @@
         const detailEl = document.getElementById("eaDetail");
         if (!card) return;
         card.classList.remove("optimal", "subclinical", "clinical");
+
+        // Nothing eaten yet at all — neutral "log some food" state
         if (ea == null) {
           val.textContent = "—";
           zoneEl.textContent = "Log some food to see your EA";
           detailEl.innerHTML = `Exercise today: <b>${exCal}</b> cal. EA = (intake − ${exCal}) / 47.8 kg LBM. Optimal ≥ 45 · subclinical LEA 30–45 · clinical &lt; 30.`;
           return;
         }
-        const zone = eaZoneFor(ea);
+
+        // Time-aware: an EA reading isn't meaningful until most of the day's
+        // eating has happened. At 5am with a banana logged, "RED-S risk" is
+        // a false alarm — you just haven't had breakfast yet.
+        // Reliable threshold: 5pm onwards, OR you've logged ≥ 40% of your
+        // calorie target (substantial intake suggests most meals are in).
+        const hour = new Date().getHours();
+        const reliable = hour >= 17 || totals.cal >= (target.targetCal || 2000) * 0.4;
+
         val.textContent = ea.toFixed(0);
+
+        if (!reliable) {
+          // Show the EA number for awareness but skip the zone warnings —
+          // it's normal to be low this early.
+          zoneEl.textContent = "Still early — keep logging through the day";
+          let stamp;
+          if (hour < 11) stamp = "Morning";
+          else if (hour < 14) stamp = "Around lunchtime";
+          else stamp = "Afternoon";
+          detailEl.innerHTML = `${stamp}, intake so far: <b>${Math.round(totals.cal)}</b> cal · Exercise today: <b>${exCal}</b> cal. EA will read low until you've finished most of today's eating — check back this evening for a meaningful reading.`;
+          return;
+        }
+
+        // Reliable EA reading — show actual zone
+        const zone = eaZoneFor(ea);
         zoneEl.textContent = zone.label;
         card.classList.add(zone.cls);
         detailEl.innerHTML = `Intake: <b>${Math.round(totals.cal)}</b> cal · Exercise: <b>${exCal}</b> cal · Net: <b>${Math.round(totals.cal - exCal)}</b> / 47.8 kg LBM. ${zone.desc}`;
