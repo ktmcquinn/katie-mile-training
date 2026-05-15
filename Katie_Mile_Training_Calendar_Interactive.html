@@ -3107,6 +3107,8 @@
             "DESK BREAKS: Every 60-90 min stand and do: 10 squats + 10s couch-stretch each side + 30s hip flexor stretch. Set a phone timer. Sitting 4 hr/day is the root cause of your hip tightness - these micro-breaks change the trajectory.",
           shin_protocol:
             "SHIN PROTOCOL (do daily until pain resolves, then 3x/week): Toe raises (heels on floor, lift toes) 2x20; calf raises (eccentric: 1s up, 3s down) 2x15; tibialis raises against band 2x15; ice shins 10 min after running if sore; foam roll calves 2 min/side. If pain >4/10 or sharp, REST and reassess.",
+          core:
+            "CORE WORKOUT (10-12 min, runner-specific): Plank 3x30-45s; side plank 3x30s/side; dead bug 3x10/side; bird dog 3x8/side; Pallof press 3x10/side; glute bridge with march 2x10/side. Anti-rotation + lateral core are the running-specific patterns.",
         },
         strength: {
           A_full_gym:
@@ -4620,6 +4622,19 @@
         mobility_daily: "Mobility",
         desk_breaks: "Desk breaks",
         shin_protocol: "Shin protocol",
+        core: "Core",
+      };
+
+      // Chronological category for each routine — drives modal display order.
+      const ROUTINE_PHASE = {
+        mobility_daily: "anytime",
+        shin_protocol: "anytime",
+        pre_run: "pre",
+        pre_bike: "pre",
+        core: "core",
+        post_run: "post",
+        post_bike: "post",
+        desk_breaks: "after_hours",
       };
 
       // ---------- Structured exercise data (for the exercise tracker sub-modal) ----------
@@ -4728,6 +4743,14 @@
           { key: "tibialis_band", name: "Tibialis raises against band", prescription: "2x15", note: "Band around forefoot, dorsiflex against tension." },
           { key: "ice_shins", name: "Ice shins after running", prescription: "10 min if sore", note: "Skip if no pain." },
           { key: "foam_roll_calves", name: "Foam roll calves", prescription: "2 min/side", note: "" },
+        ],
+        core: [
+          { key: "plank", name: "Plank", prescription: "3 x 30-45 sec", note: "Form > duration. Squeeze glutes, neutral spine. Stop when form breaks." },
+          { key: "side_plank", name: "Side plank", prescription: "3 x 30s/side", note: "Hips driven up. Lateral core builds running stability." },
+          { key: "dead_bug", name: "Dead bug", prescription: "3 x 10/side", note: "Slow. Low back glued to floor. Opposite arm + leg lower together." },
+          { key: "bird_dog", name: "Bird dog", prescription: "3 x 8/side", note: "Hold each rep 2 sec. Hips square — don't twist." },
+          { key: "pallof_press", name: "Pallof press", prescription: "3 x 10/side", note: "Anti-rotation core — the most running-specific core lift. Hold 1-2 sec at full extension." },
+          { key: "glute_bridge_march", name: "Glute bridge with march", prescription: "2 x 10/side", note: "Bridge up, march knees alternating. Hips do not drop or twist." },
         ],
       };
 
@@ -5411,8 +5434,7 @@
         for (let i = 0; i < items.length; i++) {
           const m = items[i];
           const safeName = (m.name || "(unnamed)").replace(/</g, "&lt;");
-          const countBadge = m.count > 1 ? `<span class="chip-count">${m.count}</span>` : "";
-          html += `<button type="button" class="recent-chip" data-idx="${i}">${safeName}<span class="chip-cal">${m.cal} cal</span>${countBadge}</button>`;
+          html += `<button type="button" class="recent-chip" data-idx="${i}">${safeName}<span class="chip-cal">${m.cal} cal</span></button>`;
         }
         html += `</div>`;
         el.innerHTML = html;
@@ -5896,6 +5918,20 @@
           }
         }
       }
+      // Add the core routine to Tuesday + Friday of every week (2x/week).
+      // These are the lowest-impact days (Tue = rest, Fri = bike-only) so core
+      // doesn't compete with the heavy run/lift sessions.
+      function injectCoreRoutine() {
+        for (const w of DATA.weeks) {
+          for (const d of w.days) {
+            if (d.day_name === "Tue" || d.day_name === "Fri") {
+              if (!d.routines) d.routines = [];
+              if (!d.routines.includes("core")) d.routines.push("core");
+            }
+          }
+        }
+      }
+
       function applyOverrides() {
         for (const w of DATA.weeks) {
           for (const d of w.days) {
@@ -6558,46 +6594,40 @@
         html += `<h2>${day.title}</h2>`;
         html += `<div class="meta">${fmtDate(day.date, { weekday: "long", month: "long", day: "numeric", year: "numeric" })} · Week ${week.num} · Phase ${ph.num}: ${ph.name} · <b>${cat.toUpperCase()}</b> · <span class="section-progress" id="modalSectionProgress"><b>${counts.done}</b>/${counts.total} sections done</span></div>`;
 
-        // Workout section
+        // Build a single routine-row's HTML (used in chronological ordering below)
+        function routineRowHtml(r) {
+          const rKey = "routine_" + r;
+          const rDone = isSectionDone(day, rKey);
+          const rCounts = DATA.routine_exercises[r] ? exerciseProgress(day.date, rKey) : null;
+          return `<label class="routine-check-row ${rDone ? "section-done" : ""}" data-section-label="${rKey}">
+              <input type="checkbox" class="task-check section-check" data-section="${rKey}" ${rDone ? "checked" : ""}>
+              <div class="routine"><b>${ROUTINE_LABELS[r] || r}.</b> ${DATA.routines[r] || ""}
+                ${rCounts ? `<span class="ex-progress-pill" style="margin-left:6px">${rCounts.done}/${rCounts.total} done</span>` : ""}
+                ${DATA.routine_exercises[r] ? `<br><button type="button" class="open-tracker-btn routine-tracker" data-tracker-kind="routine" data-tracker-key="${r}" style="margin-top:6px">Check off each move</button>` : ""}
+              </div>
+            </label>`;
+        }
+
+        // Group routines by chronological phase
+        const byPhase = { anytime: [], pre: [], core: [], post: [], after_hours: [] };
+        for (const r of (day.routines || [])) {
+          const phase = ROUTINE_PHASE[r] || "anytime";
+          byPhase[phase].push(r);
+        }
+
+        // 1. Anytime routines (morning mobility, shin protocol)
+        for (const r of byPhase.anytime) html += routineRowHtml(r);
+
+        // 2. Pre-workout warmup
+        for (const r of byPhase.pre) html += routineRowHtml(r);
+
+        // 3. Workout section (the day's main activity)
         const wDone = isSectionDone(day, "workout");
         html += `<label class="section-h3-label ${wDone ? "section-done" : ""}" data-section-label="workout">
             <input type="checkbox" class="task-check section-check" data-section="workout" ${wDone ? "checked" : ""}>
             <h3>Workout</h3>
           </label>
           <div class="body">${day.detail}</div>`;
-
-        // Strength section (optional)
-        if (day.strength) {
-          const sDone = isSectionDone(day, "strength");
-          const sKey = detectStrengthKey(day.strength);
-          const sCounts = sKey ? exerciseProgress(day.date, "strength_" + sKey) : null;
-          html += `<label class="section-h3-label ${sDone ? "section-done" : ""}" data-section-label="strength">
-              <input type="checkbox" class="task-check section-check" data-section="strength" ${sDone ? "checked" : ""}>
-              <h3>Strength</h3>
-              ${sCounts ? `<span class="ex-progress-pill">${sCounts.done}/${sCounts.total} done</span>` : ""}
-            </label>
-            <div class="strength-box">${day.strength}</div>`;
-          if (sKey) {
-            html += `<button type="button" class="open-tracker-btn" data-tracker-kind="strength" data-tracker-key="${sKey}">Track each exercise (weight, reps, notes)</button>`;
-          }
-        }
-
-        // Routines (each one gets its own checkbox)
-        if (day.routines && day.routines.length) {
-          html += `<h3 style="margin-top:18px">Routines</h3>`;
-          for (const r of day.routines) {
-            const rKey = "routine_" + r;
-            const rDone = isSectionDone(day, rKey);
-            const rCounts = DATA.routine_exercises[r] ? exerciseProgress(day.date, rKey) : null;
-            html += `<label class="routine-check-row ${rDone ? "section-done" : ""}" data-section-label="${rKey}">
-                <input type="checkbox" class="task-check section-check" data-section="${rKey}" ${rDone ? "checked" : ""}>
-                <div class="routine"><b>${ROUTINE_LABELS[r] || r}.</b> ${DATA.routines[r]}
-                  ${rCounts ? `<span class="ex-progress-pill" style="margin-left:6px">${rCounts.done}/${rCounts.total} done</span>` : ""}
-                  ${DATA.routine_exercises[r] ? `<br><button type="button" class="open-tracker-btn routine-tracker" data-tracker-kind="routine" data-tracker-key="${r}" style="margin-top:6px">Check off each move</button>` : ""}
-                </div>
-              </label>`;
-          }
-        }
 
         // Workout Log section.
         // Show on every non-rest day, AND on rest days where you already logged
@@ -6656,7 +6686,30 @@
     </div>`;
         }
 
-        // Fueling cue removed — daily nutrition lives on the Fuel tab now.
+        // 4. Strength (if any) — done after the main workout
+        if (day.strength) {
+          const sDone = isSectionDone(day, "strength");
+          const sKey = detectStrengthKey(day.strength);
+          const sCounts = sKey ? exerciseProgress(day.date, "strength_" + sKey) : null;
+          html += `<label class="section-h3-label ${sDone ? "section-done" : ""}" data-section-label="strength">
+              <input type="checkbox" class="task-check section-check" data-section="strength" ${sDone ? "checked" : ""}>
+              <h3>Strength</h3>
+              ${sCounts ? `<span class="ex-progress-pill">${sCounts.done}/${sCounts.total} done</span>` : ""}
+            </label>
+            <div class="strength-box">${day.strength}</div>`;
+          if (sKey) {
+            html += `<button type="button" class="open-tracker-btn" data-tracker-kind="strength" data-tracker-key="${sKey}">Track each exercise (weight, reps, notes)</button>`;
+          }
+        }
+
+        // 5. Core (if any) — between workout/strength and post-routines
+        for (const r of byPhase.core) html += routineRowHtml(r);
+
+        // 6. Post-workout cooldown
+        for (const r of byPhase.post) html += routineRowHtml(r);
+
+        // 7. After-hours routines (desk breaks)
+        for (const r of byPhase.after_hours) html += routineRowHtml(r);
 
         // Master "all complete" checkbox at the bottom
         const allDone = isDone(day);
@@ -8201,6 +8254,8 @@
       // Snapshot original DATA before applying any overrides (needed for "reset plan")
       snapshotOriginalDays();
       applyOverrides();
+      // Layer the runner-core routine onto Tuesday + Friday after overrides apply
+      injectCoreRoutine();
       // Re-apply theme so the toggle button picks up its label/icon
       applyTheme(loadTheme());
       document
