@@ -1252,35 +1252,163 @@
       }
       .ex-inputs textarea { min-height: 50px; resize: vertical; }
 
-      /* Set checkboxes for strength exercises (replaces the reps free-field) */
-      .set-checkboxes {
-        display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
-        padding: 6px 0 2px;
+      /* Circular set buttons for strength exercises */
+      .strength-set-area {
+        margin-top: 10px;
       }
-      .set-checkbox {
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 6px 12px;
-        background: var(--card);
-        border: 1.5px solid var(--border);
-        border-radius: 999px;
-        cursor: pointer;
+      .sets-summary {
         font-size: 12px;
-        font-weight: 600;
         color: var(--muted);
+        font-weight: 600;
+        margin-bottom: 6px;
+        letter-spacing: 0.3px;
+      }
+      .sets-summary b { color: var(--p1); }
+      .set-circles {
+        display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+        padding: 2px 0;
+      }
+      .set-circle {
+        width: 46px; height: 46px;
+        border-radius: 50%;
+        border: 2px solid var(--border);
+        background: var(--card);
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--muted);
+        display: flex; align-items: center; justify-content: center;
+        transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+        padding: 0;
+        text-align: center;
+        line-height: 1;
+      }
+      .set-circle:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        transform: scale(1.06);
+      }
+      .set-circle.completed {
+        background: var(--p1);
+        border-color: var(--p1);
+        color: white;
+      }
+      .set-circle.completed:hover {
+        filter: brightness(0.92);
+        color: white;
+      }
+
+      /* Exercise history block */
+      .ex-history {
+        margin-top: 12px;
+        padding-top: 10px;
+        border-top: 1px dashed var(--border);
+      }
+      .ex-history-toggle {
+        cursor: pointer;
+        color: var(--accent);
         user-select: none;
-        transition: background 0.15s, border-color 0.15s, color 0.15s;
+        font-weight: 600;
+        font-size: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
       }
-      .set-checkbox:hover { border-color: var(--accent); color: var(--accent); }
-      .set-checkbox input {
-        width: 16px; height: 16px;
-        cursor: pointer; margin: 0;
-        accent-color: var(--p1);
+      .ex-history-toggle .chev-mini {
+        transition: transform 0.15s;
+        display: inline-block;
       }
-      .set-checkbox.checked {
-        background: var(--pace-bg);
-        border-color: var(--pace-border);
-        color: var(--p1);
+      .ex-history-toggle.open .chev-mini { transform: rotate(90deg); }
+      .ex-history-list {
+        margin-top: 8px;
+        display: none;
+        flex-direction: column;
+        gap: 4px;
       }
+      .ex-history-list.open { display: flex; }
+      .ex-history-row {
+        font-size: 12px;
+        color: var(--muted);
+        display: flex;
+        gap: 10px;
+        align-items: baseline;
+      }
+      .ex-history-row .h-date { font-weight: 600; min-width: 70px; }
+      .ex-history-row .h-sets { flex: 1; color: var(--ink); }
+      .ex-history-row .h-weight { font-weight: 700; color: var(--p3); }
+
+      /* Set log modal (3rd-tier modal for per-set entry) */
+      #setLogModalBg .ex-modal { max-width: 420px; padding: 20px; }
+      .set-log-meta {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+      .set-log-prescription {
+        font-size: 13px;
+        color: var(--ink);
+        font-weight: 600;
+        margin-bottom: 16px;
+      }
+      .set-log-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .set-log-form .field { display: flex; flex-direction: column; gap: 5px; }
+      .set-log-form label {
+        font-size: 11px; font-weight: 700; color: var(--muted);
+        text-transform: uppercase; letter-spacing: 0.4px;
+      }
+      .set-log-form input {
+        padding: 12px 14px;
+        font-size: 22px;
+        font-weight: 700;
+        text-align: center;
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        background: var(--card); color: var(--ink);
+        font-family: inherit;
+        width: 100%;
+      }
+      .set-log-form input:focus {
+        outline: none; border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(59,92,140,0.12);
+      }
+      .weight-unit-row {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 16px;
+      }
+      .weight-unit-row .label-text {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+      .weight-unit-toggle {
+        display: flex; gap: 0;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .weight-unit-toggle button {
+        padding: 8px 16px;
+        border: 0;
+        background: var(--card);
+        color: var(--muted);
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .weight-unit-toggle button.active {
+        background: var(--accent);
+        color: white;
+      }
+      .set-log-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
       .ex-modal .ex-actions {
         display: flex; gap: 8px; flex-wrap: wrap;
@@ -3096,6 +3224,11 @@
     <!-- Workout log sub-modal -->
     <div class="ex-modal-bg" id="logModalBg">
       <div class="ex-modal" id="logModal"></div>
+    </div>
+
+    <!-- Per-set log sub-modal (3rd tier — opens from a circular set button) -->
+    <div class="ex-modal-bg" id="setLogModalBg">
+      <div class="ex-modal" id="setLogModal"></div>
     </div>
 
     <script>
@@ -7381,6 +7514,92 @@
         return m ? parseInt(m[1], 10) : 0;
       }
 
+      // Extract the "per-set" portion of a prescription (what goes inside each set circle).
+      // "3x6" → "6", "3x5-8" → "5-8", "3x8/leg" → "8", "3x30s/side" → "30s".
+      function parsePerSetLabel(prescription) {
+        if (!prescription) return "";
+        const m = String(prescription).match(/^\d+\s*[x×]\s*([\d.\-]+s?|\d+\s*sec)/i);
+        return m ? m[1].trim() : "";
+      }
+
+      // Numeric prescribed reps, used as the default in the set-log modal.
+      // "6" → 6, "5-8" → 8 (upper bound), "30s" → null (time-based, not reps).
+      function parsePrescribedReps(prescription) {
+        const label = parsePerSetLabel(prescription);
+        if (!label) return null;
+        if (/s$|sec/i.test(label)) return null; // time-based, no reps
+        const range = label.match(/^(\d+)-(\d+)/);
+        if (range) return parseInt(range[2], 10);
+        const single = label.match(/^(\d+)/);
+        if (single) return parseInt(single[1], 10);
+        return null;
+      }
+
+      // Ensure log has a `sets` array in the new format. Migrates old `setsCompleted`.
+      function ensureSetsArray(log, ex) {
+        if (Array.isArray(log.sets) && log.sets.length > 0) return log.sets;
+        const setCount = parseSetCount(ex.prescription);
+        if (setCount === 0) return [];
+        const defaultReps = parsePrescribedReps(ex.prescription);
+        const oldSets = Array.isArray(log.setsCompleted) ? log.setsCompleted : [];
+        const sets = [];
+        for (let i = 0; i < setCount; i++) {
+          sets.push({
+            reps: defaultReps,
+            weight: log.weight ?? null,
+            weightUnit: "lb",
+            completed: !!oldSets[i],
+          });
+        }
+        return sets;
+      }
+
+      // Find previous logs of this exercise across past dates (any routine).
+      // Used to populate the history section + suggest default weights.
+      function getExerciseHistory(exerciseKey, beforeDate, limit = 5) {
+        const results = [];
+        const dates = Object.keys(EX_LOGS).filter((d) => d < beforeDate).sort().reverse();
+        for (const date of dates) {
+          const dayLogs = EX_LOGS[date];
+          if (!dayLogs) continue;
+          for (const rk in dayLogs) {
+            const exLog = dayLogs[rk][exerciseKey];
+            if (!exLog) continue;
+            const sets = Array.isArray(exLog.sets) ? exLog.sets : [];
+            // Get the typical weight (last set's, or legacy log.weight)
+            let weight = null, weightUnit = "lb";
+            for (let i = sets.length - 1; i >= 0; i--) {
+              if (sets[i].weight != null) {
+                weight = sets[i].weight;
+                weightUnit = sets[i].weightUnit || "lb";
+                break;
+              }
+            }
+            if (weight == null && exLog.weight != null) weight = exLog.weight;
+            results.push({ date, sets, weight, weightUnit, routineKey: rk });
+            if (results.length >= limit) return results;
+          }
+        }
+        return results;
+      }
+
+      // Default weight when opening a set log: prior set today, else last week's value.
+      function findDefaultWeight(day, routineKey, exerciseKey, setIdx) {
+        const log = getExerciseLog(day.date, routineKey, exerciseKey);
+        if (log && Array.isArray(log.sets)) {
+          for (let i = setIdx - 1; i >= 0; i--) {
+            if (log.sets[i] && log.sets[i].weight != null) {
+              return { weight: log.sets[i].weight, unit: log.sets[i].weightUnit || "lb" };
+            }
+          }
+        }
+        const history = getExerciseHistory(exerciseKey, day.date, 1);
+        if (history.length > 0 && history[0].weight != null) {
+          return { weight: history[0].weight, unit: history[0].weightUnit || "lb" };
+        }
+        return null;
+      }
+
       function exerciseProgress(date, routineKey) {
         const list = getExerciseList(routineKey);
         if (!list.length) return null;
@@ -7409,7 +7628,16 @@
       // ---------- Exercise tracker sub-modal ----------
       // routineKey: for strength → "strength_A_full_gym", "strength_B_home", "strength_light_taper"
       //             for routines → "pre_run", "post_run", "mobility_daily", etc.
+      // Track currently-open exercise tracker so set-log modal can re-render it
+      let CURRENT_TRACKER = null;
+      function refreshExerciseTrackerModal() {
+        if (CURRENT_TRACKER) {
+          const { day, kind, key } = CURRENT_TRACKER;
+          openExerciseTracker(day, kind, key);
+        }
+      }
       function openExerciseTracker(day, kind, key) {
+        CURRENT_TRACKER = { day, kind, key };
         const routineKey = kind === "strength" ? "strength_" + key : key;
         const exercises = getExerciseList(routineKey);
         const meta = getRoutineMeta(routineKey);
@@ -7427,19 +7655,49 @@
 
         for (const ex of exercises) {
           const log = getExerciseLog(day.date, routineKey, ex.key) || {};
-          const done = !!log.completed;
-          const setCount = isStrength ? parseSetCount(ex.prescription) : 0;
-          // setsCompleted: array of booleans, one per set (strength only)
-          const savedSets = Array.isArray(log.setsCompleted) ? log.setsCompleted : [];
-          // Build set checkboxes HTML
-          let setBoxesHtml = "";
-          for (let i = 0; i < setCount; i++) {
-            const setChecked = !!savedSets[i];
-            setBoxesHtml += `<label class="set-checkbox ${setChecked ? "checked" : ""}">
-              <input type="checkbox" class="ex-set" data-set-idx="${i}" ${setChecked ? "checked" : ""}>
-              <span>Set ${i + 1}</span>
-            </label>`;
+          const sets = isStrength ? ensureSetsArray(log, ex) : [];
+          const completedCount = sets.filter((s) => s.completed).length;
+          const totalSets = sets.length;
+          const done = isStrength
+            ? totalSets > 0 && completedCount === totalSets
+            : !!log.completed;
+          const perSetLabel = isStrength ? parsePerSetLabel(ex.prescription) || "?" : "";
+
+          // Build set circle buttons (strength only)
+          let circlesHtml = "";
+          if (isStrength) {
+            for (let i = 0; i < totalSets; i++) {
+              const s = sets[i] || {};
+              const insideLabel = s.completed && s.reps != null
+                ? String(s.reps)
+                : perSetLabel;
+              circlesHtml += `<button type="button" class="set-circle ${s.completed ? "completed" : ""}" data-set-idx="${i}" title="Set ${i + 1}">${insideLabel}</button>`;
+            }
           }
+
+          // Build history block (strength only — last 3 prior workouts of this exercise)
+          let historyHtml = "";
+          if (isStrength) {
+            const history = getExerciseHistory(ex.key, day.date, 3);
+            if (history.length > 0) {
+              const rows = history.map((h) => {
+                const repList = (h.sets || []).map((s) => (s.reps != null ? s.reps : "?")).join(",") || "—";
+                const wDisplay = h.weight != null ? `${h.weight} ${h.weightUnit || "lb"}` : "—";
+                return `<div class="ex-history-row">
+                  <span class="h-date">${fmtDate(h.date, { month: "short", day: "numeric" })}</span>
+                  <span class="h-sets">${repList} reps</span>
+                  <span class="h-weight">${wDisplay}</span>
+                </div>`;
+              }).join("");
+              historyHtml = `<div class="ex-history">
+                <div class="ex-history-toggle" data-history-toggle>
+                  <span class="chev-mini">▸</span> History (${history.length})
+                </div>
+                <div class="ex-history-list">${rows}</div>
+              </div>`;
+            }
+          }
+
           html += `<div class="ex-row ${done ? "done" : ""}" data-ex-key="${ex.key}">
             <div class="ex-head">
               <input type="checkbox" class="task-check ex-done-check" ${done ? "checked" : ""}>
@@ -7449,23 +7707,20 @@
                 ${ex.note ? `<div class="tip">${ex.note}</div>` : ""}
               </div>
             </div>
-            <div class="ex-inputs ${isStrength ? "" : "full"}">
-              ${isStrength ? `
-                <div>
-                  <label>Weight (lb)</label>
-                  <input type="number" class="ex-weight" step="0.5" min="0" placeholder="—" value="${log.weight ?? ""}">
-                </div>
-                <div>
-                  <label>Sets done</label>
-                  <div class="set-checkboxes">${setBoxesHtml || `<span style="font-size:12px;color:var(--muted)">—</span>`}</div>
-                </div>
-              ` : `
+            ${isStrength ? `
+              <div class="strength-set-area">
+                <div class="sets-summary"><b>${completedCount}</b> / ${totalSets} sets ${totalSets > 0 ? "· tap a circle to log" : ""}</div>
+                <div class="set-circles">${circlesHtml || `<span style="font-size:12px;color:var(--muted)">No sets parsed from prescription</span>`}</div>
+              </div>
+              ${historyHtml}
+            ` : `
+              <div class="ex-inputs full">
                 <div style="grid-column: 1 / -1">
                   <label>Notes</label>
                   <textarea class="ex-notes" placeholder="How it felt, form notes...">${log.notes ? log.notes.replace(/</g, "&lt;") : ""}</textarea>
                 </div>
-              `}
-            </div>
+              </div>
+            `}
           </div>`;
         }
 
@@ -7485,51 +7740,77 @@
         m.querySelectorAll(".ex-row").forEach((row) => {
           const exKey = row.dataset.exKey;
           const cb = row.querySelector(".ex-done-check");
-          const wEl = row.querySelector(".ex-weight");
-          const nEl = row.querySelector(".ex-notes");
-          const setBoxes = Array.from(row.querySelectorAll(".ex-set"));
+          const nEl = row.querySelector(".ex-notes"); // routines only
+          const circles = Array.from(row.querySelectorAll(".set-circle"));
 
-          function persist() {
+          // Routine note + completion persistence (non-strength only)
+          function persistRoutine() {
             const completed = cb.checked;
-            const weight = wEl && wEl.value !== "" ? parseFloat(wEl.value) : null;
-            const setsCompleted = setBoxes.length > 0 ? setBoxes.map((s) => s.checked) : null;
             const notes = nEl && nEl.value.trim() ? nEl.value.trim() : null;
-            const anySet = setsCompleted && setsCompleted.some((v) => v);
-            if (!completed && weight == null && !anySet && !notes) {
+            if (!completed && !notes) {
               clearExerciseLog(day.date, routineKey, exKey);
             } else {
-              setExerciseLog(day.date, routineKey, exKey, { completed, weight, setsCompleted, notes });
+              setExerciseLog(day.date, routineKey, exKey, { completed, notes });
             }
             row.classList.toggle("done", completed);
             updateExProgress(day, routineKey);
             propagateToParentSection(day, routineKey);
           }
 
-          // Master done checkbox: toggling syncs all set checkboxes too
-          cb.addEventListener("change", () => {
-            if (setBoxes.length > 0) {
-              setBoxes.forEach((s) => {
-                s.checked = cb.checked;
-                const lbl = s.closest(".set-checkbox");
-                if (lbl) lbl.classList.toggle("checked", cb.checked);
-              });
+          // Strength master done — toggling marks all sets done/undone with default reps
+          function strengthMasterToggle(toCompleted) {
+            const ex = exercises.find((e) => e.key === exKey);
+            if (!ex) return;
+            const log = getExerciseLog(day.date, routineKey, exKey) || {};
+            const sets = ensureSetsArray(log, ex);
+            const defaultReps = parsePrescribedReps(ex.prescription);
+            const def = findDefaultWeight(day, routineKey, exKey, sets.length);
+            for (let i = 0; i < sets.length; i++) {
+              sets[i] = {
+                reps: sets[i].reps != null ? sets[i].reps : defaultReps,
+                weight: sets[i].weight != null ? sets[i].weight : (def ? def.weight : null),
+                weightUnit: sets[i].weightUnit || (def ? def.unit : "lb"),
+                completed: toCompleted,
+              };
             }
-            persist();
+            const completed = toCompleted;
+            setExerciseLog(day.date, routineKey, exKey, { completed, sets });
+            updateExProgress(day, routineKey);
+            propagateToParentSection(day, routineKey);
+            refreshExerciseTrackerModal();
+          }
+
+          // Master done checkbox
+          cb.addEventListener("change", () => {
+            if (isStrength) {
+              strengthMasterToggle(cb.checked);
+            } else {
+              persistRoutine();
+            }
           });
 
-          // Each set checkbox: when all are checked, master auto-checks
-          setBoxes.forEach((s) => {
-            s.addEventListener("change", () => {
-              const lbl = s.closest(".set-checkbox");
-              if (lbl) lbl.classList.toggle("checked", s.checked);
-              const allChecked = setBoxes.every((x) => x.checked);
-              cb.checked = allChecked;
-              persist();
+          // Set circles — tap to open the per-set log sub-modal
+          circles.forEach((circle) => {
+            circle.addEventListener("click", (e) => {
+              e.stopPropagation();
+              const idx = parseInt(circle.dataset.setIdx, 10);
+              openSetLogModal(day, routineKey, exKey, idx);
             });
           });
 
-          if (wEl) wEl.addEventListener("change", persist);
-          if (nEl) nEl.addEventListener("change", persist);
+          // History toggle
+          const histToggle = row.querySelector("[data-history-toggle]");
+          if (histToggle) {
+            histToggle.addEventListener("click", (e) => {
+              e.stopPropagation();
+              histToggle.classList.toggle("open");
+              const list = row.querySelector(".ex-history-list");
+              if (list) list.classList.toggle("open");
+            });
+          }
+
+          // Notes textarea (routines only)
+          if (nEl) nEl.addEventListener("change", persistRoutine);
         });
 
         // Mark all / Clear all
@@ -7544,20 +7825,12 @@
           if (!confirm("Clear all exercise logs for this workout?")) return;
           m.querySelectorAll(".ex-row").forEach((row) => {
             const exKey = row.dataset.exKey;
-            row.querySelector(".ex-done-check").checked = false;
-            const w = row.querySelector(".ex-weight"); if (w) w.value = "";
-            const n = row.querySelector(".ex-notes"); if (n) n.value = "";
-            row.querySelectorAll(".ex-set").forEach((s) => {
-              s.checked = false;
-              const lbl = s.closest(".set-checkbox");
-              if (lbl) lbl.classList.remove("checked");
-            });
-            row.classList.remove("done");
             clearExerciseLog(day.date, routineKey, exKey);
           });
           updateExProgress(day, routineKey);
           propagateToParentSection(day, routineKey);
           flashStatus("Cleared");
+          refreshExerciseTrackerModal();
         });
         document.getElementById("exClose").addEventListener("click", closeExerciseTracker);
       }
@@ -7618,7 +7891,129 @@
       function closeExerciseTracker() {
         document.getElementById("exModalBg").classList.remove("show");
         document.body.style.overflow = "";
+        CURRENT_TRACKER = null;
       }
+
+      // Per-set log sub-modal — opened by tapping a set circle
+      function openSetLogModal(day, routineKey, exerciseKey, setIdx) {
+        const exercises = getExerciseList(routineKey);
+        const ex = exercises.find((e) => e.key === exerciseKey);
+        if (!ex) return;
+        const log = getExerciseLog(day.date, routineKey, exerciseKey) || {};
+        const sets = ensureSetsArray(log, ex);
+        const currentSet = sets[setIdx] || {};
+        const defaultReps = currentSet.reps != null ? currentSet.reps : parsePrescribedReps(ex.prescription);
+        const def = findDefaultWeight(day, routineKey, exerciseKey, setIdx);
+        const defaultWeight = currentSet.weight != null ? currentSet.weight : (def ? def.weight : null);
+        const defaultUnit = currentSet.weightUnit || (def ? def.unit : "lb");
+
+        const m = document.getElementById("setLogModal");
+        let html = `<button class="close" onclick="closeSetLogModal()" style="float:right;cursor:pointer;border:0;background:none;font-size:24px;color:var(--muted);line-height:1;padding:0 4px">×</button>`;
+        html += `<h2>Set ${setIdx + 1} of ${sets.length}</h2>`;
+        html += `<div class="set-log-meta">${ex.name}</div>`;
+        html += `<div class="set-log-prescription">Prescription: ${ex.prescription || "—"}</div>`;
+        html += `<div class="set-log-form">
+          <div class="field">
+            <label>Reps</label>
+            <input type="number" id="setRepsInput" min="0" max="500" placeholder="—" value="${defaultReps ?? ""}" inputmode="numeric">
+          </div>
+          <div class="field">
+            <label>Weight</label>
+            <input type="number" id="setWeightInput" min="0" step="0.5" placeholder="—" value="${defaultWeight ?? ""}" inputmode="decimal">
+          </div>
+        </div>
+        <div class="weight-unit-row">
+          <span class="label-text">Unit</span>
+          <div class="weight-unit-toggle">
+            <button type="button" class="unit-btn ${defaultUnit === "lb" ? "active" : ""}" data-unit="lb">lb</button>
+            <button type="button" class="unit-btn ${defaultUnit === "kg" ? "active" : ""}" data-unit="kg">kg</button>
+          </div>
+        </div>
+        <div class="set-log-actions">
+          <button type="button" class="btn btn-primary" id="setLogSaveBtn">${currentSet.completed ? "Update set" : "Save set"}</button>
+          ${currentSet.completed ? `<button type="button" class="btn btn-danger" id="setLogClearBtn">Clear set</button>` : ""}
+          <span style="flex:1"></span>
+          <button type="button" class="btn" id="setLogCancelBtn">Cancel</button>
+        </div>`;
+
+        m.innerHTML = html;
+        document.getElementById("setLogModalBg").classList.add("show");
+
+        let selectedUnit = defaultUnit;
+        m.querySelectorAll(".unit-btn").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            m.querySelectorAll(".unit-btn").forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+            selectedUnit = btn.dataset.unit;
+          });
+        });
+
+        document.getElementById("setLogSaveBtn").addEventListener("click", () => {
+          const repsVal = document.getElementById("setRepsInput").value;
+          const weightVal = document.getElementById("setWeightInput").value;
+          sets[setIdx] = {
+            reps: repsVal !== "" ? parseInt(repsVal, 10) : null,
+            weight: weightVal !== "" ? parseFloat(weightVal) : null,
+            weightUnit: selectedUnit,
+            completed: true,
+          };
+          // Auto-complete = all sets done
+          const allDone = sets.every((s) => s.completed);
+          setExerciseLog(day.date, routineKey, exerciseKey, {
+            completed: allDone,
+            sets,
+          });
+          updateExProgress(day, routineKey);
+          propagateToParentSection(day, routineKey);
+          closeSetLogModal();
+          refreshExerciseTrackerModal();
+        });
+
+        const clearBtn = document.getElementById("setLogClearBtn");
+        if (clearBtn) {
+          clearBtn.addEventListener("click", () => {
+            sets[setIdx] = {
+              reps: currentSet.reps,
+              weight: currentSet.weight,
+              weightUnit: currentSet.weightUnit,
+              completed: false,
+            };
+            const allDone = sets.every((s) => s.completed);
+            setExerciseLog(day.date, routineKey, exerciseKey, {
+              completed: allDone,
+              sets,
+            });
+            updateExProgress(day, routineKey);
+            propagateToParentSection(day, routineKey);
+            closeSetLogModal();
+            refreshExerciseTrackerModal();
+          });
+        }
+
+        document.getElementById("setLogCancelBtn").addEventListener("click", closeSetLogModal);
+
+        // Focus reps input for quick keyboard entry
+        setTimeout(() => {
+          const r = document.getElementById("setRepsInput");
+          if (r) { r.focus(); r.select(); }
+        }, 100);
+      }
+
+      function closeSetLogModal() {
+        document.getElementById("setLogModalBg").classList.remove("show");
+      }
+      // Click outside + Escape to close set log modal
+      document.addEventListener("click", (e) => {
+        const bg = document.getElementById("setLogModalBg");
+        if (bg && e.target === bg) closeSetLogModal();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          const bg = document.getElementById("setLogModalBg");
+          if (bg && bg.classList.contains("show")) closeSetLogModal();
+        }
+      });
       // Click outside to close, Esc to close
       document.addEventListener("click", (e) => {
         const bg = document.getElementById("exModalBg");
