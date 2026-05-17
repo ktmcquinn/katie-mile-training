@@ -3120,6 +3120,39 @@
           </ol>
         </details>
       </div>
+
+      <div class="cloud-card" id="stravaCard" style="border-left-color:#FC4C02">
+        <div class="cloud-row">
+          <h3 style="margin:0;flex:1;color:#FC4C02">Strava Connection</h3>
+          <span class="cloud-status disconnected" id="stravaStatus"><span class="dot"></span><span id="stravaStatusText">Not connected</span></span>
+        </div>
+        <div class="cloud-meta" id="stravaLastSync" style="margin-bottom:10px"></div>
+
+        <div class="cloud-row" id="stravaConnectRow">
+          <button type="button" class="btn btn-primary" id="stravaConnectBtn">Connect Strava</button>
+          <span class="cloud-meta">You'll be sent to Strava to approve, then bounced back here.</span>
+        </div>
+
+        <div class="cloud-row" id="stravaConnectedRow" style="display:none">
+          <span class="cloud-meta" id="stravaUserLabel"></span>
+          <span style="flex:1"></span>
+          <button type="button" class="btn btn-primary" id="stravaPullBtn">Pull recent runs &amp; rides</button>
+          <button type="button" class="btn" id="stravaDisconnectBtn">Disconnect</button>
+        </div>
+
+        <details>
+          <summary>Setup instructions (one-time)</summary>
+          <ol class="step-list">
+            <li>Go to <code>strava.com/settings/api</code> and create an API app. Use your Vercel domain (e.g. <code>katie-mile-training.vercel.app</code>) as the Authorization Callback Domain (no <code>https://</code>).</li>
+            <li>Copy your <b>Client ID</b> and <b>Client Secret</b>.</li>
+            <li>In your Vercel dashboard → <b>Settings → Environment Variables</b>, add <code>STRAVA_CLIENT_ID</code> and <code>STRAVA_CLIENT_SECRET</code> with those values. Apply to Production + Preview + Development.</li>
+            <li>Re-run <code>supabase-setup.sql</code> in Supabase to add the <code>strava_tokens</code> table.</li>
+            <li>Redeploy on Vercel so the new env vars take effect.</li>
+            <li>Sign in to your app (Cloud Sync), then click <b>Connect Strava</b> above.</li>
+          </ol>
+        </details>
+      </div>
+
       </div><!-- end #tab-more -->
 
       <!-- ========== TAB: TRENDS ========== -->
@@ -3243,6 +3276,11 @@
       const SUPABASE_URL = "https://wsbqdltgtbfjqhtkutgq.supabase.co";
       const SUPABASE_ANON_KEY =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndzYnFkbHRndGJmanFodGt1dGdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1MTg4NjYsImV4cCI6MjA5MzA5NDg2Nn0.yJV55I0dm0cilyAn3szJ31uazFDKijHae0PNqC5JTTE";
+
+      // Strava Client ID (PUBLIC — safe to commit. The Client Secret stays in
+      // Vercel environment variables, never in this file.) Get it from your app
+      // at strava.com/settings/api after creating one.
+      const STRAVA_CLIENT_ID_PUBLIC = "246580";
       // =========================================================================
 
       // ---------- Theme (light/dark) - run early to avoid flash ----------
@@ -8026,6 +8064,286 @@
         }
       });
 
+      // ---------- Strava integration ----------
+      // Token storage (in-memory + synced to Supabase strava_tokens table)
+      let STRAVA = null; // { access_token, refresh_token, expires_at, athlete_id, athlete_name }
+      const STRAVA_LAST_SYNC_KEY = "katie-mile-strava-last-sync";
+
+      function setStravaStatus(state, text) {
+        const el = document.getElementById("stravaStatus");
+        const t = document.getElementById("stravaStatusText");
+        if (!el || !t) return;
+        el.className = "cloud-status " + state;
+        t.textContent = text;
+      }
+
+      function updateStravaLastSync() {
+        const el = document.getElementById("stravaLastSync");
+        if (!el) return;
+        const ts = localStorage.getItem(STRAVA_LAST_SYNC_KEY);
+        if (!ts) { el.textContent = ""; return; }
+        const d = new Date(ts);
+        const mins = Math.floor((Date.now() - d.getTime()) / 60000);
+        if (mins < 1) el.textContent = "Last pulled just now";
+        else if (mins < 60) el.textContent = `Last pulled ${mins} min ago`;
+        else if (mins < 60 * 24) el.textContent = `Last pulled ${Math.floor(mins/60)} hr ago`;
+        else el.textContent = `Last pulled ${d.toLocaleDateString()}`;
+      }
+
+      // Load saved tokens from Supabase on sign-in
+      async function loadStravaTokens() {
+        if (!isSignedIn || !isSignedIn() || !supaClient) return;
+        try {
+          const { data, error } = await supaClient
+            .from("strava_tokens")
+            .select("*")
+            .eq("user_id", supaUser.id)
+            .single();
+          if (error && error.code !== "PGRST116") throw error;
+          if (data) {
+            STRAVA = {
+              access_token: data.access_token,
+              refresh_token: data.refresh_token,
+              expires_at: data.expires_at,
+              athlete_id: data.athlete_id,
+              athlete_name: data.athlete_name,
+            };
+            onStravaConnected();
+          } else {
+            onStravaDisconnected();
+          }
+        } catch (err) {
+          console.warn("Failed to load Strava tokens:", err);
+          onStravaDisconnected();
+        }
+      }
+
+      async function saveStravaTokens(tokens) {
+        if (!isSignedIn || !isSignedIn() || !supaClient) return;
+        const row = {
+          user_id: supaUser.id,
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+          expires_at: tokens.expires_at,
+          athlete_id: tokens.athlete_id || (tokens.athlete && tokens.athlete.id) || null,
+          athlete_name: tokens.athlete_name || (tokens.athlete ? `${tokens.athlete.firstname} ${tokens.athlete.lastname}` : null),
+        };
+        const { error } = await supaClient.from("strava_tokens").upsert(row, { onConflict: "user_id" });
+        if (error) throw error;
+        STRAVA = {
+          access_token: row.access_token,
+          refresh_token: row.refresh_token,
+          expires_at: row.expires_at,
+          athlete_id: row.athlete_id,
+          athlete_name: row.athlete_name,
+        };
+      }
+
+      // Start OAuth flow: redirect to Strava authorization page.
+      // We pass our own URL as redirect_uri so Strava bounces back.
+      function connectStrava() {
+        // We use a placeholder client_id since the actual one is on the server.
+        // Reconnect with the real client ID via env var injection at deploy time would be cleaner,
+        // but since the client_id is public anyway, easiest is to fetch it from server first.
+        fetch("/api/strava/exchange", { method: "OPTIONS" }) // warmup, ignore result
+          .catch(() => {});
+        // Use the public Strava OAuth URL. Client ID needs to be hardcoded or fetched.
+        // We'll fetch from server via a small unauthenticated endpoint that returns the client_id.
+        // Simpler: prompt user to paste their client_id once OR hardcode after first deploy.
+        // For now: open Strava OAuth with the Client ID baked in via STRAVA_CLIENT_ID_PUBLIC constant.
+        const clientId = STRAVA_CLIENT_ID_PUBLIC;
+        if (!clientId || clientId === "PASTE_YOUR_STRAVA_CLIENT_ID_HERE") {
+          alert("Strava Client ID not configured yet. See setup instructions in the More tab.");
+          return;
+        }
+        const redirect = location.origin + location.pathname;
+        const scope = "read,activity:read_all";
+        const url = `https://www.strava.com/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirect)}&response_type=code&approval_prompt=auto&scope=${encodeURIComponent(scope)}`;
+        location.href = url;
+      }
+
+      // After Strava redirects back to our app with ?code=..., exchange code for tokens
+      async function handleStravaCallback() {
+        const params = new URLSearchParams(location.search);
+        const code = params.get("code");
+        const scope = params.get("scope");
+        const error = params.get("error");
+        if (!code && !error) return false;
+        // Clean the URL (remove the OAuth params)
+        history.replaceState(null, "", location.pathname);
+        if (error) {
+          setStravaStatus("error", "Authorization denied: " + error);
+          return true;
+        }
+        if (!code) return false;
+        if (!isSignedIn || !isSignedIn()) {
+          alert("Sign in to your training app first (Cloud Sync), then reconnect Strava.");
+          return true;
+        }
+        setStravaStatus("syncing", "Exchanging code for token...");
+        try {
+          const res = await fetch("/api/strava/exchange", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Token exchange failed");
+          await saveStravaTokens(data);
+          onStravaConnected();
+          setStravaStatus("signed-in", `Connected as ${STRAVA.athlete_name || "athlete"}`);
+        } catch (err) {
+          console.error(err);
+          setStravaStatus("error", "Connection failed: " + (err.message || err));
+        }
+        return true;
+      }
+
+      // Refresh access token if expired
+      async function ensureStravaToken() {
+        if (!STRAVA) throw new Error("Not connected to Strava");
+        const nowSec = Math.floor(Date.now() / 1000);
+        if (STRAVA.expires_at && nowSec < STRAVA.expires_at - 60) {
+          return STRAVA.access_token; // still valid
+        }
+        // Refresh
+        const res = await fetch("/api/strava/refresh", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refresh_token: STRAVA.refresh_token }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Token refresh failed");
+        await saveStravaTokens({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+          expires_at: data.expires_at,
+          athlete_id: STRAVA.athlete_id,
+          athlete_name: STRAVA.athlete_name,
+        });
+        return STRAVA.access_token;
+      }
+
+      // Fetch recent activities from Strava and pre-fill workout logs
+      async function pullStravaActivities() {
+        if (!STRAVA) {
+          alert("Connect Strava first.");
+          return;
+        }
+        setStravaStatus("syncing", "Pulling activities from Strava...");
+        try {
+          const token = await ensureStravaToken();
+          // Fetch activities from past 30 days
+          const after = Math.floor(Date.now() / 1000) - 30 * 86400;
+          const res = await fetch(`https://www.strava.com/api/v3/athlete/activities?after=${after}&per_page=50`, {
+            headers: { "Authorization": `Bearer ${token}` },
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || `HTTP ${res.status}`);
+          }
+          const activities = await res.json();
+          // Process each activity into a workout log
+          let imported = 0, skipped = 0;
+          for (const a of activities) {
+            // Date: Strava gives UTC ISO; convert to local date string
+            const date = new Date(a.start_date_local || a.start_date).toISOString().slice(0, 10);
+            // Find matching day in plan
+            const ctx = findDayForDate(date);
+            if (!ctx) { skipped++; continue; }
+            // Determine if this is a run or bike
+            const type = (a.type || a.sport_type || "").toLowerCase();
+            const isRun = type.includes("run");
+            const isBike = type.includes("ride") || type.includes("bike") || type.includes("velo");
+            if (!isRun && !isBike) { skipped++; continue; }
+            const distanceMi = a.distance ? a.distance / 1609.344 : null;
+            const durationSec = a.moving_time || a.elapsed_time || null;
+            const avgHr = a.average_heartrate ? Math.round(a.average_heartrate) : null;
+            const newLog = {
+              date,
+              distance: distanceMi ? Math.round(distanceMi * 100) / 100 : null,
+              minutes: durationSec ? Math.floor(durationSec / 60) : null,
+              seconds: durationSec ? durationSec % 60 : null,
+              durationSec,
+              rpe: null,
+              heartRate: avgHr,
+              notes: `Imported from Strava (${a.name}). ${a.notes || ""}`.trim(),
+              loggedAt: new Date().toISOString(),
+            };
+            if (isBike) {
+              const mph = calcSpeed(distanceMi, durationSec);
+              newLog.avgSpeedMph = mph || null;
+              newLog.avgSpeedLabel = mph ? fmtSpeed(mph) : null;
+              newLog.avgPower = a.average_watts ? Math.round(a.average_watts) : null;
+              newLog.paceSecPerMile = null;
+              newLog.paceLabel = null;
+            } else {
+              const paceSec = calcPace(distanceMi, durationSec);
+              newLog.paceSecPerMile = paceSec || null;
+              newLog.paceLabel = paceSec ? fmtPace(paceSec) : null;
+              newLog.avgSpeedMph = null;
+              newLog.avgSpeedLabel = null;
+              newLog.avgPower = null;
+            }
+            saveLog(date, newLog);
+            // Auto-check workout section
+            setSectionDone(ctx.day, "workout", true);
+            // Refresh day card pace pill
+            document.querySelectorAll(`.day[data-date="${date}"]`).forEach((el) => updateDayCardLog(el, newLog));
+            // Week totals
+            refreshWeekStat(ctx.week);
+            refreshBarFill(ctx.week);
+            imported++;
+          }
+          localStorage.setItem(STRAVA_LAST_SYNC_KEY, new Date().toISOString());
+          updateStravaLastSync();
+          setStravaStatus("signed-in", `Connected as ${STRAVA.athlete_name || "athlete"}`);
+          alert(`Pulled ${imported} activities from Strava. ${skipped} skipped (no matching plan day or unsupported type).`);
+        } catch (err) {
+          console.error(err);
+          setStravaStatus("error", "Pull failed: " + (err.message || err));
+        }
+      }
+
+      function onStravaConnected() {
+        document.getElementById("stravaConnectRow").style.display = "none";
+        document.getElementById("stravaConnectedRow").style.display = "flex";
+        const lbl = document.getElementById("stravaUserLabel");
+        if (lbl) lbl.textContent = "Connected as " + (STRAVA.athlete_name || `athlete ${STRAVA.athlete_id}`);
+        setStravaStatus("signed-in", "Connected");
+        updateStravaLastSync();
+      }
+      function onStravaDisconnected() {
+        document.getElementById("stravaConnectRow").style.display = "flex";
+        document.getElementById("stravaConnectedRow").style.display = "none";
+        setStravaStatus("disconnected", "Not connected");
+      }
+
+      async function disconnectStrava() {
+        if (!confirm("Disconnect Strava? Your existing imported workout logs are kept.")) return;
+        if (isSignedIn && isSignedIn() && supaClient) {
+          await supaClient.from("strava_tokens").delete().eq("user_id", supaUser.id);
+        }
+        STRAVA = null;
+        onStravaDisconnected();
+      }
+
+      function initStrava() {
+        const connectBtn = document.getElementById("stravaConnectBtn");
+        const pullBtn = document.getElementById("stravaPullBtn");
+        const disconnectBtn = document.getElementById("stravaDisconnectBtn");
+        if (connectBtn) connectBtn.addEventListener("click", connectStrava);
+        if (pullBtn) pullBtn.addEventListener("click", pullStravaActivities);
+        if (disconnectBtn) disconnectBtn.addEventListener("click", disconnectStrava);
+        // Handle OAuth callback if present in URL
+        handleStravaCallback().then((handled) => {
+          if (!handled) {
+            // Try to load existing tokens
+            if (isSignedIn && isSignedIn()) loadStravaTokens();
+          }
+        });
+      }
+
       // ---------- Cloud sync (Supabase) ----------
       const CLOUD_LAST_SYNC_KEY = "katie-mile-cloud-last-sync";
       let supaClient = null;
@@ -8140,6 +8458,8 @@
         updateLastSyncDisplay();
         // Auto-pull on sign-in
         pullFromCloud();
+        // Load Strava connection if any
+        if (typeof loadStravaTokens === "function") loadStravaTokens();
       }
       function onSignedOut() {
         document.getElementById("cloudAuthForm").style.display = "flex";
@@ -8976,6 +9296,7 @@
       initCloudUI();
       initCheckin();
       initFuel();
+      initStrava();
       initTabs();
       renderThisWeek();
       fillRef();

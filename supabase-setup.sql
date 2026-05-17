@@ -86,6 +86,20 @@ create table if not exists public.exercise_logs (
 );
 
 -- =========================================================================
+-- 8) strava_tokens: OAuth tokens for the user's Strava connection.
+-- One row per user. expires_at is unix epoch seconds (Strava's format).
+-- =========================================================================
+create table if not exists public.strava_tokens (
+  user_id        uuid primary key references auth.users(id) on delete cascade,
+  access_token   text not null,
+  refresh_token  text not null,
+  expires_at     bigint not null,
+  athlete_id     bigint,
+  athlete_name   text,
+  updated_at     timestamptz default now()
+);
+
+-- =========================================================================
 -- 7) meals: food log entries (one row per meal/snack — multiple per day OK).
 -- =========================================================================
 create table if not exists public.meals (
@@ -129,6 +143,7 @@ alter table public.day_overrides enable row level security;
 alter table public.exercise_logs enable row level security;
 alter table public.checkins      enable row level security;
 alter table public.meals         enable row level security;
+alter table public.strava_tokens enable row level security;
 
 -- Drop any existing policies so this script is idempotent
 drop policy if exists "own_workouts_select" on public.workouts;
@@ -145,6 +160,8 @@ drop policy if exists "own_checkins_select" on public.checkins;
 drop policy if exists "own_checkins_modify" on public.checkins;
 drop policy if exists "own_meals_select" on public.meals;
 drop policy if exists "own_meals_modify" on public.meals;
+drop policy if exists "own_strava_select" on public.strava_tokens;
+drop policy if exists "own_strava_modify" on public.strava_tokens;
 
 -- Recreate policies: users can SELECT their own rows and INSERT/UPDATE/DELETE
 -- only rows where user_id matches their auth uid.
@@ -181,6 +198,11 @@ create policy "own_checkins_modify" on public.checkins
 create policy "own_meals_select" on public.meals
   for select using (auth.uid() = user_id);
 create policy "own_meals_modify" on public.meals
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "own_strava_select" on public.strava_tokens
+  for select using (auth.uid() = user_id);
+create policy "own_strava_modify" on public.strava_tokens
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- =========================================================================

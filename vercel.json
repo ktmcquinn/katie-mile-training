@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": null,
+  "outputDirectory": null,
+  "framework": null,
+  "rewrites": [
+    { "source": "/api/strava/exchange", "destination": "/api/strava/exchange.js" },
+    { "source": "/api/strava/refresh", "destination": "/api/strava/refresh.js" }
+  ]
+}
