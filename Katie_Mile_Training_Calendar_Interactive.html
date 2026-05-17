@@ -8263,12 +8263,33 @@
             const date = new Date(a.start_date_local || a.start_date).toISOString().slice(0, 10);
             // Find matching day in plan
             const ctx = findDayForDate(date);
-            if (!ctx) { skipped++; continue; }
-            // Determine if this is a run or bike
-            const type = (a.type || a.sport_type || "").toLowerCase();
-            const isRun = type.includes("run");
-            const isBike = type.includes("ride") || type.includes("bike") || type.includes("velo");
-            if (!isRun && !isBike) { skipped++; continue; }
+            if (!ctx) {
+              console.log("Strava sync: skipped (no matching plan day)", { id: a.id, name: a.name, date, type: a.type, sport_type: a.sport_type });
+              skipped++;
+              continue;
+            }
+            // Determine if this is a run or bike. Strava exposes both `type` (legacy,
+            // broad category) and `sport_type` (newer, more granular). Peloton's
+            // integration usually sends `Ride` for bike classes, but Bike Bootcamp
+            // and some hybrid classes sync as the generic `Workout` type — so we
+            // also peek at the activity name for cycling keywords.
+            const type = (a.type || "").toLowerCase();
+            const sportType = (a.sport_type || "").toLowerCase();
+            const name = (a.name || "").toLowerCase();
+            const isRun = type.includes("run") || sportType.includes("run");
+            const nameLooksLikeBike =
+              name.includes("peloton") || name.includes("bike") ||
+              name.includes("cycl") || name.includes("ride") ||
+              name.includes("spin");
+            const isBike =
+              type.includes("ride") || type.includes("bike") || type.includes("velo") ||
+              sportType.includes("ride") || sportType.includes("bike") || sportType.includes("velo") ||
+              ((type === "workout" || sportType === "workout") && nameLooksLikeBike);
+            if (!isRun && !isBike) {
+              console.log("Strava sync: skipped (unsupported activity type)", { id: a.id, name: a.name, type: a.type, sport_type: a.sport_type });
+              skipped++;
+              continue;
+            }
             const distanceMi = a.distance ? a.distance / 1609.344 : null;
             const durationSec = a.moving_time || a.elapsed_time || null;
             const avgHr = a.average_heartrate ? Math.round(a.average_heartrate) : null;
