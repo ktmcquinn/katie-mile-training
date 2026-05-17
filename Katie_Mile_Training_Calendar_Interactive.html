@@ -8176,7 +8176,20 @@
           return true;
         }
         if (!code) return false;
+        // OAuth redirect lands on a fresh page load. Supabase session restoration
+        // is async — wait up to ~5s for supaUser to populate before deciding the
+        // user isn't signed in. Without this wait, the callback fires before
+        // initSupabase() has read the session from localStorage and we lose the code.
+        setStravaStatus("syncing", "Waiting for sign-in to load...");
+        if (configIsValid && configIsValid() && window.supabase) {
+          let waited = 0;
+          while ((!supaClient || !supaUser) && waited < 5000) {
+            await new Promise((r) => setTimeout(r, 100));
+            waited += 100;
+          }
+        }
         if (!isSignedIn || !isSignedIn()) {
+          setStravaStatus("error", "Not signed in to Cloud Sync");
           alert("Sign in to your training app first (Cloud Sync), then reconnect Strava.");
           return true;
         }
