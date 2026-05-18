@@ -8259,12 +8259,22 @@
           // Process each activity into a workout log
           let imported = 0, skipped = 0;
           for (const a of activities) {
-            // Date: Strava gives UTC ISO; convert to local date string
-            const date = new Date(a.start_date_local || a.start_date).toISOString().slice(0, 10);
+            // Bucket the activity by the user's BROWSER-LOCAL calendar date.
+            // Strava's `start_date_local` is the activity's recorded timezone,
+            // which Peloton hardcodes to the user's Peloton account timezone
+            // (Washington, DC) regardless of where the rider actually is — so
+            // a 5am Stuttgart Peloton ride lands on the previous calendar day
+            // if we use start_date_local naively. Using UTC start_date plus
+            // the browser's local timezone produces the right date no matter
+            // how the activity itself was timezoned.
+            const utc = new Date(a.start_date);
+            const date = utc.getFullYear() + "-" +
+              String(utc.getMonth() + 1).padStart(2, "0") + "-" +
+              String(utc.getDate()).padStart(2, "0");
             // Find matching day in plan
             const ctx = findDayForDate(date);
             if (!ctx) {
-              console.log("Strava sync: skipped (no matching plan day)", { id: a.id, name: a.name, date, type: a.type, sport_type: a.sport_type });
+              console.log("Strava sync: skipped (no matching plan day)", { id: a.id, name: a.name, date, start_date: a.start_date, start_date_local: a.start_date_local, type: a.type, sport_type: a.sport_type });
               skipped++;
               continue;
             }
