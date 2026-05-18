@@ -1184,6 +1184,62 @@
         font-size: 11px; font-weight: 700; border-radius: 999px;
       }
 
+      /* ---------- Strava inbox badge + rows ---------- */
+      .strava-inbox-badge {
+        display: inline-block; min-width: 18px;
+        padding: 1px 6px; margin-left: 4px;
+        background: #FC4C02; color: #fff;
+        font-size: 11px; font-weight: 700;
+        border-radius: 999px; text-align: center;
+        vertical-align: middle;
+      }
+      .strava-inbox-badge.zero { background: var(--muted); }
+      .si-row {
+        padding: 12px; border: 1px solid var(--border);
+        border-radius: 10px; margin-bottom: 10px; background: var(--card);
+      }
+      .si-row.ignored { opacity: 0.55; }
+      .si-row .si-head { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+      .si-row .si-name { font-weight: 700; font-size: 14px; flex: 1; min-width: 0; }
+      .si-row .si-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+      .si-row .si-reason {
+        display: inline-block; padding: 2px 8px;
+        font-size: 11px; font-weight: 700; border-radius: 999px;
+        background: var(--pace-bg); color: var(--p1);
+      }
+      .si-row .si-reason.warn { background: #FDECEA; color: #B85450; }
+      .si-row .si-stats {
+        display: flex; gap: 12px; flex-wrap: wrap;
+        font-size: 12px; color: var(--ink); margin-top: 6px;
+      }
+      .si-row .si-stats b { color: var(--ink); }
+      .si-row .si-controls {
+        display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 8px;
+        margin-top: 10px; align-items: end;
+      }
+      .si-row .si-controls label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 2px; }
+      .si-row .si-controls input[type="date"],
+      .si-row .si-controls select {
+        width: 100%; padding: 6px 8px;
+        border: 1px solid var(--border); border-radius: 6px;
+        background: var(--card); color: var(--ink); font-size: 13px;
+      }
+      @media (max-width: 560px) {
+        .si-row .si-controls { grid-template-columns: 1fr 1fr; }
+        .si-row .si-controls .si-btn-assign,
+        .si-row .si-controls .si-btn-ignore { grid-column: span 1; }
+      }
+      .si-empty {
+        text-align: center; padding: 30px 16px;
+        color: var(--muted); font-size: 13px;
+      }
+      .si-toggle-ignored {
+        display: inline-block; margin-top: 8px;
+        background: none; border: none; color: var(--accent);
+        font-size: 12px; cursor: pointer; padding: 4px 0;
+        text-decoration: underline;
+      }
+
       /* ---------- Exercise tracker sub-modal ---------- */
       .ex-modal-bg {
         position: fixed; inset: 0;
@@ -3137,6 +3193,7 @@
           <span class="cloud-meta" id="stravaUserLabel"></span>
           <span style="flex:1"></span>
           <button type="button" class="btn btn-primary" id="stravaPullBtn">Pull recent runs &amp; rides</button>
+          <button type="button" class="btn" id="stravaInboxBtn" style="display:none">Unassigned <span id="stravaInboxBadge" class="strava-inbox-badge">0</span></button>
           <button type="button" class="btn" id="stravaDisconnectBtn">Disconnect</button>
         </div>
 
@@ -3262,6 +3319,11 @@
     <!-- Per-set log sub-modal (3rd tier — opens from a circular set button) -->
     <div class="ex-modal-bg" id="setLogModalBg">
       <div class="ex-modal" id="setLogModal"></div>
+    </div>
+
+    <!-- Strava skipped-activities inbox modal -->
+    <div class="ex-modal-bg" id="stravaInboxModalBg">
+      <div class="ex-modal" id="stravaInboxModal"></div>
     </div>
 
     <script>
@@ -8061,6 +8123,8 @@
         if (e.key === "Escape") {
           const bg = document.getElementById("exModalBg");
           if (bg && bg.classList.contains("show")) closeExerciseTracker();
+          const siBg = document.getElementById("stravaInboxModalBg");
+          if (siBg && siBg.classList.contains("show")) closeStravaInbox();
         }
       });
 
@@ -8068,6 +8132,370 @@
       // Token storage (in-memory + synced to Supabase strava_tokens table)
       let STRAVA = null; // { access_token, refresh_token, expires_at, athlete_id, athlete_name }
       const STRAVA_LAST_SYNC_KEY = "katie-mile-strava-last-sync";
+
+      // ---------- Strava skipped-activities inbox ----------
+      // Persistent map of activities the auto-sync couldn't place. Shape:
+      //   { [activityId]: { activity, reason, status, updatedAt } }
+      // status: "pending" | "ignored" | "assigned"
+      // reason: "no_plan_day" | "unsupported_type" | "strength_no_day"
+      const STRAVA_INBOX_KEY = "katie-mile-strava-inbox";
+      let STRAVA_INBOX_SHOW_IGNORED = false;
+
+      function loadStravaInbox() {
+        try {
+          const raw = localStorage.getItem(STRAVA_INBOX_KEY);
+          return raw ? JSON.parse(raw) : {};
+        } catch (e) { return {}; }
+      }
+      function saveStravaInbox(obj) {
+        try { localStorage.setItem(STRAVA_INBOX_KEY, JSON.stringify(obj)); } catch (e) {}
+      }
+      // Slim the activity payload before storing so the inbox doesn't carry
+      // every Strava field forever.
+      function slimStravaActivity(a) {
+        return {
+          id: a.id,
+          name: a.name,
+          type: a.type,
+          sport_type: a.sport_type,
+          start_date: a.start_date,
+          start_date_local: a.start_date_local,
+          distance: a.distance,
+          moving_time: a.moving_time,
+          elapsed_time: a.elapsed_time,
+          average_heartrate: a.average_heartrate,
+          average_watts: a.average_watts,
+        };
+      }
+      // Add or refresh a pending inbox entry. If the entry was already
+      // 'assigned' or 'ignored', leave it alone — the user already decided.
+      function addToStravaInbox(activity, reason) {
+        const inbox = loadStravaInbox();
+        const existing = inbox[activity.id];
+        if (existing && (existing.status === "assigned" || existing.status === "ignored")) {
+          return existing.status;
+        }
+        inbox[activity.id] = {
+          activity: slimStravaActivity(activity),
+          reason,
+          status: "pending",
+          updatedAt: new Date().toISOString(),
+        };
+        saveStravaInbox(inbox);
+        return "pending";
+      }
+      function markStravaActivityStatus(id, status) {
+        const inbox = loadStravaInbox();
+        if (!inbox[id]) return;
+        inbox[id].status = status;
+        inbox[id].updatedAt = new Date().toISOString();
+        saveStravaInbox(inbox);
+      }
+      function getStravaInboxStatus(id) {
+        const inbox = loadStravaInbox();
+        return inbox[id]?.status || null;
+      }
+      function countStravaInboxPending() {
+        const inbox = loadStravaInbox();
+        let n = 0;
+        for (const id in inbox) if (inbox[id].status === "pending") n++;
+        return n;
+      }
+      function updateStravaInboxBadge() {
+        const btn = document.getElementById("stravaInboxBtn");
+        const badge = document.getElementById("stravaInboxBadge");
+        if (!btn || !badge) return;
+        const n = countStravaInboxPending();
+        if (n > 0) {
+          btn.style.display = "";
+          badge.textContent = String(n);
+          badge.classList.remove("zero");
+        } else {
+          // Hide the button entirely when nothing is pending — but keep it
+          // accessible if there are ignored items the user might un-ignore.
+          const inbox = loadStravaInbox();
+          const anyIgnored = Object.values(inbox).some((e) => e.status === "ignored");
+          if (anyIgnored) {
+            btn.style.display = "";
+            badge.textContent = "0";
+            badge.classList.add("zero");
+          } else {
+            btn.style.display = "none";
+          }
+        }
+      }
+
+      function fmtInboxStats(a, defaultType) {
+        const distMi = a.distance ? a.distance / 1609.344 : null;
+        const dur = a.moving_time || a.elapsed_time || null;
+        const parts = [];
+        if (defaultType !== "strength" && distMi)
+          parts.push(`<b>${(Math.round(distMi * 100) / 100).toFixed(2)} mi</b>`);
+        if (dur) parts.push(`<b>${fmtDuration(dur)}</b>`);
+        if (a.average_heartrate) parts.push(`HR ${Math.round(a.average_heartrate)}`);
+        if (a.average_watts) parts.push(`${Math.round(a.average_watts)} W`);
+        return parts.join(" · ");
+      }
+      function reasonLabel(reason) {
+        if (reason === "no_plan_day") return { text: "No matching plan day", cls: "" };
+        if (reason === "unsupported_type") return { text: "Unsupported activity type", cls: "" };
+        if (reason === "strength_no_day") return { text: "Strength on a non-strength day", cls: "warn" };
+        return { text: reason, cls: "" };
+      }
+      // Best guess at workout type from the original Strava activity, used
+      // to pre-select the type dropdown for the user.
+      function guessWorkoutType(a) {
+        const type = (a.type || "").toLowerCase();
+        const sportType = (a.sport_type || "").toLowerCase();
+        const name = (a.name || "").toLowerCase();
+        if (type.includes("run") || sportType.includes("run")) return "run";
+        if (type.includes("ride") || type.includes("bike") || type.includes("velo")
+          || sportType.includes("ride") || sportType.includes("bike") || sportType.includes("velo")
+          || name.includes("peloton") || name.includes("bike") || name.includes("cycl")
+          || name.includes("ride") || name.includes("spin")) return "bike";
+        if (type === "weighttraining" || sportType === "weighttraining"
+          || type === "crossfit" || sportType === "crossfit"
+          || type === "highintensityintervaltraining" || sportType === "highintensityintervaltraining"
+          || name.includes("strength") || name.includes("weight") || name.includes("lift")
+          || name.includes("bootcamp")) return "strength";
+        return "run";
+      }
+      // Compute the browser-local calendar date for an activity (same rule
+      // as the auto-import uses), formatted YYYY-MM-DD for <input type="date">.
+      function activityLocalDate(a) {
+        const utc = new Date(a.start_date);
+        return utc.getFullYear() + "-" +
+          String(utc.getMonth() + 1).padStart(2, "0") + "-" +
+          String(utc.getDate()).padStart(2, "0");
+      }
+
+      function openStravaInbox() {
+        renderStravaInbox();
+        const bg = document.getElementById("stravaInboxModalBg");
+        if (bg) bg.classList.add("show");
+      }
+      function closeStravaInbox() {
+        const bg = document.getElementById("stravaInboxModalBg");
+        if (bg) bg.classList.remove("show");
+      }
+      function renderStravaInbox() {
+        const root = document.getElementById("stravaInboxModal");
+        if (!root) return;
+        const inbox = loadStravaInbox();
+        const entries = Object.values(inbox);
+        const pending = entries.filter((e) => e.status === "pending");
+        const ignored = entries.filter((e) => e.status === "ignored");
+        // Sort pending newest-first by activity start date
+        pending.sort((a, b) => (b.activity.start_date || "").localeCompare(a.activity.start_date || ""));
+        ignored.sort((a, b) => (b.activity.start_date || "").localeCompare(a.activity.start_date || ""));
+
+        const headerHtml = `
+          <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:14px">
+            <div style="flex:1">
+              <h2>Unassigned Strava Activities</h2>
+              <div class="ex-meta">${pending.length} pending${ignored.length ? ` · ${ignored.length} ignored` : ""}</div>
+            </div>
+            <button type="button" class="btn" id="siCloseBtn">Close</button>
+          </div>
+          <div class="ex-desc">These activities couldn't be auto-assigned. Pick a date and workout type, then Assign. Use Ignore to dismiss activities you don't want to track (e.g. walks, recovery rides).</div>
+        `;
+
+        const renderRow = (entry) => {
+          const a = entry.activity;
+          const reason = reasonLabel(entry.reason);
+          const guess = guessWorkoutType(a);
+          const localDate = activityLocalDate(a);
+          const friendlyDate = new Date(a.start_date).toLocaleString(undefined, {
+            weekday: "short", month: "short", day: "numeric",
+            hour: "numeric", minute: "2-digit",
+          });
+          const typeLabel = a.sport_type || a.type || "Activity";
+          const isIgnored = entry.status === "ignored";
+          if (isIgnored) {
+            return `<div class="si-row ignored" data-id="${a.id}">
+              <div class="si-head">
+                <div class="si-name">${escapeHtml(a.name || "Untitled")}</div>
+                <span class="si-reason">Ignored</span>
+              </div>
+              <div class="si-meta">${escapeHtml(typeLabel)} · ${friendlyDate}</div>
+              <div class="si-stats">${fmtInboxStats(a, guess)}</div>
+              <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end">
+                <button type="button" class="btn si-btn-unignore" data-id="${a.id}">Un-ignore</button>
+              </div>
+            </div>`;
+          }
+          return `<div class="si-row" data-id="${a.id}">
+            <div class="si-head">
+              <div class="si-name">${escapeHtml(a.name || "Untitled")}</div>
+              <span class="si-reason ${reason.cls}">${reason.text}</span>
+            </div>
+            <div class="si-meta">${escapeHtml(typeLabel)} · ${friendlyDate}</div>
+            <div class="si-stats">${fmtInboxStats(a, guess)}</div>
+            <div class="si-controls">
+              <div>
+                <label>Assign to date</label>
+                <input type="date" class="si-date" value="${localDate}">
+              </div>
+              <div>
+                <label>Workout type</label>
+                <select class="si-type">
+                  <option value="run"${guess === "run" ? " selected" : ""}>Run</option>
+                  <option value="bike"${guess === "bike" ? " selected" : ""}>Bike</option>
+                  <option value="strength"${guess === "strength" ? " selected" : ""}>Strength</option>
+                </select>
+              </div>
+              <button type="button" class="btn btn-primary si-btn-assign" data-id="${a.id}">Assign</button>
+              <button type="button" class="btn si-btn-ignore" data-id="${a.id}">Ignore</button>
+            </div>
+          </div>`;
+        };
+
+        let body = "";
+        if (pending.length === 0) {
+          body = `<div class="si-empty">No pending Strava activities to assign. Hit "Pull recent runs &amp; rides" to look for new ones.</div>`;
+        } else {
+          body = pending.map(renderRow).join("");
+        }
+
+        let ignoredBlock = "";
+        if (ignored.length > 0) {
+          const toggleLabel = STRAVA_INBOX_SHOW_IGNORED
+            ? `Hide ignored (${ignored.length})`
+            : `Show ignored (${ignored.length})`;
+          ignoredBlock = `
+            <button type="button" class="si-toggle-ignored" id="siToggleIgnored">${toggleLabel}</button>
+            ${STRAVA_INBOX_SHOW_IGNORED ? `<div style="margin-top:8px">${ignored.map(renderRow).join("")}</div>` : ""}
+          `;
+        }
+
+        root.innerHTML = headerHtml + body + ignoredBlock;
+
+        // Wire row handlers
+        root.querySelector("#siCloseBtn")?.addEventListener("click", closeStravaInbox);
+        root.querySelector("#siToggleIgnored")?.addEventListener("click", () => {
+          STRAVA_INBOX_SHOW_IGNORED = !STRAVA_INBOX_SHOW_IGNORED;
+          renderStravaInbox();
+        });
+        root.querySelectorAll(".si-btn-assign").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const id = btn.dataset.id;
+            const row = btn.closest(".si-row");
+            const dateStr = row.querySelector(".si-date")?.value;
+            const type = row.querySelector(".si-type")?.value;
+            assignFromInbox(id, dateStr, type);
+          });
+        });
+        root.querySelectorAll(".si-btn-ignore").forEach((btn) => {
+          btn.addEventListener("click", () => ignoreFromInbox(btn.dataset.id));
+        });
+        root.querySelectorAll(".si-btn-unignore").forEach((btn) => {
+          btn.addEventListener("click", () => unignoreFromInbox(btn.dataset.id));
+        });
+      }
+
+      function escapeHtml(s) {
+        return String(s || "").replace(/[&<>"']/g, (c) => (
+          { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+        ));
+      }
+
+      // Assign a stored Strava activity to a specific plan day + workout type.
+      // Mirrors the bookkeeping the auto-import does, plus a conflict prompt
+      // when the target date already has a log (or strength check) recorded.
+      function assignFromInbox(id, dateStr, type) {
+        const inbox = loadStravaInbox();
+        const entry = inbox[id];
+        if (!entry) return;
+        const a = entry.activity;
+        if (!dateStr) {
+          alert("Pick a date for this activity first.");
+          return;
+        }
+        const ctx = findDayForDate(dateStr);
+        if (!ctx) {
+          alert("That date isn't in the training plan. Pick a date inside the plan range.");
+          return;
+        }
+        if (type === "strength") {
+          if (!ctx.day.strength) {
+            if (!confirm("That day has no strength workout scheduled. Mark strength done on this day anyway?")) {
+              return;
+            }
+          } else {
+            const already = COMPLETED[dateStr];
+            const alreadyDone = already && typeof already === "object" && already.strength === true;
+            if (alreadyDone) {
+              const keep = confirm("Strength is already marked complete on " + dateStr + ".\n\nOK = keep existing (no change)\nCancel = re-mark from this Strava activity");
+              if (keep) {
+                // User wants to keep the existing check; still clear from inbox.
+                markStravaActivityStatus(id, "assigned");
+                updateStravaInboxBadge();
+                renderStravaInbox();
+                return;
+              }
+            }
+          }
+          setSectionDone(ctx.day, "strength", true);
+          markStravaActivityStatus(id, "assigned");
+          updateStravaInboxBadge();
+          renderStravaInbox();
+          return;
+        }
+        // Run or Bike
+        const distanceMi = a.distance ? a.distance / 1609.344 : null;
+        const durationSec = a.moving_time || a.elapsed_time || null;
+        const avgHr = a.average_heartrate ? Math.round(a.average_heartrate) : null;
+        const newLog = {
+          date: dateStr,
+          distance: distanceMi ? Math.round(distanceMi * 100) / 100 : null,
+          minutes: durationSec ? Math.floor(durationSec / 60) : null,
+          seconds: durationSec ? durationSec % 60 : null,
+          durationSec,
+          rpe: null,
+          heartRate: avgHr,
+          notes: `Imported from Strava (${a.name}). Manually assigned.`.trim(),
+          loggedAt: new Date().toISOString(),
+        };
+        if (type === "bike") {
+          const mph = calcSpeed(distanceMi, durationSec);
+          newLog.avgSpeedMph = mph || null;
+          newLog.avgSpeedLabel = mph ? fmtSpeed(mph) : null;
+          newLog.avgPower = a.average_watts ? Math.round(a.average_watts) : null;
+          newLog.paceSecPerMile = null;
+          newLog.paceLabel = null;
+        } else {
+          const paceSec = calcPace(distanceMi, durationSec);
+          newLog.paceSecPerMile = paceSec || null;
+          newLog.paceLabel = paceSec ? fmtPace(paceSec) : null;
+          newLog.avgSpeedMph = null;
+          newLog.avgSpeedLabel = null;
+          newLog.avgPower = null;
+        }
+        // Conflict prompt — three-way choice via two confirms (no custom prompt UI)
+        if (hasLog(dateStr)) {
+          const overwrite = confirm("There's already a workout log on " + dateStr + ".\n\nOK = overwrite with this Strava activity\nCancel = keep the existing log (do nothing)");
+          if (!overwrite) return;
+        }
+        saveLog(dateStr, newLog);
+        setSectionDone(ctx.day, "workout", true);
+        document.querySelectorAll(`.day[data-date="${dateStr}"]`).forEach((el) => updateDayCardLog(el, newLog));
+        refreshWeekStat(ctx.week);
+        refreshBarFill(ctx.week);
+        markStravaActivityStatus(id, "assigned");
+        updateStravaInboxBadge();
+        renderStravaInbox();
+      }
+
+      function ignoreFromInbox(id) {
+        markStravaActivityStatus(id, "ignored");
+        updateStravaInboxBadge();
+        renderStravaInbox();
+      }
+      function unignoreFromInbox(id) {
+        markStravaActivityStatus(id, "pending");
+        updateStravaInboxBadge();
+        renderStravaInbox();
+      }
 
       function setStravaStatus(state, text) {
         const el = document.getElementById("stravaStatus");
@@ -8257,8 +8685,15 @@
           }
           const activities = await res.json();
           // Process each activity into a workout log
-          let imported = 0, skipped = 0;
+          let imported = 0, skipped = 0, newlySkipped = 0;
           for (const a of activities) {
+            // Skip activities the user has already manually handled in the
+            // inbox — assigned ones shouldn't be silently re-imported, and
+            // ignored ones shouldn't be resurfaced.
+            const handledStatus = getStravaInboxStatus(a.id);
+            if (handledStatus === "assigned" || handledStatus === "ignored") {
+              continue;
+            }
             // Bucket the activity by the user's BROWSER-LOCAL calendar date.
             // Strava's `start_date_local` is the activity's recorded timezone,
             // which Peloton hardcodes to the user's Peloton account timezone
@@ -8275,6 +8710,8 @@
             const ctx = findDayForDate(date);
             if (!ctx) {
               console.log("Strava sync: skipped (no matching plan day)", { id: a.id, name: a.name, date, start_date: a.start_date, start_date_local: a.start_date_local, type: a.type, sport_type: a.sport_type });
+              const prev = addToStravaInbox(a, "no_plan_day");
+              if (prev === "pending") newlySkipped++;
               skipped++;
               continue;
             }
@@ -8309,6 +8746,8 @@
               ((type === "workout" || sportType === "workout") && !nameLooksLikeBike && nameLooksLikeStrength);
             if (!isRun && !isBike && !isStrength) {
               console.log("Strava sync: skipped (unsupported activity type)", { id: a.id, name: a.name, type: a.type, sport_type: a.sport_type });
+              const prev = addToStravaInbox(a, "unsupported_type");
+              if (prev === "pending") newlySkipped++;
               skipped++;
               continue;
             }
@@ -8321,6 +8760,8 @@
                 imported++;
               } else {
                 console.log("Strava sync: strength activity on a day with no strength scheduled", { id: a.id, name: a.name, date });
+                const prev = addToStravaInbox(a, "strength_no_day");
+                if (prev === "pending") newlySkipped++;
                 skipped++;
               }
               continue;
@@ -8367,7 +8808,15 @@
           localStorage.setItem(STRAVA_LAST_SYNC_KEY, new Date().toISOString());
           updateStravaLastSync();
           setStravaStatus("signed-in", `Connected as ${STRAVA.athlete_name || "athlete"}`);
-          alert(`Pulled ${imported} activities from Strava. ${skipped} skipped (no matching plan day or unsupported type).`);
+          updateStravaInboxBadge();
+          const pendingCount = countStravaInboxPending();
+          const skipMsg = skipped
+            ? ` ${skipped} skipped — ${pendingCount} waiting in the Unassigned list.`
+            : "";
+          alert(`Pulled ${imported} activities from Strava.${skipMsg}`);
+          // Auto-open the inbox modal when there's anything new to assign,
+          // so the user can act on it without hunting for a button.
+          if (newlySkipped > 0) openStravaInbox();
         } catch (err) {
           console.error(err);
           setStravaStatus("error", "Pull failed: " + (err.message || err));
@@ -8381,6 +8830,7 @@
         if (lbl) lbl.textContent = "Connected as " + (STRAVA.athlete_name || `athlete ${STRAVA.athlete_id}`);
         setStravaStatus("signed-in", "Connected");
         updateStravaLastSync();
+        updateStravaInboxBadge();
       }
       function onStravaDisconnected() {
         document.getElementById("stravaConnectRow").style.display = "flex";
@@ -8400,10 +8850,21 @@
       function initStrava() {
         const connectBtn = document.getElementById("stravaConnectBtn");
         const pullBtn = document.getElementById("stravaPullBtn");
+        const inboxBtn = document.getElementById("stravaInboxBtn");
         const disconnectBtn = document.getElementById("stravaDisconnectBtn");
         if (connectBtn) connectBtn.addEventListener("click", connectStrava);
         if (pullBtn) pullBtn.addEventListener("click", pullStravaActivities);
+        if (inboxBtn) inboxBtn.addEventListener("click", openStravaInbox);
         if (disconnectBtn) disconnectBtn.addEventListener("click", disconnectStrava);
+        // Close the inbox modal on backdrop click or Escape
+        const inboxBg = document.getElementById("stravaInboxModalBg");
+        if (inboxBg) {
+          inboxBg.addEventListener("click", (e) => {
+            if (e.target === inboxBg) closeStravaInbox();
+          });
+        }
+        // Surface any pending Strava activities from prior sessions
+        updateStravaInboxBadge();
         // Handle OAuth callback if present in URL
         handleStravaCallback().then((handled) => {
           if (!handled) {
