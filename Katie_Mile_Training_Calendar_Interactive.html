@@ -8268,11 +8268,12 @@
               skipped++;
               continue;
             }
-            // Determine if this is a run or bike. Strava exposes both `type` (legacy,
-            // broad category) and `sport_type` (newer, more granular). Peloton's
-            // integration usually sends `Ride` for bike classes, but Bike Bootcamp
-            // and some hybrid classes sync as the generic `Workout` type — so we
-            // also peek at the activity name for cycling keywords.
+            // Determine if this is a run, bike, or strength activity. Strava exposes
+            // both `type` (legacy, broad category) and `sport_type` (newer, more
+            // granular). Peloton's integration usually sends `Ride` for bike classes
+            // and `WeightTraining` for strength classes, but Bike Bootcamp and some
+            // hybrid classes sync as the generic `Workout` type — so we also peek at
+            // the activity name for keywords.
             const type = (a.type || "").toLowerCase();
             const sportType = (a.sport_type || "").toLowerCase();
             const name = (a.name || "").toLowerCase();
@@ -8281,13 +8282,37 @@
               name.includes("peloton") || name.includes("bike") ||
               name.includes("cycl") || name.includes("ride") ||
               name.includes("spin");
+            const nameLooksLikeStrength =
+              name.includes("strength") || name.includes("weight") ||
+              name.includes("lift") || name.includes("crossfit") ||
+              name.includes("bootcamp") || name.includes("arms") ||
+              name.includes("legs") || name.includes("upper body") ||
+              name.includes("lower body") || name.includes("full body");
             const isBike =
               type.includes("ride") || type.includes("bike") || type.includes("velo") ||
               sportType.includes("ride") || sportType.includes("bike") || sportType.includes("velo") ||
               ((type === "workout" || sportType === "workout") && nameLooksLikeBike);
-            if (!isRun && !isBike) {
+            const isStrength =
+              type === "weighttraining" || sportType === "weighttraining" ||
+              type === "crossfit" || sportType === "crossfit" ||
+              type === "highintensityintervaltraining" || sportType === "highintensityintervaltraining" ||
+              ((type === "workout" || sportType === "workout") && !nameLooksLikeBike && nameLooksLikeStrength);
+            if (!isRun && !isBike && !isStrength) {
               console.log("Strava sync: skipped (unsupported activity type)", { id: a.id, name: a.name, type: a.type, sport_type: a.sport_type });
               skipped++;
+              continue;
+            }
+            // Strength activities don't have pace/speed/distance, so we handle them
+            // separately: auto-check the strength section on planned strength days
+            // without touching any existing cardio workout log on the same date.
+            if (isStrength) {
+              if (ctx.day.strength) {
+                setSectionDone(ctx.day, "strength", true);
+                imported++;
+              } else {
+                console.log("Strava sync: strength activity on a day with no strength scheduled", { id: a.id, name: a.name, date });
+                skipped++;
+              }
               continue;
             }
             const distanceMi = a.distance ? a.distance / 1609.344 : null;
