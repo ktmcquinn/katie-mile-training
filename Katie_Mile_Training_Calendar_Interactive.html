@@ -2729,15 +2729,18 @@
             <input type="number" id="ciEnergy" min="1" max="10" placeholder="—" inputmode="numeric">
             <span class="hint">1–10 feeling</span>
           </div>
-          <div class="checkin-field">
+          <div class="checkin-field" id="ciWeightField">
             <label for="ciWeight">Weight (lb)</label>
             <input type="number" id="ciWeight" min="50" max="500" step="0.1" placeholder="—" inputmode="decimal">
-            <span class="hint">morning weigh-in</span>
+            <span class="hint">Friday morning weigh-in</span>
           </div>
-          <div class="checkin-field">
+          <div class="checkin-field" id="ciBodyFatField">
             <label for="ciBodyFat">Body fat %</label>
             <input type="number" id="ciBodyFat" min="5" max="60" step="0.1" placeholder="—" inputmode="decimal">
-            <span class="hint">optional</span>
+            <span class="hint">optional, Fridays</span>
+          </div>
+          <div class="checkin-field" id="ciWeighInNote" style="display:none">
+            <span class="hint" id="ciWeighInNoteText" style="grid-column:1/-1"></span>
           </div>
           <div class="checkin-field">
             <label for="ciCycle">Period</label>
@@ -6226,33 +6229,94 @@
         persistCheckins();
       }
 
+      // Weigh-ins are a Friday-only ritual: the daily check-in form shows the
+      // Weight + Body Fat inputs only on Fridays, and a small note on other
+      // days pointing at the most recent / next Friday.
+      function isWeighInDay(dateStr) {
+        try {
+          return new Date(dateStr + "T00:00:00").getDay() === 5;
+        } catch (e) { return false; }
+      }
+      // Days until the next Friday (0 if today IS Friday).
+      function daysUntilFriday(dateStr) {
+        try {
+          const dow = new Date(dateStr + "T00:00:00").getDay();
+          return (5 - dow + 7) % 7;
+        } catch (e) { return 0; }
+      }
+      // Find the most recent Friday on or before the given date (used to look
+      // up the latest weigh-in for the note shown on non-Friday days).
+      function lastFridayOnOrBefore(dateStr) {
+        try {
+          const d = new Date(dateStr + "T00:00:00");
+          const dow = d.getDay();
+          const back = (dow - 5 + 7) % 7;
+          d.setDate(d.getDate() - back);
+          return d.getFullYear() + "-" +
+            String(d.getMonth() + 1).padStart(2, "0") + "-" +
+            String(d.getDate()).padStart(2, "0");
+        } catch (e) { return null; }
+      }
+      function fmtFriendlyDate(dateStr) {
+        try {
+          return new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", {
+            weekday: "long", month: "long", day: "numeric"
+          });
+        } catch (e) { return dateStr; }
+      }
+
       // Render the check-in form (populate fields from today's entry if it exists)
       function renderCheckin() {
         const dateEl = document.getElementById("checkinDate");
         if (!dateEl) return;
         const today = todayISO();
-        const todayDisplay = (() => {
-          try {
-            return new Date(today + "T00:00:00").toLocaleDateString("en-US", {
-              weekday: "long", month: "long", day: "numeric"
-            });
-          } catch (e) { return today; }
-        })();
+        const todayDisplay = fmtFriendlyDate(today);
         dateEl.textContent = todayDisplay;
         const c = getCheckin(today) || {};
         document.getElementById("ciBodyBattery").value = c.bodyBattery ?? "";
         document.getElementById("ciRHR").value = c.restingHr ?? "";
         document.getElementById("ciEnergy").value = c.energy ?? "";
         document.getElementById("ciCycle").value = c.cyclePhase ?? "";
-        // Pull weight + BF% from the WEIGHTS store (in sync with Trends weight sparkline)
+
+        // ---- Friday-only weight section ----
+        const isFriday = isWeighInDay(today);
+        const weightField = document.getElementById("ciWeightField");
+        const bfField = document.getElementById("ciBodyFatField");
+        const note = document.getElementById("ciWeighInNote");
+        const noteText = document.getElementById("ciWeighInNoteText");
         const weightEl = document.getElementById("ciWeight");
         const bfEl = document.getElementById("ciBodyFat");
-        const todayW = WEIGHTS && WEIGHTS[today];
-        if (weightEl) weightEl.value = todayW && todayW.weight != null ? todayW.weight : "";
-        if (bfEl) bfEl.value = todayW && todayW.bodyFat != null ? todayW.bodyFat : "";
+        if (isFriday) {
+          if (weightField) weightField.style.display = "";
+          if (bfField) bfField.style.display = "";
+          if (note) note.style.display = "none";
+          // Pull weight + BF% from the WEIGHTS store (in sync with Trends weight sparkline)
+          const todayW = WEIGHTS && WEIGHTS[today];
+          if (weightEl) weightEl.value = todayW && todayW.weight != null ? todayW.weight : "";
+          if (bfEl) bfEl.value = todayW && todayW.bodyFat != null ? todayW.bodyFat : "";
+        } else {
+          if (weightField) weightField.style.display = "none";
+          if (bfField) bfField.style.display = "none";
+          // Show a small note explaining when the next weigh-in is, plus the
+          // most recent Friday weight if we have one on file.
+          const days = daysUntilFriday(today);
+          const lastFri = lastFridayOnOrBefore(today);
+          const lastW = lastFri && WEIGHTS ? WEIGHTS[lastFri] : null;
+          const lastStr = lastW && lastW.weight != null
+            ? ` Last weigh-in: <b>${lastW.weight} lb</b> on ${fmtFriendlyDate(lastFri)}.`
+            : "";
+          if (noteText) {
+            noteText.innerHTML = `Weigh-in is Fridays only — next in <b>${days} day${days === 1 ? "" : "s"}</b>.${lastStr}`;
+          }
+          if (note) note.style.display = "";
+          // Clear the inputs so any stale value doesn't sneak into a save
+          if (weightEl) weightEl.value = "";
+          if (bfEl) bfEl.value = "";
+        }
+
         // Update Save button text based on whether today is already logged
         const btn = document.getElementById("ciSave");
-        if (btn) btn.textContent = (getCheckin(today) || (WEIGHTS && WEIGHTS[today])) ? "Update check-in" : "Save check-in";
+        if (btn) btn.textContent = (getCheckin(today) || (isFriday && WEIGHTS && WEIGHTS[today])) ? "Update check-in" : "Save check-in";
       }
 
       function saveCheckin() {
@@ -6261,8 +6325,11 @@
         const rhr = document.getElementById("ciRHR").value;
         const en = document.getElementById("ciEnergy").value;
         const phase = document.getElementById("ciCycle").value;
-        const weight = document.getElementById("ciWeight").value;
-        const bf = document.getElementById("ciBodyFat").value;
+        // Weight + body fat are Friday-only — ignore whatever the (hidden)
+        // inputs contain on any other day of the week.
+        const isFriday = isWeighInDay(today);
+        const weight = isFriday ? document.getElementById("ciWeight").value : "";
+        const bf = isFriday ? document.getElementById("ciBodyFat").value : "";
         const statusEl = document.getElementById("ciStatus");
         if (!bb && !rhr && !en && !phase && !weight && !bf) {
           statusEl.style.color = "#B85450";
