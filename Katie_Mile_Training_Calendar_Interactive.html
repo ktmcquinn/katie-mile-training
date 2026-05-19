@@ -804,6 +804,19 @@
         border-radius: 4px;
         background: rgba(0, 0, 0, 0.05);
       }
+      /* Specs line shows the actual workout content under the type label
+         (e.g. "6 miles", "8x400m @ mile", "30 min easy spin"). */
+      .day .day-specs {
+        margin-top: 4px;
+        font-size: 11px;
+        line-height: 1.35;
+        color: var(--muted);
+        font-weight: 500;
+      }
+      .day.completed .day-specs {
+        color: var(--muted);
+        opacity: 0.7;
+      }
       .day.today {
         box-shadow: 0 0 0 3px var(--accent);
       }
@@ -6634,6 +6647,83 @@
         return !!day.strength;
       }
 
+      // ---------- Display label + specs for the workout pill ----------
+      // The pill shows two lines under the date:
+      //   1) labelForDay()   — short type tag: "Easy Run", "Quality Run",
+      //      "Long Run", "Easy Bike", "Quality Bike", "Rest Day", "Race Day"
+      //      (with " + Strength" appended when the day has strength work)
+      //   2) specsForDay()   — the actual workout content (distance for runs,
+      //      duration for bikes, interval prescription for quality days).
+      function labelForDay(day) {
+        const cat = categorize(day);
+        let base;
+        if (cat === "race") base = "Race Day";
+        else if (cat === "rest") base = "Rest Day";
+        else if (cat === "quality") base = "Quality Run";
+        else if (cat === "long") base = "Long Run";
+        else if (cat === "bike") {
+          // Heuristic: "quality bike" if the detail mentions intervals,
+          // thresholds, or HIIT. Otherwise it's an easy Z2 spin.
+          const txt = ((day.title || "") + " " + (day.detail || "")).toUpperCase();
+          base = /SPRINT|INTERVAL|THRESHOLD|VO2|HIIT|FTP|TABATA|HARD\b/.test(txt)
+            ? "Quality Bike"
+            : "Easy Bike";
+        } else {
+          base = "Easy Run";
+        }
+        // Append strength when the day has a strength block scheduled
+        if (day.strength) base = `${base} + Strength`;
+        return base;
+      }
+      function specsForDay(day) {
+        const detail = (day.detail || "").trim();
+        if (!detail) return "";
+        const cat = categorize(day);
+        if (cat === "rest") return "Recovery";
+        if (cat === "race") return detail;
+        // Quality: prefer the "MAIN:" segment of the prescription; fall back
+        // to the first meaningful phrase. Track + interval workouts use
+        // "WU/CD" framing around a MAIN section that holds the real work.
+        if (cat === "quality") {
+          const mainMatch = detail.match(/MAIN:\s*([^.]+)/i);
+          if (mainMatch) {
+            return mainMatch[1].split(/[,;]/)[0].trim().replace(/\.$/, "");
+          }
+          // No MAIN marker (e.g. tempo runs like "5 mi: 1 mi WU; 3 mi @ HM pace; 1 mi CD"):
+          // strip the leading total + WU/CD bookends to highlight the meat.
+          const cleaned = detail
+            .replace(/^\d+(?:\.\d+)?\s*mi[:.\s]*/i, "")
+            .replace(/\d+(?:\.\d+)?\s*mi\s*WU[;,.\s]*/gi, "")
+            .replace(/\d+(?:\.\d+)?\s*mi\s*CD\.?\s*$/gi, "")
+            .trim();
+          return cleaned.split(/[,;]/)[0].trim().replace(/\.$/, "") || detail;
+        }
+        // Easy / long runs: pull the headline distance.
+        if (cat === "easy" || cat === "long") {
+          const miMatch = detail.match(/(\d+(?:\.\d+)?)\s*mi(?:le)?s?\b/i);
+          if (miMatch) {
+            const n = miMatch[1];
+            return `${n} ${n === "1" ? "mile" : "miles"}`;
+          }
+          return detail;
+        }
+        // Bike days: extract minutes and a flavor word (Z2 / easy).
+        if (cat === "bike") {
+          const minMatch = detail.match(/(\d+)\s*min\b/i);
+          if (minMatch) {
+            const m = minMatch[1];
+            const flavor = /\bZ2\b/i.test(detail)
+              ? "Z2"
+              : /easy/i.test(detail)
+                ? "easy spin"
+                : "";
+            return flavor ? `${m} min ${flavor}` : `${m} min`;
+          }
+          return detail;
+        }
+        return detail;
+      }
+
       // ---------- Hero countdown ----------
       function renderCountdown() {
         const race = parseISO(DATA.meta.race_date);
@@ -6718,15 +6808,15 @@
             : "TODAY";
         document.getElementById("todayDate").textContent =
           `${fmtDate(day.date, { weekday: "long", month: "long", day: "numeric" })} · Week ${week.num} · Phase ${ph.num}`;
-        document.getElementById("todayTitle").textContent = day.title;
+        // Title shows the new category label ("Easy Run + Strength", "Quality Run", etc.)
+        // Detail stays as the full workout description from the plan.
+        document.getElementById("todayTitle").textContent = labelForDay(day);
         document.getElementById("todayDetail").textContent = day.detail;
         const badges = document.getElementById("todayBadges");
         badges.innerHTML = "";
-        const cat = categorize(day);
         badges.innerHTML += `<span class="phase-pill pp${week.phase}">${ph.name}</span>`;
-        badges.innerHTML += `<span class="phase-pill" style="background:#374151">${cat.toUpperCase()}</span>`;
-        if (dayHasStrength(day))
-          badges.innerHTML += `<span class="phase-pill" style="background:#B45309">+ STRENGTH</span>`;
+        // Category + strength are now part of todayTitle, so we don't add
+        // separate badges for them anymore.
 
         // Today completion checkbox
         const todayCard = document.getElementById("todayCard");
@@ -6959,11 +7049,8 @@
           ${swappable ? '<span class="swap-handle" title="Drag to another day to swap, or tap two days to swap">⋮⋮</span>' : ""}
           <input type="checkbox" class="task-check" title="Mark all sections complete" ${isDone(d) ? "checked" : ""}>
         </div>
-        <div class="dt">${d.title}</div>
-        <div class="icons">
-          <span class="icon">${dayIcon(d)}</span>
-          ${dayHasStrength(d) ? '<span class="icon" style="background:#FEF3C7">+ ST</span>' : ""}
-        </div>
+        <div class="dt">${labelForDay(d)}</div>
+        <div class="day-specs">${specsForDay(d)}</div>
       `;
         // Checkbox: don't open modal when interacted with; sync state across both views
         const cb = dEl.querySelector(".task-check");
