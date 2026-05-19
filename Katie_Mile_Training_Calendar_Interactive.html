@@ -5053,7 +5053,7 @@
         A_full_gym: {
           label: "Strength A — Full Gym",
           duration: "~50 min",
-          description: "Heavy bilateral + single-leg foundation. Rest 90-120s between heavy sets.",
+          description: "Heavy bilateral + single-leg foundation. Rest 90-120s between heavy sets. Total exercise count is 9: do all of the main 9, OR swap 1-2 of the alternates at the bottom in place of similar-pattern exercises to keep the rotation fresh.",
           exercises: [
             { key: "back_squat", name: "Back squat", prescription: "3x5-8", note: "The bilateral king lift — work up to a top set at RPE 7-8." },
             { key: "single_leg_rdl", name: "Single-leg Romanian deadlift", prescription: "3x8/leg", note: "The most running-specific lift you'll do. Single-leg posterior chain + balance. Slow eccentric." },
@@ -5064,12 +5064,15 @@
             { key: "pallof_press", name: "Pallof press", prescription: "3x10/side", note: "Anti-rotation core. Slow + controlled." },
             { key: "side_plank", name: "Side plank", prescription: "3x30s/side", note: "Lateral core — hips drive sideways stability when running." },
             { key: "single_leg_calf_raise", name: "Single-leg calf raise", prescription: "2x15/leg", note: "Each running stride is a calf rep. Build calf power directly." },
+            { key: "goblet_squat", name: "Goblet squat (alternate)", prescription: "Alt for back squat — 3x8-10", note: "Lower-back-friendly squat pattern. Hold a heavy DB or KB at the chest, knees tracking over toes. Good week to swap in when the spine wants a break from barbell loading.", alternate: true },
+            { key: "single_leg_hip_thrust", name: "Single-leg hip thrust (alternate)", prescription: "Alt for any glute work — 3x10/leg", note: "Shoulders on a bench, one foot on the floor with knee bent ~90°. Drive through the heel, squeeze the glute at the top. Direct glute strength = better push-off.", alternate: true },
+            { key: "lateral_lunge", name: "Lateral lunge (alternate)", prescription: "Alt for Bulgarian split squat — 3x8/side", note: "Step wide to the side, sit into that hip with the other leg straight. Trains adductors + frontal-plane control — the plane running never touches but ankles/hips need.", alternate: true },
           ],
         },
         B_home: {
           label: "Strength B — Home",
           duration: "~35 min",
-          description: "Single-leg dominant, dumbbell-friendly. 25-30 lb DBs + a band.",
+          description: "Single-leg dominant, dumbbell-friendly. 25-30 lb DBs + a band. Total exercise count is 9: do all of the main 9, OR swap 1-2 of the alternates at the bottom in place of similar-pattern exercises to keep variety in the rotation.",
           exercises: [
             { key: "bulgarian_split_squat", name: "Bulgarian split squat", prescription: "3x8/leg @ 25-30 lb DBs", note: "Foundation single-leg lift. Drop straight down, front shin vertical." },
             { key: "single_leg_db_rdl", name: "Single-leg DB Romanian deadlift", prescription: "3x8/leg @ 25 lb", note: "Hinge from the hip. Keep moving leg straight back. Slow eccentric." },
@@ -5080,6 +5083,9 @@
             { key: "copenhagen_plank", name: "Copenhagen plank", prescription: "3x20s/side", note: "Top leg on couch. Brutal but builds groin/adductor strength runners need." },
             { key: "single_leg_calf_raise", name: "Single-leg calf raise", prescription: "2x15/leg", note: "On a step, drop heel below, drive up. Eccentric: 1s up, 3s down." },
             { key: "tibialis_raise", name: "Tibialis raise (toe raise)", prescription: "2x20", note: "Heels on floor, lift toes — shin pain prevention." },
+            { key: "reverse_lunge", name: "Reverse lunge (alternate)", prescription: "Alt for Bulgarian split squat — 3x10/leg @ 20-25 lb DBs", note: "Step BACK into the lunge (knee-friendlier than forward). Drive through the front heel. Easier balance demand than BSS so you can chase a slightly heavier load.", alternate: true },
+            { key: "lateral_lunge_db", name: "Lateral lunge w/ DB (alternate)", prescription: "Alt for step-up — 3x8/side @ 20-25 lb DB goblet", note: "Step wide to one side, sit into that hip, other leg stays straight. Adductor + frontal-plane strength — exactly the plane running ignores but ankles/hips need.", alternate: true },
+            { key: "hip_airplane", name: "Hip airplane (alternate)", prescription: "Alt for any single-leg lift — 3x6/leg, no weight", note: "Stand on one leg, hinge forward, rotate hips open/closed (toes up to ceiling, then down). Brutal single-leg balance + hip rotational control. Bodyweight is enough.", alternate: true },
           ],
         },
         light_taper: {
