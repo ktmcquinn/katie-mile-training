@@ -244,17 +244,11 @@ export default async function handler(req, res) {
       url.searchParams.set("api_key", apiKey);
       url.searchParams.set("query", query);
       url.searchParams.set("pageSize", String(max));
-      // Limit to data types that include nutrition for a typical person.
-      // "Branded" = packaged products (e.g., Goldfish), "Foundation" + "SR
-      // Legacy" = whole foods, "Survey (FNDDS)" = commonly eaten meals.
-      url.searchParams.set("dataType", "Branded,Foundation,SR Legacy,Survey (FNDDS)");
-      const response = await fetch(url.toString());
-      const data = await response.json();
-      if (!response.ok) {
-        return res.status(response.status).json({
-          error: `USDA search failed (${response.status}): ${data.error || JSON.stringify(data)}`,
-        });
-      }
+      // Note: previously passed dataType=Branded,Foundation,SR Legacy,Survey
+      // (FNDDS) but the parens + space in "Survey (FNDDS)" can break url
+      // parsing in api.data.gov's gateway layer. Leaving it off pulls from
+      // all types — slightly more noise in results, but a working request.
+      const data = await usdaFetch(url);
       return res.status(200).json({ results: normalizeSearchResults(data) });
     }
 
@@ -263,13 +257,7 @@ export default async function handler(req, res) {
       if (!id) return res.status(400).json({ error: "Missing 'id' parameter" });
       const url = new URL(`${API_BASE}/food/${encodeURIComponent(id)}`);
       url.searchParams.set("api_key", apiKey);
-      const response = await fetch(url.toString());
-      const data = await response.json();
-      if (!response.ok) {
-        return res.status(response.status).json({
-          error: `USDA food lookup failed (${response.status}): ${data.error || JSON.stringify(data)}`,
-        });
-      }
+      const data = await usdaFetch(url);
       const food = normalizeFoodDetail(data);
       if (!food) return res.status(404).json({ error: "Food not found" });
       return res.status(200).json({ food });
@@ -283,4 +271,44 @@ export default async function handler(req, res) {
       error: "USDA request failed: " + String(err && err.message || err),
     });
   }
+}
+
+// Fetch helper with proper error surfacing — captures the raw response body
+// so HTML error pages from the api.data.gov gateway (which proxies the USDA
+// FDC API) show up in the client error message instead of a cryptic "not
+// valid JSON" parse error.
+async function usdaFetch(url) {
+  const response = await fetch(url.toString(), {
+    headers: { "Accept": "application/json" },
+  });
+  const text = await response.text();
+  // Try to parse as JSON regardless of status code — both successful
+  // responses and api.data.gov errors typically come back as JSON.
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    // Non-JSON (usually HTML from an upstream gateway error). Surface the
+    // first ~250 chars so we can see what actually came back.
+    const snippet = text.slice(0, 250).replace(/\s+/g, " ").trim();
+    throw new Error(
+      `USDA returned non-JSON (HTTP ${response.status}). First bytes: ${snippet}`,
+    );
+  }
+  if (!response.ok) {
+    // api.data.gov error shape: { error: { code, message } }
+    // USDA error shape:         { error: "..."}  or  { code, message }
+    let msg;
+    if (data && data.error && typeof data.error === "object") {
+      msg = `${data.error.code || response.status}: ${data.error.message || JSON.stringify(data.error)}`;
+    } else if (data && data.error) {
+      msg = String(data.error);
+    } else if (data && data.message) {
+      msg = `${data.code || response.status}: ${data.message}`;
+    } else {
+      msg = JSON.stringify(data);
+    }
+    throw new Error(`USDA error (HTTP ${response.status}): ${msg}`);
+  }
+  return data;
 }
