@@ -6,6 +6,7 @@
   "rewrites": [
     { "source": "/api/strava/exchange", "destination": "/api/strava/exchange.js" },
     { "source": "/api/strava/refresh", "destination": "/api/strava/refresh.js" },
-    { "source": "/api/fatsecret/proxy", "destination": "/api/fatsecret/proxy.js" }
+    { "source": "/api/fatsecret/proxy", "destination": "/api/fatsecret/proxy.js" },
+    { "source": "/api/usda/proxy", "destination": "/api/usda/proxy.js" }
   ]
 }

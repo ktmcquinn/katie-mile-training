@@ -3033,7 +3033,7 @@
              You can still edit any value before hitting Add, or fill the form
              manually for custom recipes. -->
         <div class="food-search">
-          <label class="food-search-lbl" for="foodSearchInput">Search foods (FatSecret)</label>
+          <label class="food-search-lbl" for="foodSearchInput">Search foods (USDA)</label>
           <div class="food-search-input-wrap">
             <input
               type="text"
@@ -3064,7 +3064,7 @@
             <div class="fsp-preview" id="fspPreview"></div>
             <button type="button" class="btn btn-primary fsp-apply" id="fspApply">Use this — fill the form</button>
           </div>
-          <div class="food-search-attribution">Powered by <a href="https://www.fatsecret.com" target="_blank" rel="noopener">FatSecret</a></div>
+          <div class="food-search-attribution">Powered by <a href="https://fdc.nal.usda.gov" target="_blank" rel="noopener">USDA FoodData Central</a></div>
         </div>
 
         <form class="fuel-form" id="fuelForm" autocomplete="off">
@@ -6130,7 +6130,7 @@
               foodId: item.foodId || null,
               brand: item.brand || null,
               serving: item.serving || null,
-              source: item.source || (item.foodId ? "fatsecret" : "manual"),
+              source: item.source || (item.foodId ? "usda" : "manual"),
               loggedAt: new Date().toISOString(),
             };
             addMeal(todayISO(), meal);
@@ -6287,7 +6287,7 @@
             foodId: pending.foodId || null,
             brand: pending.brand || null,
             serving: pending.serving || null,
-            source: pending.foodId ? "fatsecret" : "manual",
+            source: pending.foodId ? "usda" : "manual",
             loggedAt: new Date().toISOString(),
           };
           addMeal(todayISO(), meal);
@@ -6320,21 +6320,24 @@
       //   4. User picks serving + quantity → "Use this — fill the form"
       //   5. Form's nutrition fields auto-fill; user can still edit; hits Add
       //
-      // The serverless function holds the API credentials — the browser never
-      // sees them. See api/fatsecret/proxy.js for the server side.
-      const FOOD_API_BASE = "/api/fatsecret/proxy";
+      // The serverless function holds the API key — the browser never sees
+      // it. See api/usda/proxy.js for the server side. (We still have an
+      // api/fatsecret/proxy.js sitting alongside in case FatSecret Premier
+      // Free comes through later and we want to switch back — just flip the
+      // FOOD_API_BASE constant.)
+      const FOOD_API_BASE = "/api/usda/proxy";
       let foodSearchDebounceId = null;
       let foodSearchInFlight = 0;
-      let currentFoodDetail = null; // result of food.get.v2 after a pick
+      let currentFoodDetail = null; // result of /food/{id} after a pick
 
-      async function fatSecretSearch(query) {
+      async function foodSearchApi(query) {
         const url = `${FOOD_API_BASE}?method=search&query=${encodeURIComponent(query)}&max=10`;
         const res = await fetch(url);
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Search failed");
         return data.results || [];
       }
-      async function fatSecretFood(foodId) {
+      async function foodLookupApi(foodId) {
         const url = `${FOOD_API_BASE}?method=food&id=${encodeURIComponent(foodId)}`;
         const res = await fetch(url);
         const data = await res.json();
@@ -6377,7 +6380,7 @@
           foodSearchDebounceId = setTimeout(async () => {
             const myReq = ++foodSearchInFlight;
             try {
-              const results = await fatSecretSearch(q);
+              const results = await foodSearchApi(q);
               // Bail if a newer request finished before us
               if (myReq !== foodSearchInFlight) return;
               renderResults(results);
@@ -6422,7 +6425,7 @@
         async function onPickResult(foodId) {
           setStatus("Loading nutrition…");
           try {
-            const food = await fatSecretFood(foodId);
+            const food = await foodLookupApi(foodId);
             currentFoodDetail = food;
             openServingPicker(food);
             setStatus("");
@@ -10037,7 +10040,7 @@
                 food_id: m.foodId || null,
                 brand: m.brand || null,
                 serving_description: m.serving || null,
-                source: m.source || (m.foodId ? "fatsecret" : "manual"),
+                source: m.source || (m.foodId ? "usda" : "manual"),
                 logged_at: m.loggedAt || new Date().toISOString(),
               });
             }
