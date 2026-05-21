@@ -115,6 +115,19 @@ create table if not exists public.meals (
   logged_at   timestamptz default now()
 );
 create index if not exists meals_user_date_idx on public.meals(user_id, date);
+-- Columns added when wiring FatSecret nutrition lookups (safe to re-run):
+--   sodium               — milligrams (FatSecret returns this for every food)
+--   food_id              — FatSecret's stable food identifier (text), so we
+--                          can re-fetch / refresh nutrition later if needed
+--   brand                — brand name for branded items ("Pepperidge Farm")
+--   serving_description  — human-readable serving ("1 oz", "30 pieces")
+--   source               — origin of the row ("fatsecret" | "manual"), so we
+--                          know what was looked up vs. hand-entered
+alter table public.meals add column if not exists sodium               numeric;
+alter table public.meals add column if not exists food_id              text;
+alter table public.meals add column if not exists brand                text;
+alter table public.meals add column if not exists serving_description  text;
+alter table public.meals add column if not exists source               text default 'manual';
 
 -- =========================================================================
 -- 6) checkins: daily morning check-in (Body Battery, RHR, energy, period).
