@@ -9536,6 +9536,11 @@
           updateStravaLastSync();
           setStravaStatus("signed-in", `Connected as ${STRAVA.athlete_name || "athlete"}`);
           updateStravaInboxBadge();
+          // Re-render the Fuel tab so its exercise-calorie / EA readings
+          // pick up the freshly-imported workout(s). Meal data is never
+          // modified by this pull, but if the user is sitting on the Fuel
+          // tab a stale UI can falsely look like meals disappeared.
+          if (typeof renderFuel === "function") renderFuel();
           const pendingCount = countStravaInboxPending();
           const skipMsg = skipped
             ? ` ${skipped} skipped — ${pendingCount} waiting in the Unassigned list.`
@@ -9982,11 +9987,16 @@
           }
           try { localStorage.setItem(CHECKIN_KEY, JSON.stringify(CHECKINS)); } catch (e) {}
           if (typeof renderCheckin === "function") renderCheckin();
-          // Meals
-          MEALS = {};
+          // Meals — MERGE rather than overwrite so any local-only meals
+          // (logged but not yet pushed to cloud due to the 1.5s debounce or a
+          // prior push failure) survive this pull. We treat the cloud as the
+          // source of truth for any meal whose id appears there, and keep any
+          // local meal whose id is NOT in the cloud snapshot.
+          const cloudMealIds = new Set();
+          const mergedMeals = {};
           for (const r of ml.data) {
-            if (!MEALS[r.date]) MEALS[r.date] = [];
-            MEALS[r.date].push({
+            if (!mergedMeals[r.date]) mergedMeals[r.date] = [];
+            mergedMeals[r.date].push({
               id: r.id,
               name: r.name,
               cal: r.calories,
@@ -10001,8 +10011,23 @@
               source: r.source || null,
               loggedAt: r.logged_at,
             });
+            if (r.id) cloudMealIds.add(r.id);
           }
+          // Preserve any local-only meals (unsynced).
+          for (const date in MEALS) {
+            for (const m of (MEALS[date] || [])) {
+              if (m && m.id && !cloudMealIds.has(m.id)) {
+                if (!mergedMeals[date]) mergedMeals[date] = [];
+                mergedMeals[date].push(m);
+              }
+            }
+          }
+          MEALS = mergedMeals;
           try { localStorage.setItem(MEAL_KEY, JSON.stringify(MEALS)); } catch (e) {}
+          // Re-push so the local-only meals make it to the cloud on the
+          // next sync cycle (the debounce queue may have been cleared by a
+          // page reload between addMeal and this pull).
+          if (typeof scheduleSync === "function") scheduleSync();
           if (typeof renderFuel === "function") renderFuel();
           // Re-render everything
           renderWeeks();
