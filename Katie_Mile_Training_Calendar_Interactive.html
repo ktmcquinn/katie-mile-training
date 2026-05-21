@@ -1975,7 +1975,13 @@
         cursor: pointer;
         color: var(--ink);
         font-family: inherit;
-        white-space: nowrap;
+        /* Keep chip on a single line but cap its width so long food names
+           ellipsize instead of overflowing the row off-screen. */
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        max-width: 100%;
+        min-width: 0;
         transition: background 0.15s, border-color 0.15s, color 0.15s;
       }
       .recent-chip:hover {
@@ -1983,10 +1989,21 @@
         border-color: var(--pace-border);
         color: var(--p1);
       }
+      .recent-chip .chip-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+        /* Keep the name to a reasonable share of the chip so even short
+           viewports still show some of the food name plus the cal badge. */
+        max-width: 22ch;
+      }
       .recent-chip .chip-cal {
         font-weight: 700;
-        margin-left: 4px;
+        margin-left: 0;
         color: var(--muted);
+        flex-shrink: 0;
+        white-space: nowrap;
       }
       .recent-chip:hover .chip-cal { color: var(--p1); }
       .recent-chip .chip-count {
@@ -6161,7 +6178,7 @@
         for (let i = 0; i < items.length; i++) {
           const m = items[i];
           const safeName = (m.name || "(unnamed)").replace(/</g, "&lt;");
-          html += `<button type="button" class="recent-chip" data-idx="${i}">${safeName}<span class="chip-cal">${m.cal} cal</span></button>`;
+          html += `<button type="button" class="recent-chip" data-idx="${i}" title="${safeName} — ${m.cal} cal"><span class="chip-name">${safeName}</span><span class="chip-cal">${m.cal} cal</span></button>`;
         }
         html += `</div>`;
         el.innerHTML = html;
