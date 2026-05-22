@@ -155,12 +155,32 @@
         max-width: 1200px;
         margin: 0 auto;
         padding: 16px;
-        /* Push content below the iOS notch / status bar. The viewport is
-           viewport-fit=cover so without this the top of the page renders
-           underneath the notch on iPhones. The base 20px gives every
-           device a touch more breathing room than the old 16px. */
-        padding-top: calc(20px + env(safe-area-inset-top, 0px));
+        /* Offset content below the fixed top bar. The top bar is 52px tall
+           plus whatever the iOS safe-area inset is (notch / status bar),
+           and we add 16px breathing room beneath it. */
+        padding-top: calc(52px + env(safe-area-inset-top, 0px) + 16px);
         padding-bottom: 90px; /* room for fixed bottom tab bar */
+      }
+
+      /* ---------- Fixed top menu bar (Strava-style) ---------- */
+      /* Empty for now — sits pinned to the top of the viewport so it
+         stays put while the page below scrolls. */
+      .top-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: calc(52px + env(safe-area-inset-top, 0px));
+        padding-top: env(safe-area-inset-top, 0px);
+        background: var(--card);
+        border-bottom: 1px solid var(--border);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        z-index: 90;
+        display: flex;
+        align-items: center;
+        /* Optional inner padding so future icons/title don't hug the edge. */
+        padding-left: max(16px, env(safe-area-inset-left, 0px));
+        padding-right: max(16px, env(safe-area-inset-right, 0px));
       }
 
       /* ---------- Tab pages + bottom tab bar ---------- */
@@ -2909,6 +2929,11 @@
     </style>
   </head>
   <body>
+    <!-- Fixed top menu bar — pinned to the viewport, stays put on scroll.
+         Intentionally empty for now; later we can drop a title/logo/menu
+         button in here. -->
+    <header class="top-bar" id="topBar" role="banner" aria-label="App header"></header>
+
     <div class="wrap">
 
       <!-- ========== TAB: TODAY ========== -->
