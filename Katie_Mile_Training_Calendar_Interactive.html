@@ -1138,35 +1138,6 @@
         margin-top: 4px;
         line-height: 1.4;
       }
-      /* Small "Move to another day →" link inside each modal-child body.
-         Sits below the description text. Has its own click handler that
-         stops propagation so tapping it doesn't fire the row's tracker
-         /log-modal click handler. */
-      .section-move-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        margin-top: 8px;
-        padding: 4px 0;
-        background: none;
-        border: none;
-        color: var(--accent);
-        font-family: inherit;
-        font-size: 12px;
-        font-weight: 600;
-        cursor: pointer;
-        text-decoration: none;
-        position: relative;
-        z-index: 1; /* sits above the ::after chevron on clickable rows */
-      }
-      .section-move-btn:hover {
-        text-decoration: underline;
-      }
-      .section-move-btn .arrow {
-        font-size: 14px;
-        line-height: 1;
-      }
-
       /* Move-target picker list inside the move-section modal. */
       .move-target-list {
         display: flex;
