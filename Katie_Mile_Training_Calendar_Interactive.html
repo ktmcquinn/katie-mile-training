@@ -476,8 +476,8 @@
         display: flex;
         gap: 4px;
         border-radius: 8px;
-        overflow: hidden;
-        height: 36px;
+        overflow: visible;
+        min-height: 36px;
       }
       .phase-seg {
         flex: 1;
@@ -487,12 +487,12 @@
         color: white;
         font-size: clamp(7px, 1.2vw, 10px);
         font-weight: 600;
-        padding: 0 4px;
+        padding: 4px;
         cursor: pointer;
         transition: opacity 0.15s;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
+        text-align: center;
+        word-break: break-word;
+        line-height: 1.2;
       }
       .phase-seg:hover {
         opacity: 0.85;
