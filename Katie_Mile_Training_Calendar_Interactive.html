@@ -2980,6 +2980,265 @@
         font-size: 12px;
         padding: 16px 0 24px;
       }
+
+      /* =========================================================================
+         BRAND V2 — preview design system inspired by the Dribbble reference.
+         Scoped to elements inside .brand-v2 so other tabs are unaffected.
+         All overrides redefine local CSS custom properties + restyle the
+         existing components (.hero, .today, .checkin-card, etc.) so the
+         underlying HTML doesn't have to change. Light-mode + dark-mode are
+         both supported via the [data-theme="dark"] .brand-v2 selector.
+         ========================================================================= */
+      .brand-v2 {
+        /* Light-mode brand-v2 palette: warm-cream background, dark ink,
+           same mint teal + amber accents. Picks up automatically when the
+           app is in light mode. */
+        --v2-bg:        #F4F1EC;
+        --v2-card:      #FFFFFF;
+        --v2-card-2:    #FAF7F2;
+        --v2-ink:       #14161A;
+        --v2-muted:     #6B7280;
+        --v2-border:    rgba(20, 22, 26, 0.08);
+        --v2-teal:      #14B8A6;
+        --v2-teal-soft: rgba(20, 184, 166, 0.15);
+        --v2-amber:     #F59E0B;
+        --v2-amber-soft:rgba(245, 158, 11, 0.15);
+        --v2-coral:     #FB923C;
+        --v2-ring-track: rgba(20, 22, 26, 0.08);
+        --v2-radius:    18px;
+        --v2-shadow:    0 4px 16px rgba(20, 22, 26, 0.04);
+      }
+      [data-theme="dark"] .brand-v2 {
+        /* Dark-mode brand-v2: OLED-deep black with slightly raised cards.
+           Matches the reference exactly. */
+        --v2-bg:        #0A0A0C;
+        --v2-card:      #15151A;
+        --v2-card-2:    #1C1C22;
+        --v2-ink:       #F4F4F6;
+        --v2-muted:     #8A8A92;
+        --v2-border:    rgba(255, 255, 255, 0.06);
+        --v2-teal:      #2DD4BF;
+        --v2-teal-soft: rgba(45, 212, 191, 0.15);
+        --v2-amber:     #FBBF24;
+        --v2-amber-soft:rgba(251, 191, 36, 0.15);
+        --v2-coral:     #FB923C;
+        --v2-ring-track: rgba(255, 255, 255, 0.07);
+        --v2-shadow:    0 4px 18px rgba(0, 0, 0, 0.45);
+      }
+
+      /* Repaint the tab background so the cards sit on the v2 surface.
+         Negative margins escape .wrap's 16px / 90px padding so the bg
+         bleeds edge-to-edge and extends down past the bottom tab bar. */
+      .brand-v2 {
+        background: var(--v2-bg);
+        color: var(--v2-ink);
+        margin: -16px -16px -90px;
+        padding: 16px 16px 110px;
+        border-radius: 0;
+        min-height: calc(100dvh - 52px - env(safe-area-inset-top, 0px));
+      }
+
+      /* Section header — bold title on the left, faded label on the right.
+         Mirrors the reference's "Today / Activity >" pattern. */
+      .brand-v2 .v2-section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin: 22px 4px 12px;
+      }
+      .brand-v2 .v2-section-title {
+        font-size: 19px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        color: var(--v2-ink);
+      }
+      .brand-v2 .v2-section-link {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--v2-muted);
+        text-transform: lowercase;
+        letter-spacing: 0.02em;
+      }
+
+      /* Stat tiles row. Three equal-width tiles with an icon-in-a-ring,
+         a big number, and a small caption underneath. */
+      .brand-v2 .v2-stat-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+      .brand-v2 .v2-stat {
+        background: var(--v2-card);
+        border-radius: var(--v2-radius);
+        padding: 14px 12px 12px;
+        box-shadow: var(--v2-shadow);
+        border: 1px solid var(--v2-border);
+      }
+      .brand-v2 .v2-stat-icon {
+        position: relative;
+        width: 44px;
+        height: 44px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--v2-card-2);
+      }
+      .brand-v2 .v2-stat-icon-teal { color: var(--v2-teal); }
+      .brand-v2 .v2-stat-icon-amber { color: var(--v2-amber); }
+      .brand-v2 .v2-stat-icon svg:first-of-type {
+        position: relative;
+        z-index: 1;
+      }
+      .brand-v2 .v2-ring {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+      }
+      .brand-v2 .v2-ring .ring-track {
+        fill: none;
+        stroke: var(--v2-ring-track);
+        stroke-width: 3;
+      }
+      .brand-v2 .v2-ring .ring-fill {
+        fill: none;
+        stroke-width: 3;
+        stroke-linecap: round;
+        /* Circumference of r=19 → 2πr ≈ 119.38. Dasharray set so we can
+           drive the percentage via stroke-dashoffset from JS. */
+        stroke-dasharray: 119.38;
+        stroke-dashoffset: 119.38;
+        transition: stroke-dashoffset 0.4s ease;
+      }
+      .brand-v2 .v2-ring .ring-fill.teal { stroke: var(--v2-teal); }
+      .brand-v2 .v2-ring .ring-fill.amber { stroke: var(--v2-amber); }
+      .brand-v2 .v2-stat-num {
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--v2-ink);
+        line-height: 1.1;
+      }
+      .brand-v2 .v2-stat-lbl {
+        font-size: 11px;
+        color: var(--v2-muted);
+        text-transform: lowercase;
+        letter-spacing: 0.03em;
+        margin-top: 2px;
+      }
+
+      /* Restyle the existing hero to feel like the reference's photo-card
+         workout banner: deeper gradient, larger title, more atmosphere. */
+      .brand-v2 .hero {
+        background: linear-gradient(135deg, #0F3D38 0%, #14B8A6 70%, #2DD4BF 100%);
+        border-radius: var(--v2-radius);
+        padding: 22px 22px 26px;
+        box-shadow: var(--v2-shadow);
+      }
+      [data-theme="dark"] .brand-v2 .hero {
+        background: linear-gradient(135deg, #0E2E2A 0%, #115E59 60%, #14B8A6 100%);
+      }
+      .brand-v2 .hero h1 {
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+      .brand-v2 .hero .sub {
+        font-size: 13px;
+        opacity: 0.92;
+      }
+      .brand-v2 .countdown { gap: 10px; margin-top: 18px; }
+      .brand-v2 .cd-box {
+        background: rgba(255, 255, 255, 0.16);
+        border-radius: 14px;
+        padding: 10px 14px;
+        min-width: 70px;
+        backdrop-filter: blur(6px);
+      }
+      .brand-v2 .cd-box .v { font-size: 24px; font-weight: 800; }
+
+      /* Restyle the "today" card as a dark/cream rounded surface with the
+         teal accent on the title and a heavier, more confident type stack. */
+      .brand-v2 .today {
+        background: var(--v2-card);
+        border-radius: var(--v2-radius);
+        border-left: 0;
+        border: 1px solid var(--v2-border);
+        padding: 18px;
+        margin-bottom: 16px;
+        box-shadow: var(--v2-shadow);
+      }
+      .brand-v2 .today:hover {
+        box-shadow: 0 6px 22px rgba(20, 22, 26, 0.08);
+      }
+      [data-theme="dark"] .brand-v2 .today:hover {
+        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.5);
+      }
+      .brand-v2 .today .title {
+        color: var(--v2-teal);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+      }
+      .brand-v2 .today .date {
+        color: var(--v2-muted);
+        font-size: 12px;
+      }
+      .brand-v2 .today h2 {
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--v2-ink);
+      }
+      .brand-v2 .today .detail {
+        color: var(--v2-muted);
+        font-size: 13px;
+      }
+
+      /* Restyle the check-in card to match the new surface treatment. */
+      .brand-v2 .checkin-card {
+        background: var(--v2-card);
+        border-radius: var(--v2-radius);
+        border: 1px solid var(--v2-border);
+        border-left: 0;
+        box-shadow: var(--v2-shadow);
+        padding: 18px;
+      }
+      .brand-v2 .checkin-head h3 {
+        color: var(--v2-teal);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+      }
+      .brand-v2 .checkin-card input,
+      .brand-v2 .checkin-card select {
+        background: var(--v2-card-2);
+        border: 1px solid var(--v2-border);
+        color: var(--v2-ink);
+        border-radius: 10px;
+      }
+
+      /* Progress + this-week cards get the same shell treatment. */
+      .brand-v2 .progress-card,
+      .brand-v2 .this-week-card {
+        background: var(--v2-card);
+        border-radius: var(--v2-radius);
+        border: 1px solid var(--v2-border);
+        box-shadow: var(--v2-shadow);
+      }
+      .brand-v2 .progress-fill {
+        background: var(--v2-teal) !important;
+      }
+      .brand-v2 .progress-track {
+        background: var(--v2-ring-track);
+      }
+
+      /* Small screens — keep the stat row legible on narrow phones. */
+      @media (max-width: 380px) {
+        .brand-v2 .v2-stat-num { font-size: 19px; }
+        .brand-v2 .v2-stat-lbl { font-size: 10px; }
+      }
     </style>
   </head>
   <body>
@@ -2991,7 +3250,10 @@
     <div class="wrap">
 
       <!-- ========== TAB: TODAY ========== -->
-      <div class="tab-page active" id="tab-today">
+      <!-- brand-v2 class scopes the new brand preview styles below.
+           Other tabs remain on the original styling until we decide to
+           roll the new look out further. -->
+      <div class="tab-page active brand-v2" id="tab-today">
       <div class="hero">
         <button
           class="theme-toggle"
@@ -3009,6 +3271,61 @@
         <div id="countdown" class="countdown"></div>
       </div>
 
+      <!-- Brand-v2: quick-stat tiles row. Three small tiles each showing
+           an icon-in-a-ring + big number + label. Populated by
+           renderBrandV2Stats() (called from renderToday). -->
+      <div class="v2-section-head">
+        <div class="v2-section-title">Today</div>
+        <div class="v2-section-link">at a glance</div>
+      </div>
+      <div class="v2-stat-row">
+        <div class="v2-stat" id="v2StatDistance">
+          <div class="v2-stat-icon v2-stat-icon-teal">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M13 4v16M7 4l6 8-6 8M17 4l-4 8 4 8"/>
+            </svg>
+            <svg class="v2-ring" viewBox="0 0 44 44">
+              <circle class="ring-track" cx="22" cy="22" r="19"/>
+              <circle class="ring-fill teal" cx="22" cy="22" r="19" data-pct="0"/>
+            </svg>
+          </div>
+          <div class="v2-stat-num" id="v2StatDistanceNum">—</div>
+          <div class="v2-stat-lbl">today's miles</div>
+        </div>
+        <div class="v2-stat" id="v2StatCalories">
+          <div class="v2-stat-icon v2-stat-icon-amber">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8.5 14.5A4 4 0 0 0 12 21a4 4 0 0 0 3.5-6.5C13.5 12 12 10 12 8c-1.5 2-4 4-3.5 6.5z"/>
+              <path d="M12 21a8 8 0 0 1-8-8c0-3 1-6 4-9 1 3 3 4 5 4-1 4 3 5 3 9a8 8 0 0 1-4 4z"/>
+            </svg>
+            <svg class="v2-ring" viewBox="0 0 44 44">
+              <circle class="ring-track" cx="22" cy="22" r="19"/>
+              <circle class="ring-fill amber" cx="22" cy="22" r="19" data-pct="0"/>
+            </svg>
+          </div>
+          <div class="v2-stat-num" id="v2StatCaloriesNum">—</div>
+          <div class="v2-stat-lbl">kcal in</div>
+        </div>
+        <div class="v2-stat" id="v2StatDuration">
+          <div class="v2-stat-icon v2-stat-icon-teal">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M12 7v5l3 2"/>
+            </svg>
+            <svg class="v2-ring" viewBox="0 0 44 44">
+              <circle class="ring-track" cx="22" cy="22" r="19"/>
+              <circle class="ring-fill teal" cx="22" cy="22" r="19" data-pct="0"/>
+            </svg>
+          </div>
+          <div class="v2-stat-num" id="v2StatDurationNum">—</div>
+          <div class="v2-stat-lbl">activity</div>
+        </div>
+      </div>
+
+      <div class="v2-section-head">
+        <div class="v2-section-title">Workout</div>
+        <div class="v2-section-link">on deck</div>
+      </div>
       <div class="today" id="todayCard">
         <div class="head">
           <div class="title" id="todayLabel">Today</div>
@@ -7707,6 +8024,80 @@
           if (e.target.closest("#todayCheckRow")) return;
           openModal(day, week);
         };
+
+        // Brand-v2 quick-stat tiles (only render if the tab has the
+        // brand-v2 class — i.e. once we roll out further this will be a
+        // no-op on any tab that hasn't been migrated).
+        renderBrandV2Stats();
+      }
+
+      // Populate the three quick-stat tiles in the brand-v2 Today header.
+      // Each tile shows: current value, formatted, with a progress ring
+      // representing today's value vs. a sensible target.
+      function renderBrandV2Stats() {
+        const today = todayISO();
+        const log = (typeof getLog === "function") ? (getLog(today) || {}) : {};
+
+        // --- Distance --------------------------------------------------
+        // Target: today's planned distance if we can pluck it from the
+        // workout title (e.g. "5 mi"), else fall back to a 6mi default.
+        const distMi = Number(log.distance) || 0;
+        let plannedDist = 0;
+        try {
+          let day = null;
+          for (const w of DATA.weeks) for (const d of w.days) if (d.date === today) { day = d; break; }
+          if (day) {
+            const m = (day.detail || day.title || "").match(/(\d+(?:\.\d+)?)\s*mi/i);
+            if (m) plannedDist = parseFloat(m[1]);
+          }
+        } catch (e) {}
+        const distTarget = plannedDist > 0 ? plannedDist : 6;
+        setStatTile("v2StatDistance",
+          distMi > 0 ? `${distMi.toFixed(distMi >= 10 ? 0 : 1)} mi` : "0 mi",
+          distMi / distTarget);
+
+        // --- Calories --------------------------------------------------
+        let calIn = 0;
+        let calTarget = 2000;
+        try {
+          if (typeof todaysMeals === "function" && typeof sumMacros === "function") {
+            calIn = Math.round(sumMacros(todaysMeals()).cal || 0);
+          }
+          if (typeof buildTodayTarget === "function") {
+            const t = buildTodayTarget();
+            if (t && t.targetCal) calTarget = t.targetCal;
+          }
+        } catch (e) {}
+        setStatTile("v2StatCalories",
+          calIn > 0 ? calIn.toLocaleString() : "0",
+          calIn / calTarget);
+
+        // --- Activity duration ----------------------------------------
+        const sec = Number(log.durationSec) || 0;
+        const min = Math.round(sec / 60);
+        let durStr;
+        if (min === 0) durStr = "0m";
+        else if (min < 60) durStr = `${min}m`;
+        else durStr = `${Math.floor(min / 60)}h ${min % 60}m`;
+        // 60 min is a reasonable "full day" target for the ring.
+        setStatTile("v2StatDuration", durStr, min / 60);
+      }
+
+      // Helper — set the number text + drive the progress ring for one
+      // stat tile. pct is 0..1+ ; we clamp the ring's visible fill at 1.0.
+      function setStatTile(tileId, valueText, pct) {
+        const tile = document.getElementById(tileId);
+        if (!tile) return;
+        const num = tile.querySelector(".v2-stat-num");
+        if (num) num.textContent = valueText;
+        const ring = tile.querySelector(".ring-fill");
+        if (ring) {
+          // Circumference for r=19 → 2 * Math.PI * 19 ≈ 119.38.
+          const C = 119.38;
+          const clamped = Math.max(0, Math.min(1, pct || 0));
+          ring.style.strokeDashoffset = String(C * (1 - clamped));
+          ring.dataset.pct = String(Math.round(clamped * 100));
+        }
       }
 
       // ---------- Mileage chart ----------
