@@ -1138,6 +1138,89 @@
         margin-top: 4px;
         line-height: 1.4;
       }
+      /* Small "Move to another day →" link inside each modal-child body.
+         Sits below the description text. Has its own click handler that
+         stops propagation so tapping it doesn't fire the row's tracker
+         /log-modal click handler. */
+      .section-move-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 8px;
+        padding: 4px 0;
+        background: none;
+        border: none;
+        color: var(--accent);
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        position: relative;
+        z-index: 1; /* sits above the ::after chevron on clickable rows */
+      }
+      .section-move-btn:hover {
+        text-decoration: underline;
+      }
+      .section-move-btn .arrow {
+        font-size: 14px;
+        line-height: 1;
+      }
+
+      /* Move-target picker list inside the move-section modal. */
+      .move-target-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 12px;
+        max-height: 60vh;
+        overflow-y: auto;
+      }
+      .move-target-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        cursor: pointer;
+        text-align: left;
+        font-family: inherit;
+        color: var(--ink);
+        transition: background 0.12s ease, border-color 0.12s ease;
+      }
+      .move-target-row:hover {
+        background: var(--strength-bg);
+        border-color: var(--log-border);
+      }
+      .move-target-row.is-today {
+        border-color: var(--accent);
+      }
+      .move-target-row .mt-date {
+        font-weight: 700;
+        font-size: 13px;
+        min-width: 90px;
+      }
+      .move-target-row .mt-title {
+        flex: 1;
+        font-size: 13px;
+        color: var(--muted);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .move-target-row .mt-badge {
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 999px;
+        background: var(--accent);
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+      }
+
       .modal-child-progress {
         display: inline-block;
         margin-left: 6px;
@@ -3673,6 +3756,11 @@
     <!-- Strava skipped-activities inbox modal -->
     <div class="ex-modal-bg" id="stravaInboxModalBg">
       <div class="ex-modal" id="stravaInboxModal"></div>
+    </div>
+
+    <!-- "Move section to another day" picker modal -->
+    <div class="ex-modal-bg" id="moveSectionModalBg">
+      <div class="ex-modal" id="moveSectionModal"></div>
     </div>
 
     <script>
@@ -7069,6 +7157,27 @@
         return !!OVERRIDES[date];
       }
 
+      // Persist a day's CURRENT state as an OVERRIDES row (or clear the
+      // override entirely if the day now matches its untouched original
+      // plan exactly). Extracted from swapDays so moveSection can reuse it.
+      function saveOrClearOverride(date, day) {
+        const orig = ORIGINAL_DAYS[date];
+        const same =
+          orig &&
+          orig.title === day.title &&
+          orig.detail === day.detail &&
+          JSON.stringify(orig.routines) === JSON.stringify(day.routines) &&
+          orig.strength === day.strength;
+        if (same) delete OVERRIDES[date];
+        else
+          OVERRIDES[date] = {
+            title: day.title,
+            detail: day.detail,
+            routines: day.routines,
+            strength: day.strength,
+          };
+      }
+
       function swapDays(dateA, dateB) {
         if (dateA === dateB) return;
         const a = findDay(dateA),
@@ -7089,26 +7198,8 @@
         b.detail = tmp.detail;
         b.routines = tmp.routines;
         b.strength = tmp.strength;
-        // Persist override only if differs from original
-        function saveOrClear(date, day) {
-          const orig = ORIGINAL_DAYS[date];
-          const same =
-            orig &&
-            orig.title === day.title &&
-            orig.detail === day.detail &&
-            JSON.stringify(orig.routines) === JSON.stringify(day.routines) &&
-            orig.strength === day.strength;
-          if (same) delete OVERRIDES[date];
-          else
-            OVERRIDES[date] = {
-              title: day.title,
-              detail: day.detail,
-              routines: day.routines,
-              strength: day.strength,
-            };
-        }
-        saveOrClear(dateA, a);
-        saveOrClear(dateB, b);
+        saveOrClearOverride(dateA, a);
+        saveOrClearOverride(dateB, b);
         persistOverrides();
         // Re-render
         renderWeeks();
@@ -7116,6 +7207,178 @@
         renderProgress();
         if (typeof renderThisWeek === "function") renderThisWeek();
       }
+
+      // Move a SINGLE section from sourceDate to targetDate.
+      //   sectionKey: "workout" | "strength" | "routine_<key>"
+      // - workout: swaps title/detail between the two days (every day has
+      //   SOMETHING scheduled, so this is effectively a swap of just the
+      //   cardio block — source becomes whatever target had).
+      // - strength: pure transfer. Source's strength is cleared, target's
+      //   strength is set to source's value. If target already had a
+      //   different strength program scheduled, prompts to confirm
+      //   overwriting it.
+      // - routine_<key>: pure transfer. Removes the routine from source's
+      //   routines list and appends it to target's (if not already there).
+      // Also clears any stale completion flag on source for the moved
+      // section, since that section no longer lives there.
+      function moveSection(sourceDate, targetDate, sectionKey) {
+        if (sourceDate === targetDate) return false;
+        const src = findDay(sourceDate);
+        const tgt = findDay(targetDate);
+        if (!src || !tgt) return false;
+
+        if (sectionKey === "workout") {
+          const tmpTitle = src.title;
+          const tmpDetail = src.detail;
+          src.title = tgt.title;
+          src.detail = tgt.detail;
+          tgt.title = tmpTitle;
+          tgt.detail = tmpDetail;
+        } else if (sectionKey === "strength") {
+          if (!src.strength) return false;
+          if (tgt.strength && tgt.strength !== src.strength) {
+            const tgtLabel = fmtDate(targetDate, { weekday: "long", month: "short", day: "numeric" });
+            const ok = confirm(
+              `${tgtLabel} already has a strength workout scheduled.\n\nMove anyway? The strength workout currently on ${tgtLabel} will be replaced.`
+            );
+            if (!ok) return false;
+          }
+          tgt.strength = src.strength;
+          src.strength = null;
+        } else if (sectionKey.startsWith("routine_")) {
+          const r = sectionKey.slice("routine_".length);
+          if (!Array.isArray(src.routines) || !src.routines.includes(r)) return false;
+          src.routines = src.routines.filter(x => x !== r);
+          if (!Array.isArray(tgt.routines)) tgt.routines = [];
+          if (!tgt.routines.includes(r)) tgt.routines.push(r);
+        } else {
+          return false;
+        }
+
+        saveOrClearOverride(sourceDate, src);
+        saveOrClearOverride(targetDate, tgt);
+        persistOverrides();
+
+        // Clear any completion flag for the moved section on the source
+        // (the section is gone from there, so a leftover checkmark would
+        // be misleading). Do NOT carry the checkmark to the target — the
+        // user is moving an UNFINISHED section by definition, and the
+        // target's completion will be set when they actually finish it.
+        const srcState = COMPLETED[sourceDate];
+        if (srcState && typeof srcState === "object" && srcState[sectionKey]) {
+          delete srcState[sectionKey];
+          if (Object.keys(srcState).length === 0) delete COMPLETED[sourceDate];
+          saveCompleted(COMPLETED);
+        }
+
+        // Re-render everything that displays per-day content.
+        renderWeeks();
+        renderToday();
+        renderProgress();
+        if (typeof renderThisWeek === "function") renderThisWeek();
+        return true;
+      }
+
+      // Open the date-picker modal so the user can choose where to move a
+      // section. sectionKey is "workout" | "strength" | "routine_<key>".
+      // We surface ±14 days around the source (clamped to the plan range)
+      // and exclude the source date itself.
+      // launchedFrom (optional): "tracker" | "log" — tells the picker which
+      // sub-modal to close on a successful move (in addition to the parent
+      // day-detail modal).
+      function openMoveSectionPicker(sourceDate, sectionKey, launchedFrom) {
+        const src = findDay(sourceDate);
+        if (!src) return;
+        const sectionLabel =
+          sectionKey === "workout" ? "this workout"
+          : sectionKey === "strength" ? "this strength workout"
+          : sectionKey.startsWith("routine_") ? `the "${(ROUTINE_LABELS[sectionKey.slice(8)] || sectionKey.slice(8))}" routine`
+          : "this section";
+
+        // Build a flat list of plan days, sorted by date. We'll show a
+        // window of ±14 around the source.
+        const allDays = [];
+        for (const w of DATA.weeks) for (const d of w.days) allDays.push(d);
+        allDays.sort((a, b) => a.date.localeCompare(b.date));
+        const srcIdx = allDays.findIndex(d => d.date === sourceDate);
+        const lo = Math.max(0, srcIdx - 14);
+        const hi = Math.min(allDays.length, srcIdx + 15);
+        const candidates = allDays.slice(lo, hi).filter(d => d.date !== sourceDate);
+
+        const todayStr = todayISO();
+        const srcLabel = fmtDate(sourceDate, { weekday: "long", month: "short", day: "numeric" });
+
+        let body = `<button class="close" onclick="closeMoveSectionPicker()" style="position:absolute;top:14px;right:14px;background:none;border:0;font-size:24px;cursor:pointer;color:var(--muted);line-height:1">×</button>`;
+        body += `<h2>Move to another day</h2>`;
+        body += `<div class="ex-meta">Moving ${sectionLabel} from <b>${srcLabel}</b></div>`;
+        body += `<div class="ex-desc" style="margin-bottom:8px">Tap a day below to move ${sectionLabel} there. The section will be removed from ${srcLabel} and added to the day you pick.</div>`;
+        body += `<div class="move-target-list" id="moveTargetList">`;
+        if (!candidates.length) {
+          body += `<div class="ex-meta">No other days in range.</div>`;
+        } else {
+          for (const d of candidates) {
+            const dateLbl = fmtDate(d.date, { weekday: "short", month: "short", day: "numeric" });
+            const isToday = d.date === todayStr;
+            const badge = isToday ? `<span class="mt-badge">Today</span>` : "";
+            const titleSafe = (d.title || "").replace(/</g, "&lt;");
+            body += `<button type="button" class="move-target-row${isToday ? " is-today" : ""}" data-target-date="${d.date}">
+              <span class="mt-date">${dateLbl}</span>
+              <span class="mt-title">${titleSafe}</span>
+              ${badge}
+            </button>`;
+          }
+        }
+        body += `</div>`;
+
+        const root = document.getElementById("moveSectionModal");
+        root.innerHTML = body;
+        root.style.position = "relative";
+        document.getElementById("moveSectionModalBg").classList.add("show");
+
+        // Wire each candidate row.
+        root.querySelectorAll(".move-target-row").forEach((row) => {
+          row.addEventListener("click", () => {
+            const targetDate = row.dataset.targetDate;
+            const ok = moveSection(sourceDate, targetDate, sectionKey);
+            if (!ok) return; // user cancelled overwrite prompt or no-op
+            closeMoveSectionPicker();
+            // Close any sub-modal we were launched from — the section it
+            // was tracking no longer lives on this day.
+            if (launchedFrom === "tracker" && typeof closeExerciseTracker === "function") {
+              closeExerciseTracker();
+            } else if (launchedFrom === "log" && typeof closeWorkoutLogModal === "function") {
+              closeWorkoutLogModal();
+            }
+            // Also close the parent day-detail modal — the source day's
+            // section list has changed underneath us and showing the
+            // stale modal would be confusing. User can re-open if needed.
+            if (typeof closeModal === "function") closeModal();
+            const tgtLbl = fmtDate(targetDate, { weekday: "long", month: "short", day: "numeric" });
+            alert(`Moved to ${tgtLbl}.`);
+          });
+        });
+      }
+
+      function closeMoveSectionPicker() {
+        const bg = document.getElementById("moveSectionModalBg");
+        if (bg) bg.classList.remove("show");
+      }
+
+      // Close picker on backdrop click or Escape.
+      (function wireMoveSectionPickerDismissals() {
+        const bg = document.getElementById("moveSectionModalBg");
+        if (bg) {
+          bg.addEventListener("click", (e) => {
+            if (e.target === bg) closeMoveSectionPicker();
+          });
+        }
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") {
+            const bg2 = document.getElementById("moveSectionModalBg");
+            if (bg2 && bg2.classList.contains("show")) closeMoveSectionPicker();
+          }
+        });
+      })();
       function resetPlan() {
         if (
           !confirm(
@@ -7985,6 +8248,8 @@
         // Wire whole-row click → opens the appropriate sub-modal.
         // The child checkbox's own click handler calls stopPropagation, so
         // checking the box does NOT bubble up and open the tracker.
+        // The "Move to another day" button lives INSIDE the sub-modals
+        // (tracker / log modal), not on the row itself.
         m.querySelectorAll(".modal-child.is-clickable").forEach((row) => {
           row.addEventListener("click", (e) => {
             // Ignore clicks that originated on the checkbox or its label area.
@@ -8069,6 +8334,7 @@
         <div class="log-actions">
           <button type="button" class="btn btn-primary" id="saveLog">${hasLog(day.date) ? "Update workout" : "Save workout"}</button>
           <button type="button" class="btn btn-danger" id="deleteLog" style="${hasLog(day.date) ? "" : "display:none"}">Delete log</button>
+          <button type="button" class="btn" id="logMoveSection">Move to another day</button>
           <button type="button" class="btn" id="logCloseBtn">Close</button>
           <span class="log-status" id="logStatus"></span>
         </div>`;
@@ -8182,6 +8448,13 @@
         });
 
         document.getElementById("logCloseBtn").addEventListener("click", closeWorkoutLogModal);
+        // "Move to another day" — opens the date-picker for the workout section.
+        const logMoveBtn = document.getElementById("logMoveSection");
+        if (logMoveBtn) {
+          logMoveBtn.addEventListener("click", () => {
+            openMoveSectionPicker(day.date, "workout", "log");
+          });
+        }
       }
 
       function closeWorkoutLogModal() {
@@ -8601,6 +8874,7 @@
         html += `<div class="ex-actions">
           <button type="button" class="btn btn-primary" id="exMarkAll">Mark all done</button>
           <button type="button" class="btn" id="exClearAll">Clear all</button>
+          <button type="button" class="btn" id="exMoveSection">Move to another day</button>
           <span style="flex:1"></span>
           <span class="ex-status" id="exStatus"></span>
           <button type="button" class="btn" id="exClose">Close</button>
@@ -8707,6 +8981,15 @@
           refreshExerciseTrackerModal();
         });
         document.getElementById("exClose").addEventListener("click", closeExerciseTracker);
+        // "Move to another day" → opens the date-picker. Section key is
+        // "strength" for strength workouts, "routine_<key>" otherwise.
+        const moveBtn = document.getElementById("exMoveSection");
+        if (moveBtn) {
+          moveBtn.addEventListener("click", () => {
+            const sectionKey = isStrength ? "strength" : "routine_" + key;
+            openMoveSectionPicker(day.date, sectionKey, "tracker");
+          });
+        }
       }
 
       function flashStatus(text) {
