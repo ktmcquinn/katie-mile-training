@@ -7513,7 +7513,20 @@
         if (sourceDate === targetDate) return false;
         const src = findDay(sourceDate);
         const tgt = findDay(targetDate);
-        if (!src || !tgt) return false;
+        if (!src || !tgt) {
+          console.warn("[moveSection] findDay miss", { sourceDate, targetDate, srcFound: !!src, tgtFound: !!tgt });
+          return false;
+        }
+
+        // Capture starting values for the verification step below.
+        const before = {
+          srcStrength: src.strength,
+          tgtStrength: tgt.strength,
+          srcRoutines: Array.isArray(src.routines) ? src.routines.slice() : null,
+          tgtRoutines: Array.isArray(tgt.routines) ? tgt.routines.slice() : null,
+          srcTitle: src.title,
+          tgtTitle: tgt.title,
+        };
 
         if (sectionKey === "workout") {
           const tmpTitle = src.title;
@@ -7523,7 +7536,10 @@
           tgt.title = tmpTitle;
           tgt.detail = tmpDetail;
         } else if (sectionKey === "strength") {
-          if (!src.strength) return false;
+          if (!src.strength) {
+            console.warn("[moveSection] source has no strength to move", { sourceDate });
+            return false;
+          }
           if (tgt.strength && tgt.strength !== src.strength) {
             const tgtLabel = fmtDate(targetDate, { weekday: "long", month: "short", day: "numeric" });
             const ok = confirm(
@@ -7535,17 +7551,52 @@
           src.strength = null;
         } else if (sectionKey.startsWith("routine_")) {
           const r = sectionKey.slice("routine_".length);
-          if (!Array.isArray(src.routines) || !src.routines.includes(r)) return false;
+          if (!Array.isArray(src.routines) || !src.routines.includes(r)) {
+            console.warn("[moveSection] routine not present on source", { sourceDate, r });
+            return false;
+          }
           src.routines = src.routines.filter(x => x !== r);
           if (!Array.isArray(tgt.routines)) tgt.routines = [];
           if (!tgt.routines.includes(r)) tgt.routines.push(r);
         } else {
+          console.warn("[moveSection] unknown sectionKey", sectionKey);
           return false;
         }
 
         saveOrClearOverride(sourceDate, src);
         saveOrClearOverride(targetDate, tgt);
         persistOverrides();
+        // Defensive: re-apply the overrides we just persisted so the in-
+        // memory DATA.weeks is guaranteed to match what we just saved.
+        // (If anything downstream — a render hook, a parallel sync —
+        // somehow mutates a day reference, applyOverrides() makes the
+        // change durable.)
+        applyOverrides();
+
+        // Verify the move actually landed on both sides. If a downstream
+        // mutation reverted the change we want to know about it
+        // immediately rather than silently letting the UI lie.
+        const tgtAfter = findDay(targetDate);
+        const srcAfter = findDay(sourceDate);
+        if (sectionKey === "strength") {
+          if (!tgtAfter || !tgtAfter.strength) {
+            console.error("[moveSection] target did not retain strength after save", {
+              sourceDate, targetDate, before, tgtAfterStrength: tgtAfter && tgtAfter.strength,
+              overrideTgt: OVERRIDES[targetDate],
+            });
+          }
+          if (srcAfter && srcAfter.strength) {
+            console.error("[moveSection] source still has strength after clear", {
+              sourceDate, srcAfterStrength: srcAfter.strength,
+              overrideSrc: OVERRIDES[sourceDate],
+            });
+          }
+        }
+        console.log("[moveSection] ok", {
+          sourceDate, targetDate, sectionKey,
+          srcStrengthAfter: srcAfter && srcAfter.strength,
+          tgtStrengthAfter: tgtAfter && tgtAfter.strength,
+        });
 
         // Clear any completion flag for the moved section on the source
         // (the section is gone from there, so a leftover checkmark would
@@ -7642,7 +7693,15 @@
             // stale modal would be confusing. User can re-open if needed.
             if (typeof closeModal === "function") closeModal();
             const tgtLbl = fmtDate(targetDate, { weekday: "long", month: "short", day: "numeric" });
-            alert(`Moved to ${tgtLbl}.`);
+            // Friendly section name in the confirmation so the user knows
+            // exactly what landed where (and is more likely to spot it on
+            // the destination day card after they dismiss this alert).
+            const moveLbl =
+              sectionKey === "workout" ? "workout"
+              : sectionKey === "strength" ? "strength workout"
+              : sectionKey.startsWith("routine_") ? `${ROUTINE_LABELS[sectionKey.slice(8)] || sectionKey.slice(8)} routine`
+              : "section";
+            alert(`Moved ${moveLbl} to ${tgtLbl}.\n\nOpen that day to see it.`);
           });
         });
       }
