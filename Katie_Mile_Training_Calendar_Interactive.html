@@ -10699,15 +10699,40 @@
             };
           }
           persistWeights();
-          // Overrides
-          OVERRIDES = {};
+          // Overrides — MERGE rather than overwrite so any local-only
+          // override (e.g. a move just made by the user that hasn't been
+          // pushed to cloud yet because the 1.5s sync debounce hasn't
+          // fired — or because a prior push failed) survives this pull.
+          // For dates present in the cloud snapshot we take the cloud
+          // version (cloud is the source of truth for already-synced
+          // moves); for dates only in local we keep the local entry and
+          // let persistOverrides → scheduleSync push it up next cycle.
+          // This is the same pattern we use for MEALS below.
+          const cloudOverrideDates = new Set();
+          const mergedOverrides = {};
           for (const r of ov.data) {
-            OVERRIDES[r.date] = {
+            cloudOverrideDates.add(r.date);
+            mergedOverrides[r.date] = {
               title: r.title,
               detail: r.detail,
               routines: r.routines,
               strength: r.strength,
             };
+          }
+          let preservedLocalOverrides = 0;
+          for (const date in OVERRIDES) {
+            if (!cloudOverrideDates.has(date)) {
+              mergedOverrides[date] = OVERRIDES[date];
+              preservedLocalOverrides++;
+            }
+          }
+          OVERRIDES = mergedOverrides;
+          if (preservedLocalOverrides > 0) {
+            console.log(
+              "[pullFromCloud] preserved",
+              preservedLocalOverrides,
+              "local-only override(s) — will be pushed on next sync"
+            );
           }
           persistOverrides();
           applyOverrides();
