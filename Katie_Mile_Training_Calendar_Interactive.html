@@ -493,7 +493,7 @@
       }
 
       /* ---------- Today panel ---------- */
-      .today {
+      .today:not(.day) {
         background: var(--card);
         border-radius: 12px;
         padding: 18px;
@@ -503,11 +503,11 @@
         cursor: pointer;
         transition: box-shadow 0.15s, transform 0.1s;
       }
-      .today:hover {
+      .today:not(.day):hover {
         box-shadow: 0 4px 14px rgba(31, 41, 55, 0.1);
         transform: translateY(-1px);
       }
-      .today:active {
+      .today:not(.day):active {
         transform: translateY(0);
       }
       .today .head {
@@ -3146,7 +3146,7 @@
 
       /* Restyle the "today" card as a dark/cream rounded surface with the
          teal accent on the title and a heavier, more confident type stack. */
-      .brand-v2 .today {
+      .brand-v2 .today:not(.day) {
         background: var(--v2-card);
         border-radius: var(--v2-radius);
         border-left: 0;
@@ -3155,10 +3155,10 @@
         margin-bottom: 16px;
         box-shadow: var(--v2-shadow);
       }
-      .brand-v2 .today:hover {
+      .brand-v2 .today:not(.day):hover {
         box-shadow: 0 6px 22px rgba(20, 22, 26, 0.08);
       }
-      [data-theme="dark"] .brand-v2 .today:hover {
+      [data-theme="dark"] .brand-v2 .today:not(.day):hover {
         box-shadow: 0 6px 22px rgba(0, 0, 0, 0.5);
       }
       .brand-v2 .today .title {
