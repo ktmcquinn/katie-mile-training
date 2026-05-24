@@ -173,6 +173,62 @@
         padding-right: max(16px, env(safe-area-inset-right, 0px));
       }
 
+      .top-bar-logo {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+      }
+      .top-bar-logo-mark {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        background: var(--accent);
+        color: white;
+        font-size: 14px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        letter-spacing: -0.5px;
+      }
+      .top-bar-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--ink);
+        letter-spacing: -0.2px;
+      }
+      .top-bar-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .top-bar-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        border: none;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s, color 0.15s;
+      }
+      .top-bar-btn:hover {
+        background: var(--hover-bg);
+        color: var(--ink);
+      }
+      .top-bar-btn.syncing {
+        color: var(--accent);
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+      }
+
       /* ---------- Tab pages + bottom tab bar ---------- */
       .tab-page {
         display: none;
@@ -3220,7 +3276,27 @@
     <!-- Fixed top menu bar — pinned to the viewport, stays put on scroll.
          Intentionally empty for now; later we can drop a title/logo/menu
          button in here. -->
-    <header class="top-bar" id="topBar" role="banner" aria-label="App header"></header>
+    <header class="top-bar" id="topBar" role="banner" aria-label="App header">
+      <div class="top-bar-logo">
+        <span class="top-bar-logo-mark">K</span>
+        <span class="top-bar-title">Katie's Miles</span>
+      </div>
+      <div class="top-bar-actions">
+        <button class="top-bar-btn" id="topBarSyncBtn" title="Sync Strava" aria-label="Sync Strava">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+        </button>
+        <button class="top-bar-btn" id="topBarSettingsBtn" title="Settings" aria-label="Settings">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
 
     <div class="wrap">
 
@@ -10314,6 +10390,25 @@
         if (pullBtn) pullBtn.addEventListener("click", pullStravaActivities);
         if (inboxBtn) inboxBtn.addEventListener("click", openStravaInbox);
         if (disconnectBtn) disconnectBtn.addEventListener("click", disconnectStrava);
+
+        // Top bar sync button
+        const topSyncBtn = document.getElementById("topBarSyncBtn");
+        if (topSyncBtn) {
+          topSyncBtn.addEventListener("click", async () => {
+            topSyncBtn.classList.add("syncing");
+            try { await pullStravaActivities(); } finally {
+              topSyncBtn.classList.remove("syncing");
+            }
+          });
+        }
+
+        // Top bar settings button — jump to the More tab
+        const topSettingsBtn = document.getElementById("topBarSettingsBtn");
+        if (topSettingsBtn) {
+          topSettingsBtn.addEventListener("click", () => {
+            document.querySelector('.tab-btn[data-tab="tab-more"]')?.click();
+          });
+        }
         // Close the inbox modal on backdrop click or Escape
         const inboxBg = document.getElementById("stravaInboxModalBg");
         if (inboxBg) {
