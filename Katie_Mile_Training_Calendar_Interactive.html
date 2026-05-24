@@ -229,6 +229,65 @@
         to   { transform: rotate(360deg); }
       }
 
+      .settings-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: var(--modal-overlay);
+        z-index: 200;
+      }
+      .settings-overlay.open { display: block; }
+      .settings-drawer {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: min(420px, 100vw);
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        box-shadow: -4px 0 24px rgba(0,0,0,0.18);
+        transform: translateX(100%);
+        transition: transform 0.25s ease;
+      }
+      .settings-overlay.open .settings-drawer {
+        transform: translateX(0);
+      }
+      .settings-drawer-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        padding-top: calc(16px + env(safe-area-inset-top, 0px));
+        border-bottom: 1px solid var(--border);
+        background: var(--card);
+      }
+      .settings-drawer-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--ink);
+      }
+      .settings-drawer-close {
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: var(--hover-bg);
+        border-radius: 50%;
+        font-size: 14px;
+        cursor: pointer;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .settings-drawer-close:hover { color: var(--ink); }
+      .settings-drawer-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      }
+
       /* ---------- Tab pages + bottom tab bar ---------- */
       .tab-page {
         display: none;
@@ -4061,20 +4120,21 @@
         </span>
         <span class="tab-label">Trends</span>
       </button>
-      <button class="tab-btn" data-tab="more" type="button" role="tab" aria-label="Settings">
-        <span class="tab-icon" aria-hidden="true">
-          <!-- Gear / settings icon -->
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-          </svg>
-        </span>
-        <span class="tab-label">Settings</span>
-      </button>
     </nav>
 
     <div class="modal-bg" id="modalBg">
       <div class="modal" id="modal"></div>
+    </div>
+
+    <!-- Settings drawer -->
+    <div class="settings-overlay" id="settingsOverlay">
+      <div class="settings-drawer" id="settingsDrawer">
+        <div class="settings-drawer-header">
+          <span class="settings-drawer-title">Settings</span>
+          <button class="settings-drawer-close" id="settingsDrawerClose" aria-label="Close settings">✕</button>
+        </div>
+        <div class="settings-drawer-body" id="settingsDrawerBody"></div>
+      </div>
     </div>
 
     <!-- Exercise tracker sub-modal -->
@@ -10402,13 +10462,21 @@
           });
         }
 
-        // Top bar settings button — jump to the More tab
+        // Top bar settings button — open settings drawer
         const topSettingsBtn = document.getElementById("topBarSettingsBtn");
         if (topSettingsBtn) {
           topSettingsBtn.addEventListener("click", () => {
-            document.querySelector('.tab-btn[data-tab="tab-more"]')?.click();
+            const overlay = document.getElementById("settingsOverlay");
+            const body = document.getElementById("settingsDrawerBody");
+            // Clone the settings tab content into the drawer
+            const src = document.getElementById("tab-more");
+            if (src && body) body.innerHTML = src.innerHTML;
+            overlay.classList.add("open");
           });
         }
+        const overlay = document.getElementById("settingsOverlay");
+        document.getElementById("settingsDrawerClose")?.addEventListener("click", () => overlay.classList.remove("open"));
+        overlay?.addEventListener("click", (e) => { if (e.target === overlay) overlay.classList.remove("open"); });
         // Close the inbox modal on backdrop click or Escape
         const inboxBg = document.getElementById("stravaInboxModalBg");
         if (inboxBg) {
