@@ -10478,6 +10478,11 @@
         const overlay = document.getElementById("settingsOverlay");
         document.getElementById("settingsDrawerClose")?.addEventListener("click", () => overlay.classList.remove("open"));
         overlay?.addEventListener("click", (e) => { if (e.target === overlay) overlay.classList.remove("open"); });
+
+        // Close drawer when navigating via bottom tab bar
+        document.querySelectorAll(".tab-btn").forEach((btn) => {
+          btn.addEventListener("click", () => overlay.classList.remove("open"));
+        });
         // Close the inbox modal on backdrop click or Escape
         const inboxBg = document.getElementById("stravaInboxModalBg");
         if (inboxBg) {
