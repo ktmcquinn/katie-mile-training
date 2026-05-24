@@ -10,16 +10,8 @@
 
     <!-- PWA: web app manifest -->
     <link rel="manifest" href="manifest.json" />
-    <meta
-      name="theme-color"
-      content="#F4F1EC"
-      media="(prefers-color-scheme: light)"
-    />
-    <meta
-      name="theme-color"
-      content="#0A0A0C"
-      media="(prefers-color-scheme: dark)"
-    />
+    <meta name="theme-color" content="#F2F2F2" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0D0D0D" media="(prefers-color-scheme: dark)" />
     <meta
       name="description"
       content="Katie's mile training calendar - workouts, weight, progress."
@@ -44,84 +36,82 @@
     <style>
       :root {
         color-scheme: light;
-        --ink: #14161A;
-        --muted: #6B7280;
-        --bg: #F4F1EC;
+        --ink: #0D0D0D;
+        --muted: #6B6B6B;
+        --bg: #F2F2F2;
         --card: #FFFFFF;
-        --border: rgba(20, 22, 26, 0.10);
-        --accent: #14B8A6;
+        --border: rgba(0, 0, 0, 0.10);
+        --accent: #FF6600;
 
         --p1: #4a7c59;
-        --p2: #14B8A6;
-        --p3: #F59E0B;
+        --p2: #FF6600;
+        --p3: #E05200;
         --p4: #FB923C;
         --p5: #7a4e9c;
 
         --easy: #FFFFFF;
-        --rest: #FAF7F2;
-        --quality: #FEF3C7;
-        --long: #CCFBF1;
-        --race: #FFE4E6;
-        --bike: #D1FAF5;
+        --rest: #F2F2F2;
+        --quality: #FFF0E6;
+        --long: #FFF0E6;
+        --race: #FFE4D6;
+        --bike: #FFF0E6;
 
-        /* Themed surfaces */
-        --hover-bg: #FAF7F2;
-        --routine-bg: #FAF7F2;
-        --strength-bg: rgba(245, 158, 11, 0.10);
-        --log-bg: rgba(245, 158, 11, 0.08);
-        --log-border: rgba(245, 158, 11, 0.40);
-        --pace-bg: rgba(20, 184, 166, 0.10);
-        --pace-border: rgba(20, 184, 166, 0.40);
-        --modal-info-bg: rgba(20, 184, 166, 0.08);
-        --modal-info-border: rgba(20, 184, 166, 0.30);
-        --modal-success-bg: rgba(20, 184, 166, 0.10);
-        --modal-success-border: rgba(20, 184, 166, 0.40);
-        --chart-bg: #FAF7F2;
-        --modal-overlay: rgba(20, 22, 26, 0.50);
-        --error-bg: #FFE4E6;
-        --error-border: #FECDD3;
-        --shadow-soft: 0 2px 8px rgba(20, 22, 26, 0.04);
-        --shadow-pop: 0 4px 16px rgba(20, 22, 26, 0.08);
-        --bf-note-bg: rgba(245, 158, 11, 0.10);
-        --info-text: #92400e;
+        --hover-bg: #F5F5F5;
+        --routine-bg: #F5F5F5;
+        --strength-bg: rgba(255, 102, 0, 0.08);
+        --log-bg: rgba(255, 102, 0, 0.06);
+        --log-border: rgba(255, 102, 0, 0.35);
+        --pace-bg: rgba(255, 102, 0, 0.08);
+        --pace-border: rgba(255, 102, 0, 0.35);
+        --modal-info-bg: rgba(255, 102, 0, 0.06);
+        --modal-info-border: rgba(255, 102, 0, 0.25);
+        --modal-success-bg: rgba(255, 102, 0, 0.08);
+        --modal-success-border: rgba(255, 102, 0, 0.30);
+        --chart-bg: #F2F2F2;
+        --modal-overlay: rgba(0, 0, 0, 0.55);
+        --error-bg: #FFE4D6;
+        --error-border: #FFBF99;
+        --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.06);
+        --shadow-pop: 0 4px 16px rgba(0, 0, 0, 0.10);
+        --bf-note-bg: rgba(255, 102, 0, 0.08);
+        --info-text: #CC5200;
       }
 
       [data-theme="dark"] {
         color-scheme: dark;
-        --ink: #F4F4F6;
-        --muted: #8A8A92;
-        --bg: #0A0A0C;
-        --card: #15151A;
-        --border: rgba(255, 255, 255, 0.07);
-        --accent: #2DD4BF;
+        --ink: #F5F5F5;
+        --muted: #888888;
+        --bg: #0D0D0D;
+        --card: #1A1A1A;
+        --border: rgba(255, 255, 255, 0.08);
+        --accent: #FF6600;
 
-        /* Day category backgrounds — darker tinted versions */
-        --easy: #15151A;
-        --rest: #0A0A0C;
-        --quality: #2A1F08;
-        --long: #0A2926;
-        --race: #2A0E10;
-        --bike: #0A2926;
+        --easy: #1A1A1A;
+        --rest: #0D0D0D;
+        --quality: #201400;
+        --long: #1F0D00;
+        --race: #2A0D00;
+        --bike: #1F0D00;
 
-        --hover-bg: #1C1C22;
-        --routine-bg: #0A0A0C;
-        --strength-bg: rgba(251, 191, 36, 0.10);
-        --log-bg: rgba(251, 191, 36, 0.08);
-        --log-border: rgba(251, 191, 36, 0.30);
-        --pace-bg: rgba(45, 212, 191, 0.10);
-        --pace-border: rgba(45, 212, 191, 0.35);
-        --modal-info-bg: rgba(45, 212, 191, 0.08);
-        --modal-info-border: rgba(45, 212, 191, 0.25);
-        --modal-success-bg: rgba(45, 212, 191, 0.10);
-        --modal-success-border: rgba(45, 212, 191, 0.35);
-        --chart-bg: #0A0A0C;
-        --modal-overlay: rgba(0, 0, 0, 0.80);
-        --error-bg: #2A0E10;
-        --error-border: #5A1A1E;
-        --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.40);
-        --shadow-pop: 0 4px 18px rgba(0, 0, 0, 0.55);
-        --bf-note-bg: rgba(251, 191, 36, 0.08);
-        --info-text: #FBBF24;
+        --hover-bg: #242424;
+        --routine-bg: #0D0D0D;
+        --strength-bg: rgba(255, 102, 0, 0.12);
+        --log-bg: rgba(255, 102, 0, 0.08);
+        --log-border: rgba(255, 102, 0, 0.30);
+        --pace-bg: rgba(255, 102, 0, 0.10);
+        --pace-border: rgba(255, 102, 0, 0.30);
+        --modal-info-bg: rgba(255, 102, 0, 0.08);
+        --modal-info-border: rgba(255, 102, 0, 0.25);
+        --modal-success-bg: rgba(255, 102, 0, 0.10);
+        --modal-success-border: rgba(255, 102, 0, 0.30);
+        --chart-bg: #0D0D0D;
+        --modal-overlay: rgba(0, 0, 0, 0.85);
+        --error-bg: #2A0D00;
+        --error-border: #5C2000;
+        --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.50);
+        --shadow-pop: 0 4px 18px rgba(0, 0, 0, 0.70);
+        --bf-note-bg: rgba(255, 102, 0, 0.08);
+        --info-text: #FF8533;
       }
 
       * {
@@ -266,7 +256,7 @@
 
       /* ---------- Hero ---------- */
       .hero {
-        background: linear-gradient(135deg, #1e3a5f 0%, #3b5c8c 100%);
+        background: linear-gradient(135deg, #0D0D0D 0%, #2A2A2A 100%);
         color: white;
         border-radius: 14px;
         padding: 24px;
@@ -859,7 +849,7 @@
         opacity: 0.7;
       }
       .day.today {
-        border-color: #2DD4BF;
+        border-color: #FF6600;
       }
       .day.race {
         font-weight: 700;
@@ -881,7 +871,7 @@
         -webkit-appearance: none;
         width: 18px;
         height: 18px;
-        border: 2px solid #2DD4BF;
+        border: 2px solid #FF6600;
         border-radius: 4px;
         cursor: pointer;
         flex-shrink: 0;
@@ -892,12 +882,12 @@
           border-color 0.15s;
       }
       .task-check:hover {
-        border-color: #14B8A6;
-        box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.20);
+        border-color: #CC5200;
+        box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.20);
       }
       .task-check:checked {
-        background: #2DD4BF;
-        border-color: #2DD4BF;
+        background: #FF6600;
+        border-color: #FF6600;
       }
       .task-check:checked::after {
         content: "";
@@ -3117,13 +3107,13 @@
       /* Restyle the existing hero to feel like the reference's photo-card
          workout banner: deeper gradient, larger title, more atmosphere. */
       .brand-v2 .hero {
-        background: linear-gradient(135deg, #0F3D38 0%, #14B8A6 70%, #2DD4BF 100%);
+        background: linear-gradient(135deg, #0D0D0D 0%, #2A1500 60%, #FF6600 100%);
         border-radius: var(--v2-radius);
         padding: 22px 22px 26px;
         box-shadow: var(--v2-shadow);
       }
       [data-theme="dark"] .brand-v2 .hero {
-        background: linear-gradient(135deg, #0E2E2A 0%, #115E59 60%, #14B8A6 100%);
+        background: linear-gradient(135deg, #0D0D0D 0%, #1F0D00 60%, #CC5200 100%);
       }
       .brand-v2 .hero h1 {
         font-size: 24px;
