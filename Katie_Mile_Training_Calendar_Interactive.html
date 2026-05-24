@@ -4264,35 +4264,35 @@
             num: 1,
             name: "Foundation & Rebuild",
             weeks: "1-4",
-            color: "#4A7C59",
+            color: "#4a7c59",
             goal: "Settle the ankle, address hip/shin, build durability with low-volume aerobic running. Daily mobility becomes a habit.",
           },
           {
             num: 2,
             name: "Aerobic Base",
             weeks: "5-9",
-            color: "#5B8DB8",
+            color: "#FF6600",
             goal: "Steadily increase mileage. Add hill strides and fartlek to wake up neuromuscular system without high-impact intensity.",
           },
           {
             num: 3,
             name: "Threshold & Aerobic Power",
             weeks: "10-14",
-            color: "#C77D3F",
+            color: "#E05200",
             goal: "Build the aerobic ceiling that lets a fast mile feel sustainable. Two quality runs/week: track intervals + tempo.",
           },
           {
             num: 4,
             name: "Mile-Specific (Peak)",
             weeks: "15-18",
-            color: "#B85450",
+            color: "#FB923C",
             goal: "Sharpen at mile pace. Peak mileage 44-48. VO2max work, race-pace specificity, 3K-5K intervals.",
           },
           {
             num: 5,
             name: "Sharpen & Taper",
             weeks: "19-21",
-            color: "#7A4E9C",
+            color: "#7a4e9c",
             goal: "Reduce volume, preserve sharpness. Race-day execution: arrive fresh, hungry, and confident on Sept 19.",
           },
         ],
@@ -8280,7 +8280,7 @@
         return `rgba(${r},${g},${b},${alpha})`;
       }
       function phaseColorFor(week) {
-        return week.num === 21 ? "#B85450" : DATA.phases[week.phase - 1].color;
+        return DATA.phases[week.phase - 1].color;
       }
       function renderMilesChart() {
         const max = Math.max(...DATA.weeks.map((w) => w.mileage));
