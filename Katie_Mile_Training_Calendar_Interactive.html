@@ -10247,8 +10247,11 @@
         setStravaStatus("syncing", "Pulling activities from Strava...");
         try {
           const token = await ensureStravaToken();
-          // Fetch activities from past 30 days
-          const after = Math.floor(Date.now() / 1000) - 30 * 86400;
+          // Use last sync time if available, otherwise fall back to 30 days ago
+          const lastSync = localStorage.getItem(STRAVA_LAST_SYNC_KEY);
+          const after = lastSync
+            ? Math.floor(new Date(lastSync).getTime() / 1000)
+            : Math.floor(Date.now() / 1000) - 30 * 86400;
           const res = await fetch(`https://www.strava.com/api/v3/athlete/activities?after=${after}&per_page=50`, {
             headers: { "Authorization": `Bearer ${token}` },
           });
@@ -10391,7 +10394,11 @@
           const skipMsg = skipped
             ? ` ${skipped} skipped — ${pendingCount} waiting in the Unassigned list.`
             : "";
-          alert(`Pulled ${imported} activities from Strava.${skipMsg}`);
+          if (imported === 0 && skipped === 0) {
+            alert("Already up to date — no new activities since last sync.");
+          } else {
+            alert(`${imported} new activit${imported === 1 ? "y" : "ies"} synced from Strava.${skipMsg}`);
+          }
           // Auto-open the inbox modal when there's anything new to assign,
           // so the user can act on it without hunting for a button.
           if (newlySkipped > 0) openStravaInbox();
