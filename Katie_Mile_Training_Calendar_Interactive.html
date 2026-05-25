@@ -296,12 +296,17 @@
         padding: 5px 0;
         border-bottom: 1px solid var(--border);
         gap: 12px;
+        flex-wrap: wrap;
       }
       .ref-exercise:last-of-type { border-bottom: none; }
       .ref-ex-name {
         font-size: 13px;
         color: var(--ink);
         font-weight: 500;
+        flex: 1;
+        min-width: 0;
+        word-break: break-word;
+        overflow-wrap: break-word;
       }
       .ref-ex-reps {
         font-size: 12px;
@@ -9149,30 +9154,37 @@
       function fillRef() {
         // Format a routine string into a clean per-exercise list
         function formatRoutine(text) {
-          // Strip the "LABEL (time):" prefix and capture any trailing note
-          const prefixMatch = text.match(/^([^:]+):\s*/);
+          // Strip the "LABEL (time):" prefix
+          const prefixMatch = text.match(/^[^:]+:\s*/);
           const body = prefixMatch ? text.slice(prefixMatch[0].length) : text;
 
-          // Split on semicolons or periods that end a sentence (but not abbreviations)
-          const parts = body.split(/[;]/).map(s => s.trim()).filter(Boolean);
-
-          // Separate trailing note sentences (no reps pattern)
+          // Split on semicolons first, then also split any item on ". " before an uppercase letter (trailing note)
+          const rawParts = body.split(/;/).map(s => s.trim()).filter(Boolean);
           const exercises = [];
           const notes = [];
-          parts.forEach(p => {
-            // Looks like an exercise if it contains a number/rep/sec/min/side/leg/ea pattern
-            if (/\d|\/side|\/leg|\/arm|sec|min| ea\b|reps|sets|x\d|\d+s\b/i.test(p)) {
-              exercises.push(p);
+
+          rawParts.forEach(part => {
+            // Check if this part contains a sentence note appended after a period
+            const noteSplit = part.match(/^(.+?\d[^.]*)\.\s+([A-Z].+)$/);
+            if (noteSplit) {
+              exercises.push(noteSplit[1].trim());
+              notes.push(noteSplit[2].trim());
+            } else if (/\d|\/side|\/leg|\/arm|sec|min| ea\b|reps|sets|x\d|\d+s\b/i.test(part)) {
+              // Strip trailing period if present
+              exercises.push(part.replace(/\.$/, '').trim());
             } else {
-              notes.push(p);
+              notes.push(part.replace(/\.$/, '').trim());
             }
           });
 
           const rows = exercises.map(e => {
-            // Split "Exercise Name quantity" — quantity is trailing numbers/reps
-            const match = e.match(/^(.+?)\s+(\d.*)$/);
+            // Split name from quantity — quantity starts at first digit
+            const match = e.match(/^(.*?)\s+(\d[\d\/\w\s\(\),.x-]*)$/);
             if (match) {
-              return `<div class="ref-exercise"><span class="ref-ex-name">${capitalise(match[1].trim())}</span><span class="ref-ex-reps">${match[2].trim()}</span></div>`;
+              return `<div class="ref-exercise">
+                <span class="ref-ex-name">${capitalise(match[1].trim())}</span>
+                <span class="ref-ex-reps">${match[2].trim()}</span>
+              </div>`;
             }
             return `<div class="ref-exercise"><span class="ref-ex-name">${capitalise(e)}</span></div>`;
           }).join('');
