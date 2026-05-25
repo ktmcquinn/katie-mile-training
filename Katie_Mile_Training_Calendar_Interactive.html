@@ -10,8 +10,8 @@
 
     <!-- PWA: web app manifest -->
     <link rel="manifest" href="manifest.json" />
-    <meta name="theme-color" content="#F7F0F7" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#150A15" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#EDF1F5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111518" media="(prefers-color-scheme: dark)" />
     <meta
       name="description"
       content="Katie's mile training calendar - workouts, weight, progress."
@@ -36,82 +36,82 @@
     <style>
       :root {
         color-scheme: light;
-        --ink: #2D1A2D;
-        --muted: #8A6A8A;
-        --bg: #F7F0F7;
+        --ink: #111518;
+        --muted: #5A6A7A;
+        --bg: #EDF1F5;
         --card: #FFFFFF;
-        --border: rgba(87, 44, 87, 0.10);
-        --accent: #E26972;
+        --border: rgba(17, 21, 24, 0.09);
+        --accent: #5A8FA8;
 
-        --p1: #9F5F91;
-        --p2: #E26972;
-        --p3: #572C57;
-        --p4: #C9A227;
-        --p5: #7A3D7A;
+        --p1: #5CB88A;
+        --p2: #5A8FA8;
+        --p3: #6B9FD4;
+        --p4: #D4A050;
+        --p5: #9B7FCA;
 
         --easy: #FFFFFF;
-        --rest: #F7F0F7;
-        --quality: #FDF5F5;
-        --long: #F5F0F7;
-        --race: #FDE8EA;
-        --bike: #F5F0F7;
+        --rest: #EDF1F5;
+        --quality: #EEF4F8;
+        --long: #EAF0F5;
+        --race: #F5EEF0;
+        --bike: #EAF0F5;
 
-        --hover-bg: #F2E8F2;
-        --routine-bg: #F2E8F2;
-        --strength-bg: rgba(226, 105, 114, 0.08);
-        --log-bg: rgba(226, 105, 114, 0.06);
-        --log-border: rgba(226, 105, 114, 0.35);
-        --pace-bg: rgba(159, 95, 145, 0.08);
-        --pace-border: rgba(159, 95, 145, 0.35);
-        --modal-info-bg: rgba(159, 95, 145, 0.06);
-        --modal-info-border: rgba(159, 95, 145, 0.25);
-        --modal-success-bg: rgba(226, 105, 114, 0.08);
-        --modal-success-border: rgba(226, 105, 114, 0.30);
-        --chart-bg: #F7F0F7;
-        --modal-overlay: rgba(45, 26, 45, 0.55);
-        --error-bg: #FDE8EA;
-        --error-border: #F5B8BC;
-        --shadow-soft: 0 2px 8px rgba(87, 44, 87, 0.08);
-        --shadow-pop: 0 4px 16px rgba(87, 44, 87, 0.12);
-        --bf-note-bg: rgba(226, 105, 114, 0.08);
-        --info-text: #B84E56;
+        --hover-bg: #E4EBF0;
+        --routine-bg: #E4EBF0;
+        --strength-bg: rgba(90, 143, 168, 0.08);
+        --log-bg: rgba(90, 143, 168, 0.06);
+        --log-border: rgba(90, 143, 168, 0.35);
+        --pace-bg: rgba(107, 159, 212, 0.08);
+        --pace-border: rgba(107, 159, 212, 0.35);
+        --modal-info-bg: rgba(90, 143, 168, 0.06);
+        --modal-info-border: rgba(90, 143, 168, 0.25);
+        --modal-success-bg: rgba(92, 184, 138, 0.08);
+        --modal-success-border: rgba(92, 184, 138, 0.30);
+        --chart-bg: #EDF1F5;
+        --modal-overlay: rgba(17, 21, 24, 0.55);
+        --error-bg: #F5EAED;
+        --error-border: #D4A8B0;
+        --shadow-soft: 0 2px 8px rgba(17, 21, 24, 0.08);
+        --shadow-pop: 0 4px 16px rgba(17, 21, 24, 0.12);
+        --bf-note-bg: rgba(90, 143, 168, 0.08);
+        --info-text: #3D6E87;
       }
 
       [data-theme="dark"] {
         color-scheme: dark;
-        --ink: #F7F0F7;
-        --muted: #9F7A9F;
-        --bg: #150A15;
-        --card: #241224;
-        --border: rgba(255, 255, 255, 0.08);
-        --accent: #E26972;
+        --ink: #E8EFF5;
+        --muted: #5A6A7A;
+        --bg: #111518;
+        --card: #1C2128;
+        --border: rgba(255, 255, 255, 0.07);
+        --accent: #A8D8EA;
 
-        --easy: #241224;
-        --rest: #150A15;
-        --quality: #2D1520;
-        --long: #1E0F2A;
-        --race: #2D1018;
-        --bike: #1E0F2A;
+        --easy: #1C2128;
+        --rest: #111518;
+        --quality: #1A2230;
+        --long: #151E2A;
+        --race: #221820;
+        --bike: #151E2A;
 
-        --hover-bg: #2D1A2D;
-        --routine-bg: #150A15;
-        --strength-bg: rgba(226, 105, 114, 0.12);
-        --log-bg: rgba(226, 105, 114, 0.08);
-        --log-border: rgba(226, 105, 114, 0.30);
-        --pace-bg: rgba(159, 95, 145, 0.12);
-        --pace-border: rgba(159, 95, 145, 0.30);
-        --modal-info-bg: rgba(159, 95, 145, 0.08);
-        --modal-info-border: rgba(159, 95, 145, 0.25);
-        --modal-success-bg: rgba(226, 105, 114, 0.10);
-        --modal-success-border: rgba(226, 105, 114, 0.30);
-        --chart-bg: #150A15;
+        --hover-bg: #222830;
+        --routine-bg: #111518;
+        --strength-bg: rgba(168, 216, 234, 0.10);
+        --log-bg: rgba(168, 216, 234, 0.07);
+        --log-border: rgba(168, 216, 234, 0.28);
+        --pace-bg: rgba(107, 159, 212, 0.10);
+        --pace-border: rgba(107, 159, 212, 0.28);
+        --modal-info-bg: rgba(168, 216, 234, 0.07);
+        --modal-info-border: rgba(168, 216, 234, 0.22);
+        --modal-success-bg: rgba(92, 184, 138, 0.10);
+        --modal-success-border: rgba(92, 184, 138, 0.28);
+        --chart-bg: #111518;
         --modal-overlay: rgba(0, 0, 0, 0.85);
-        --error-bg: #2D1018;
-        --error-border: #5C2030;
+        --error-bg: #221820;
+        --error-border: #4A2A38;
         --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.50);
         --shadow-pop: 0 4px 18px rgba(0, 0, 0, 0.70);
-        --bf-note-bg: rgba(226, 105, 114, 0.08);
-        --info-text: #F0A0A8;
+        --bf-note-bg: rgba(168, 216, 234, 0.07);
+        --info-text: #A8D8EA;
       }
 
       * {
@@ -372,7 +372,7 @@
 
       /* ---------- Hero ---------- */
       .hero {
-        background: linear-gradient(135deg, #2D1A2D 0%, #572C57 100%);
+        background: linear-gradient(135deg, #111518 0%, #1E2D3D 100%);
         color: white;
         border-radius: 14px;
         padding: 24px;
@@ -965,7 +965,7 @@
         opacity: 0.7;
       }
       .day.today {
-        border-color: #E26972;
+        border-color: #A8D8EA;
       }
       .day.race {
         font-weight: 700;
@@ -987,7 +987,7 @@
         -webkit-appearance: none;
         width: 18px;
         height: 18px;
-        border: 2px solid #E26972;
+        border: 2px solid #A8D8EA;
         border-radius: 4px;
         cursor: pointer;
         flex-shrink: 0;
@@ -998,12 +998,12 @@
           border-color 0.15s;
       }
       .task-check:hover {
-        border-color: #B84E56;
+        border-color: #3D6E87;
         box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.20);
       }
       .task-check:checked {
-        background: #E26972;
-        border-color: #E26972;
+        background: #A8D8EA;
+        border-color: #A8D8EA;
       }
       .task-check:checked::after {
         content: "";
@@ -3089,7 +3089,7 @@
         --v2-ink:       #14161A;
         --v2-muted:     #6B7280;
         --v2-border:    rgba(20, 22, 26, 0.08);
-        --v2-teal:      #E26972;
+        --v2-teal:      #A8D8EA;
         --v2-teal-soft: rgba(20, 184, 166, 0.15);
         --v2-amber:     #F59E0B;
         --v2-amber-soft:rgba(245, 158, 11, 0.15);
@@ -3107,7 +3107,7 @@
         --v2-ink:       #F4F4F6;
         --v2-muted:     #8A8A92;
         --v2-border:    rgba(255, 255, 255, 0.06);
-        --v2-teal:      #E26972;
+        --v2-teal:      #A8D8EA;
         --v2-teal-soft: rgba(45, 212, 191, 0.15);
         --v2-amber:     #FBBF24;
         --v2-amber-soft:rgba(251, 191, 36, 0.15);
@@ -3223,13 +3223,13 @@
       /* Restyle the existing hero to feel like the reference's photo-card
          workout banner: deeper gradient, larger title, more atmosphere. */
       .brand-v2 .hero {
-        background: linear-gradient(135deg, #2D1A2D 0%, #572C57 60%, #9F5F91 100%);
+        background: linear-gradient(135deg, #111518 0%, #1E2D3D 60%, #2A4055 100%);
         border-radius: var(--v2-radius);
         padding: 22px 22px 26px;
         box-shadow: var(--v2-shadow);
       }
       [data-theme="dark"] .brand-v2 .hero {
-        background: linear-gradient(135deg, #150A15 0%, #2D1A2D 60%, #572C57 100%);
+        background: linear-gradient(135deg, #0A0D10 0%, #111518 60%, #1E2D3D 100%);
       }
       .brand-v2 .hero h1 {
         font-size: 24px;
@@ -4247,35 +4247,35 @@
             num: 1,
             name: "Foundation & Rebuild",
             weeks: "1-4",
-            color: "#9F5F91",
+            color: "#5CB88A",
             goal: "Settle the ankle, address hip/shin, build durability with low-volume aerobic running. Daily mobility becomes a habit.",
           },
           {
             num: 2,
             name: "Aerobic Base",
             weeks: "5-9",
-            color: "#E26972",
+            color: "#A8D8EA",
             goal: "Steadily increase mileage. Add hill strides and fartlek to wake up neuromuscular system without high-impact intensity.",
           },
           {
             num: 3,
             name: "Threshold & Aerobic Power",
             weeks: "10-14",
-            color: "#572C57",
+            color: "#6B9FD4",
             goal: "Build the aerobic ceiling that lets a fast mile feel sustainable. Two quality runs/week: track intervals + tempo.",
           },
           {
             num: 4,
             name: "Mile-Specific (Peak)",
             weeks: "15-18",
-            color: "#C9A227",
+            color: "#D4A050",
             goal: "Sharpen at mile pace. Peak mileage 44-48. VO2max work, race-pace specificity, 3K-5K intervals.",
           },
           {
             num: 5,
             name: "Sharpen & Taper",
             weeks: "19-21",
-            color: "#7A3D7A",
+            color: "#9B7FCA",
             goal: "Reduce volume, preserve sharpness. Race-day execution: arrive fresh, hungry, and confident on Sept 19.",
           },
         ],
