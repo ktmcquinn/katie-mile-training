@@ -3405,7 +3405,7 @@
         <span class="top-bar-logo-mark">K</span>
         <span class="top-bar-title">Runlog</span>
       </div>
-      <span class="top-bar-page" id="topBarPage">This Week</span>
+      <span class="top-bar-page" id="topBarPage">Home</span>
       <div class="top-bar-actions">
         <button class="top-bar-btn" id="topBarSyncBtn" title="Sync Strava" aria-label="Sync Strava">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -4128,7 +4128,7 @@
          mode) automatically. 22x22 with stroke-width 1.75 — line-art
          style, consistent visual weight across all five tabs. -->
     <nav class="tab-bar" id="tabBar" role="tablist">
-      <button class="tab-btn active" data-tab="today" type="button" role="tab" aria-label="This Week">
+      <button class="tab-btn active" data-tab="today" type="button" role="tab" aria-label="Home">
         <span class="tab-icon" aria-hidden="true">
           <!-- Checklist: lines with checkmarks — represents the daily check-offs view -->
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
@@ -4140,7 +4140,7 @@
             <path d="M3 18l1.6 1.6L7 16.6"/>
           </svg>
         </span>
-        <span class="tab-label">This Week</span>
+        <span class="tab-label">Home</span>
       </button>
       <button class="tab-btn" data-tab="fuel" type="button" role="tab" aria-label="Fuel">
         <span class="tab-icon" aria-hidden="true">
@@ -4274,7 +4274,7 @@
 
       // ---------- Tabs (bottom nav) ----------
       const TAB_KEY = "katie-mile-active-tab";
-      const TAB_LABELS = { today: "This Week", fuel: "Fuel", plan: "Plan", trends: "Trends" };
+      const TAB_LABELS = { today: "Home", fuel: "Fuel", plan: "Plan", trends: "Trends" };
       function switchTab(name) {
         document.querySelectorAll(".tab-page").forEach((p) => {
           p.classList.toggle("active", p.id === `tab-${name}`);
@@ -8234,7 +8234,7 @@
         row.querySelector("input").addEventListener("change", (e) => {
           setDayDone(day, e.target.checked);
           renderToday();
-          // Sync every matching day card in both This Week + Plan views
+          // Sync every matching day card in both Home + Plan views
           document.querySelectorAll(`.day[data-date="${day.date}"]`).forEach((el) => {
             el.classList.toggle("completed", e.target.checked);
             const cb = el.querySelector(".task-check");
@@ -8494,7 +8494,7 @@
         }
       }
 
-      // Shared day-card builder. Used by renderWeeks (Plan tab) and renderThisWeek (This Week tab).
+      // Shared day-card builder. Used by renderWeeks (Plan tab) and renderThisWeek (Home tab).
       // opts.swappable: include drag-and-drop + swap-handle (only on Plan tab).
       function createDayCard(d, w, opts = {}) {
         const swappable = !!opts.swappable;
@@ -8527,7 +8527,7 @@
         cb.addEventListener("change", (e) => {
           e.stopPropagation();
           setDayDone(d, e.target.checked);
-          // Update every day card with this date (both Plan and This Week tabs)
+          // Update every day card with this date (both Plan and Home tabs)
           document.querySelectorAll(`.day[data-date="${d.date}"]`).forEach((el) => {
             el.classList.toggle("completed", e.target.checked);
             const elCb = el.querySelector(".task-check");
@@ -8588,7 +8588,7 @@
         return dEl;
       }
 
-      // Render the current week's day grid on the This Week tab.
+      // Render the current week's day grid on the Home tab.
       function renderThisWeek() {
         const container = document.getElementById("thisWeekDays");
         const statEl = document.getElementById("thisWeekStat");
@@ -8604,7 +8604,7 @@
         if (!currentWeek) currentWeek = DATA.weeks[0];
         container.innerHTML = "";
         for (const d of currentWeek.days) {
-          // No swap handles on This Week — keep this view focused
+          // No swap handles on Home — keep this view focused
           container.appendChild(createDayCard(d, currentWeek, { swappable: false }));
         }
         if (statEl) {
@@ -9677,7 +9677,7 @@
             if (head) head.classList.toggle("group-done", total > 0 && done === total);
           }
         }
-        // Sync the day card in both week grids (Plan + This Week)
+        // Sync the day card in both week grids (Plan + Home)
         document.querySelectorAll(`.day[data-date="${day.date}"]`).forEach((el) => {
           el.classList.toggle("completed", isDone(day));
         });
