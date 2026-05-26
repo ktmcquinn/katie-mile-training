@@ -6544,11 +6544,11 @@
       // For each phase: { rest, easy, bike, quality, long, race }.
       // Strength is handled as a +250 cal adjustment via exercise math, not target.
       const PHASE_CAL_RANGES = {
-        1: { rest: 2050, easy: 2100, bike: 2100, quality: 2150, long: 2150, race: 2250 },
-        2: { rest: 2100, easy: 2175, bike: 2175, quality: 2250, long: 2350, race: 2400 },
-        3: { rest: 2200, easy: 2275, bike: 2275, quality: 2350, long: 2450, race: 2500 },
-        4: { rest: 2450, easy: 2575, bike: 2575, quality: 2700, long: 2700, race: 2800 },
-        5: { rest: 2100, easy: 2200, bike: 2200, quality: 2300, long: 2300, race: 2400 },
+        1: { rest: 1650, easy: 1750, bike: 1750, quality: 1850, long: 2050, race: 2200 },
+        2: { rest: 1700, easy: 1800, bike: 1800, quality: 1900, long: 2100, race: 2200 },
+        3: { rest: 1700, easy: 1800, bike: 1800, quality: 1950, long: 2150, race: 2200 },
+        4: { rest: 1750, easy: 1850, bike: 1850, quality: 2000, long: 2200, race: 2200 },
+        5: { rest: 1650, easy: 1750, bike: 1750, quality: 1850, long: 1950, race: 2100 },
       };
 
       // EA zones (kcal/kg LBM)
@@ -9100,14 +9100,14 @@
         const phase = week.phase;
         const calRange =
           phase <= 1
-            ? "1,900-2,000 cal"
+            ? "1,650-1,750 cal"
             : phase === 2
-              ? "2,000-2,100 cal"
+              ? "1,700-1,800 cal"
               : phase === 3
-                ? "2,100-2,250 cal"
+                ? "1,700-1,950 cal"
                 : phase === 4
-                  ? "2,450-2,700 cal (MAINTENANCE - no deficit during peak)"
-                  : "2,100-2,300 cal";
+                  ? "1,750-2,000 cal"
+                  : "1,650-1,950 cal";
         if (cat === "race") {
           return `<b>RACE DAY.</b> Wake 3-4 hr before race. Breakfast 600-800 cal mostly carbs (bagel + jam + banana + coffee). Sip electrolyte water through morning. 60 min before: small snack if hungry (half banana). 45 min before: caffeine (1 cup coffee or gel) - only if rehearsed. Post-race: refuel within 60 min, celebrate with what you want.`;
         }
@@ -9241,11 +9241,11 @@
         document.getElementById("ref_paces").innerHTML = paces;
         document.getElementById("ref_fuel").innerHTML = `
     <div style="background:var(--bf-note-bg);padding:8px;border-radius:6px;margin-bottom:10px;font-size:12px"><b>Tuned to your body comp:</b> 147.9 lb / 28.7% BF / 105.4 lb LBM (47.8 kg) / BMR 1,403. Goal: 135 lb @ ~22-23% BF. Use the <b>Fuel tab</b> for daily logging — these ranges are now PCOS-tuned for energy availability ≥ 38 on training days.</div>
-    <div><b>P1 (W1-4):</b> 2,050-2,150 cal/day. ~300-400 cal deficit. P 145-155g · F 55-65g · C 230-275g.</div>
-    <div><b>P2 (W5-9):</b> 2,100-2,250 cal/day. ~300-400 cal deficit.</div>
-    <div><b>P3 (W10-14):</b> 2,200-2,350 cal/day. ~250-350 cal deficit.</div>
-    <div><b>P4 (W15-18):</b> 2,450-2,700 cal/day. <i>MAINTENANCE — DO NOT DEFICIT during peak.</i></div>
-    <div><b>P5 (W19-21):</b> 2,100-2,300 cal/day. ~200 cal mild taper deficit.</div>
+    <div><b>P1 (W1-4):</b> 1,650-1,750 cal/day. ~200-250 cal deficit. P 110-120g · F 55-65g · C 130-150g.</div>
+    <div><b>P2 (W5-9):</b> 1,700-1,800 cal/day. ~200-250 cal deficit. P 115-125g · F 58-68g · C 135-155g.</div>
+    <div><b>P3 (W10-14):</b> 1,700-1,950 cal/day. ~200 cal deficit. P 120-130g · F 60-70g · C 140-160g.</div>
+    <div><b>P4 (W15-18):</b> 1,750-2,000 cal/day. Mild deficit only — prioritise fuelling peak mileage. P 125-135g · F 60-70g · C 145-165g.</div>
+    <div><b>P5 (W19-21):</b> 1,650-1,950 cal/day. ~150-200 cal mild taper deficit. P 110-120g · F 55-65g · C 130-150g.</div>
     <div style="margin-top:8px"><b>Day cycling (key for PCOS):</b> quality / long-run days → top of range (+100-200 on long days). Easy / bike / strength → middle. Rest day → bottom (not lower). Place carbs around training — that's when insulin sensitivity is highest.</div>
     <div style="margin-top:6px"><b>Luteal phase:</b> +150-250 cal/day in the 7-10 days before your period (mostly carbs + protein, not fat). Toggle "Luteal" in the Fuel tab to apply this automatically.</div>
     <div style="margin-top:6px"><b>Always:</b> protein 4 meals @ 30-40g (target 150g/day) · 75+ oz water · 25-35g fiber (5-10g soluble for PCOS) · 7-9 hr sleep.</div>
