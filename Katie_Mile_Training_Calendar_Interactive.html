@@ -198,7 +198,16 @@
         color: var(--ink);
         letter-spacing: -0.2px;
       }
-      .top-bar-actions {
+      .top-bar-page {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--ink);
+        pointer-events: none;
+        letter-spacing: -0.2px;
+      }
         display: flex;
         align-items: center;
         gap: 4px;
@@ -3396,6 +3405,7 @@
         <span class="top-bar-logo-mark">K</span>
         <span class="top-bar-title">Runlog</span>
       </div>
+      <span class="top-bar-page" id="topBarPage">This Week</span>
       <div class="top-bar-actions">
         <button class="top-bar-btn" id="topBarSyncBtn" title="Sync Strava" aria-label="Sync Strava">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -4264,6 +4274,7 @@
 
       // ---------- Tabs (bottom nav) ----------
       const TAB_KEY = "katie-mile-active-tab";
+      const TAB_LABELS = { today: "This Week", fuel: "Fuel", plan: "Plan", trends: "Trends" };
       function switchTab(name) {
         document.querySelectorAll(".tab-page").forEach((p) => {
           p.classList.toggle("active", p.id === `tab-${name}`);
@@ -4271,6 +4282,8 @@
         document.querySelectorAll(".tab-btn").forEach((b) => {
           b.classList.toggle("active", b.dataset.tab === name);
         });
+        const pageEl = document.getElementById("topBarPage");
+        if (pageEl) pageEl.textContent = TAB_LABELS[name] || name;
         try { localStorage.setItem(TAB_KEY, name); } catch (e) {}
         // Scroll to top of the newly active tab
         window.scrollTo({ top: 0, behavior: "instant" });
