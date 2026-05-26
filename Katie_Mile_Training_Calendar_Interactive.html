@@ -2399,7 +2399,7 @@
         gap: 8px;
         margin-bottom: 10px;
       }
-      .fsp-field { display: flex; flex-direction: column; gap: 4px; }
+      .fsp-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
       .fsp-field span {
         font-size: 11px;
         text-transform: uppercase;
@@ -2416,6 +2416,9 @@
         background: var(--card);
         color: var(--ink);
         font-family: inherit;
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
       }
       .fsp-preview {
         padding: 8px 10px;
