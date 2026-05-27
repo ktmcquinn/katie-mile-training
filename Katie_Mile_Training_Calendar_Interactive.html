@@ -225,12 +225,24 @@
         transition: background 0.15s, color 0.15s;
         -webkit-tap-highlight-color: transparent;
       }
+      .top-bar-actions {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 4px;
+      }
       .top-bar-btn:hover {
         background: var(--hover-bg);
         color: var(--ink);
       }
+      .top-bar-btn:active,
+      .top-bar-btn:focus {
+        background: transparent;
+        outline: none;
+      }
       .top-bar-btn.syncing {
         color: var(--accent);
+        background: transparent;
         animation: spin 1s linear infinite;
       }
       @keyframes spin {
