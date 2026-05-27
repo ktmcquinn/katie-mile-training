@@ -217,7 +217,8 @@
         height: 36px;
         border-radius: 8px;
         border: none;
-        background: transparent;
+        outline: none;
+        background: var(--card);
         -webkit-appearance: none;
         appearance: none;
         color: var(--muted);
@@ -226,6 +227,7 @@
         align-items: center;
         justify-content: center;
         transition: background 0.15s, color 0.15s;
+        -webkit-tap-highlight-color: transparent;
       }
       .top-bar-btn:hover {
         background: var(--hover-bg);
