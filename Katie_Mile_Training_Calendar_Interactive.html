@@ -2191,6 +2191,22 @@
         letter-spacing: 0.4px;
         margin-top: 2px;
       }
+      .ftc-macro-bar-track {
+        height: 4px;
+        background: var(--border);
+        border-radius: 999px;
+        margin: 6px 12px 0;
+        overflow: hidden;
+      }
+      .ftc-macro-bar-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: var(--accent);
+        transition: width 0.4s ease;
+        max-width: 100%;
+      }
+      .ftc-macro-bar-fill.over { background: #E26972; }
+
       .ftc-macro-divider {
         width: 1px;
         height: 32px;
@@ -3732,16 +3748,19 @@
           <div class="ftc-macro">
             <div class="ftc-macro-val" id="ftcProtein">—</div>
             <div class="ftc-macro-lbl" id="ftcProteinLbl">protein left</div>
+            <div class="ftc-macro-bar-track"><div class="ftc-macro-bar-fill" id="ftcProteinBar"></div></div>
           </div>
           <div class="ftc-macro-divider"></div>
           <div class="ftc-macro">
             <div class="ftc-macro-val" id="ftcCarbs">—</div>
             <div class="ftc-macro-lbl" id="ftcCarbsLbl">carbs left</div>
+            <div class="ftc-macro-bar-track"><div class="ftc-macro-bar-fill" id="ftcCarbsBar"></div></div>
           </div>
           <div class="ftc-macro-divider"></div>
           <div class="ftc-macro">
             <div class="ftc-macro-val" id="ftcFat">—</div>
             <div class="ftc-macro-lbl" id="ftcFatLbl">fat left</div>
+            <div class="ftc-macro-bar-track"><div class="ftc-macro-bar-fill" id="ftcFatBar"></div></div>
           </div>
         </div>
 
@@ -6868,17 +6887,24 @@
         if (tgt)  tgt.textContent  = target.targetCal.toLocaleString() + " target";
 
         // Macro pills
-        const setMacro = (id, lblId, val, name) => {
+        const setMacro = (id, lblId, barId, val, target, name) => {
           const el = document.getElementById(id);
           const lbl = document.getElementById(lblId);
+          const bar = document.getElementById(barId);
           if (!el) return;
           el.textContent = Math.abs(val) + "g";
-          el.className = "ftc-macro-val" + (val < 0 ? " over" : "");
-          if (lbl) lbl.textContent = val < 0 ? name + " over" : name + " left";
+          const over = val < 0;
+          el.className = "ftc-macro-val" + (over ? " over" : "");
+          if (lbl) lbl.textContent = name + (over ? " over" : " left");
+          if (bar) {
+            const pct = Math.min(100, Math.round(((target - Math.max(val, 0)) / Math.max(target, 1)) * 100));
+            bar.style.width = pct + "%";
+            bar.className = "ftc-macro-bar-fill" + (over ? " over" : "");
+          }
         };
-        setMacro("ftcProtein", "ftcProteinLbl", remP, "protein");
-        setMacro("ftcCarbs",   "ftcCarbsLbl",   remC, "carbs");
-        setMacro("ftcFat",     "ftcFatLbl",      remF, "fat");
+        setMacro("ftcProtein", "ftcProteinLbl", "ftcProteinBar", remP, target.targetP, "protein");
+        setMacro("ftcCarbs",   "ftcCarbsLbl",   "ftcCarbsBar",   remC, target.targetC, "carbs");
+        setMacro("ftcFat",     "ftcFatLbl",      "ftcFatBar",     remF, target.targetF, "fat");
 
         // Luteal toggle
         const lutealCb = document.getElementById("lutealCheck");
