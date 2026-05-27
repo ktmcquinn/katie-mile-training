@@ -2101,6 +2101,99 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
       }
+      /* ── Redesigned fuel target card ─────────────────────── */
+      .ftc-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+      .ftc-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        color: var(--accent);
+        text-transform: uppercase;
+      }
+      .ftc-meta {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .ftc-hero {
+        text-align: center;
+        margin: 4px 0 16px;
+      }
+      .ftc-remaining {
+        font-size: 48px;
+        font-weight: 800;
+        line-height: 1;
+        color: var(--ink);
+        letter-spacing: -2px;
+      }
+      .ftc-remaining.over { color: #E26972; }
+      .ftc-remaining-label {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .ftc-bar-wrap { margin-bottom: 16px; }
+      .ftc-bar-track {
+        height: 8px;
+        background: var(--hover-bg);
+        border-radius: 999px;
+        overflow: hidden;
+        margin-bottom: 6px;
+      }
+      .ftc-bar-fill {
+        height: 100%;
+        background: var(--accent);
+        border-radius: 999px;
+        transition: width 0.4s ease;
+        max-width: 100%;
+      }
+      .ftc-bar-fill.over { background: #E26972; }
+      .ftc-bar-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .ftc-macros {
+        display: flex;
+        align-items: center;
+        background: var(--hover-bg);
+        border-radius: 10px;
+        padding: 12px 0;
+        margin-bottom: 14px;
+      }
+      .ftc-macro {
+        flex: 1;
+        text-align: center;
+      }
+      .ftc-macro-val {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--ink);
+        letter-spacing: -0.5px;
+      }
+      .ftc-macro-val.over { color: #E26972; }
+      .ftc-macro-lbl {
+        font-size: 10px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-top: 2px;
+      }
+      .ftc-macro-divider {
+        width: 1px;
+        height: 32px;
+        background: var(--border);
+      }
+
       .fuel-target-meta {
         font-size: 12px;
         color: var(--muted);
@@ -3612,16 +3705,43 @@
 
       <!-- Today's target -->
       <div class="fuel-card" id="fuelTargetCard">
-        <h3>Today's target</h3>
-        <div class="fuel-target-meta" id="fuelTargetMeta">—</div>
-        <div class="fuel-target-grid">
-          <div class="fuel-target-stat cal"><div class="v" id="fuelTargetCal">—</div><div class="l">calories</div></div>
-          <div class="fuel-target-stat"><div class="v" id="fuelTargetP">—</div><div class="l">protein (g)</div></div>
-          <div class="fuel-target-stat"><div class="v" id="fuelTargetC">—</div><div class="l">carbs (g)</div></div>
-          <div class="fuel-target-stat"><div class="v" id="fuelTargetF">—</div><div class="l">fat (g)</div></div>
-          <div class="fuel-target-stat"><div class="v" id="fuelTargetFi">—</div><div class="l">fiber (g)</div></div>
-          <div class="fuel-target-stat"><div class="v" id="fuelTargetNa">—</div><div class="l">sodium (mg)</div></div>
+        <div class="ftc-header">
+          <span class="ftc-label">TODAY'S TARGET</span>
+          <span class="ftc-meta" id="fuelTargetMeta">—</span>
         </div>
+
+        <div class="ftc-hero">
+          <div class="ftc-remaining" id="ftcRemaining">—</div>
+          <div class="ftc-remaining-label">calories remaining</div>
+        </div>
+
+        <div class="ftc-bar-wrap">
+          <div class="ftc-bar-track">
+            <div class="ftc-bar-fill" id="ftcCalFill"></div>
+          </div>
+          <div class="ftc-bar-labels">
+            <span id="ftcConsumed">0 consumed</span>
+            <span id="ftcTarget">0 target</span>
+          </div>
+        </div>
+
+        <div class="ftc-macros">
+          <div class="ftc-macro">
+            <div class="ftc-macro-val" id="ftcProtein">—</div>
+            <div class="ftc-macro-lbl">protein left</div>
+          </div>
+          <div class="ftc-macro-divider"></div>
+          <div class="ftc-macro">
+            <div class="ftc-macro-val" id="ftcCarbs">—</div>
+            <div class="ftc-macro-lbl">carbs left</div>
+          </div>
+          <div class="ftc-macro-divider"></div>
+          <div class="ftc-macro">
+            <div class="ftc-macro-val" id="ftcFat">—</div>
+            <div class="ftc-macro-lbl">fat left</div>
+          </div>
+        </div>
+
         <label class="luteal-toggle" id="lutealToggle">
           <input type="checkbox" id="lutealCheck">
           <span><b>Luteal phase / pre-period</b> — add +200 cal to today's target (recommended by your nutritionist for the 7-10 days before your period).</span>
@@ -6710,23 +6830,60 @@
       function renderFuelTarget() {
         const target = buildTodayTarget();
         if (!target) return;
+
+        // Meta line
         const metaEl = document.getElementById("fuelTargetMeta");
         const lbl = dayTypeLabel[target.cat] || target.cat;
-        let meta = `Phase ${target.phase} · <b>${lbl}</b> — ${target.day.title}`;
-        if (target.luteal) meta += ` · <b>luteal bump +${LUTEAL_BUMP}</b>`;
-        metaEl.innerHTML = meta;
-        document.getElementById("fuelTargetCal").textContent = target.targetCal;
-        document.getElementById("fuelTargetP").textContent = target.targetP;
-        document.getElementById("fuelTargetC").textContent = target.targetC;
-        document.getElementById("fuelTargetF").textContent = target.targetF;
-        document.getElementById("fuelTargetFi").textContent = target.targetFi;
-        const naEl = document.getElementById("fuelTargetNa");
-        if (naEl) naEl.textContent = target.targetNa;
-        // Reflect luteal toggle in UI
-        const lutealEl = document.getElementById("lutealToggle");
+        let meta = `Phase ${target.phase} · ${lbl}`;
+        if (target.luteal) meta += ` · luteal +${LUTEAL_BUMP}`;
+        if (metaEl) metaEl.textContent = meta;
+
+        // Compute totals logged so far today
+        const meals = todaysMeals();
+        const totals = sumMacros(meals);
+
+        // Remaining
+        const remCal  = Math.round(target.targetCal - totals.cal);
+        const remP    = Math.round(target.targetP   - totals.p);
+        const remC    = Math.round(target.targetC   - totals.c);
+        const remF    = Math.round(target.targetF   - totals.f);
+        const pct     = Math.min(100, Math.round((totals.cal / Math.max(target.targetCal, 1)) * 100));
+        const isOver  = totals.cal > target.targetCal;
+
+        // Hero remaining cal
+        const remEl = document.getElementById("ftcRemaining");
+        if (remEl) {
+          remEl.textContent = Math.abs(remCal).toLocaleString();
+          remEl.className = "ftc-remaining" + (isOver ? " over" : "");
+        }
+        const remLblEl = document.querySelector(".ftc-remaining-label");
+        if (remLblEl) remLblEl.textContent = isOver ? "calories over target" : "calories remaining";
+
+        // Bar
+        const fill = document.getElementById("ftcCalFill");
+        if (fill) { fill.style.width = pct + "%"; fill.className = "ftc-bar-fill" + (isOver ? " over" : ""); }
+        const cons = document.getElementById("ftcConsumed");
+        const tgt  = document.getElementById("ftcTarget");
+        if (cons) cons.textContent = Math.round(totals.cal).toLocaleString() + " consumed";
+        if (tgt)  tgt.textContent  = target.targetCal.toLocaleString() + " target";
+
+        // Macro pills
+        const setMacro = (id, val) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.textContent = Math.abs(val) + "g";
+          el.className = "ftc-macro-val" + (val < 0 ? " over" : "");
+        };
+        setMacro("ftcProtein", remP);
+        setMacro("ftcCarbs",   remC);
+        setMacro("ftcFat",     remF);
+
+        // Luteal toggle
         const lutealCb = document.getElementById("lutealCheck");
+        const lutealEl = document.getElementById("lutealToggle");
         if (lutealCb) lutealCb.checked = !!target.luteal;
         if (lutealEl) lutealEl.classList.toggle("active", !!target.luteal);
+
         return target;
       }
 
