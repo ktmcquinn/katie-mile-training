@@ -3731,17 +3731,17 @@
         <div class="ftc-macros">
           <div class="ftc-macro">
             <div class="ftc-macro-val" id="ftcProtein">—</div>
-            <div class="ftc-macro-lbl">protein left</div>
+            <div class="ftc-macro-lbl" id="ftcProteinLbl">protein left</div>
           </div>
           <div class="ftc-macro-divider"></div>
           <div class="ftc-macro">
             <div class="ftc-macro-val" id="ftcCarbs">—</div>
-            <div class="ftc-macro-lbl">carbs left</div>
+            <div class="ftc-macro-lbl" id="ftcCarbsLbl">carbs left</div>
           </div>
           <div class="ftc-macro-divider"></div>
           <div class="ftc-macro">
             <div class="ftc-macro-val" id="ftcFat">—</div>
-            <div class="ftc-macro-lbl">fat left</div>
+            <div class="ftc-macro-lbl" id="ftcFatLbl">fat left</div>
           </div>
         </div>
 
@@ -6868,15 +6868,17 @@
         if (tgt)  tgt.textContent  = target.targetCal.toLocaleString() + " target";
 
         // Macro pills
-        const setMacro = (id, val) => {
+        const setMacro = (id, lblId, val, name) => {
           const el = document.getElementById(id);
+          const lbl = document.getElementById(lblId);
           if (!el) return;
           el.textContent = Math.abs(val) + "g";
           el.className = "ftc-macro-val" + (val < 0 ? " over" : "");
+          if (lbl) lbl.textContent = val < 0 ? name + " over" : name + " left";
         };
-        setMacro("ftcProtein", remP);
-        setMacro("ftcCarbs",   remC);
-        setMacro("ftcFat",     remF);
+        setMacro("ftcProtein", "ftcProteinLbl", remP, "protein");
+        setMacro("ftcCarbs",   "ftcCarbsLbl",   remC, "carbs");
+        setMacro("ftcFat",     "ftcFatLbl",      remF, "fat");
 
         // Luteal toggle
         const lutealCb = document.getElementById("lutealCheck");
