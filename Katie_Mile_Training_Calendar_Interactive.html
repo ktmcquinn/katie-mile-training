@@ -6985,10 +6985,8 @@
           listEl.innerHTML = `<div class="fuel-empty">No meals logged yet today.</div>`;
           return;
         }
-        const recent = meals.slice(-6);
-        const hidden = meals.length - recent.length;
-        let html = hidden > 0 ? `<div class="fuel-empty" style="font-style:italic">${hidden} earlier entr${hidden === 1 ? "y" : "ies"} hidden</div>` : "";
-        for (const m of recent) {
+        let html = "";
+        for (const m of meals) {
           const stats = [];
           if (m.p) stats.push(`${m.p}P`);
           if (m.c) stats.push(`${m.c}C`);
