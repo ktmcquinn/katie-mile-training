@@ -6945,7 +6945,7 @@
       function renderRecentChips() {
         const el = document.getElementById("recentFoods");
         if (!el) return;
-        const items = recentUniqueFoods(12);
+        const items = recentUniqueFoods(6);
         if (!items.length) { el.style.display = "none"; return; }
         el.style.display = "";
         let html = `<div class="recent-label">Recent — tap to log again</div><div class="recent-chips">`;
