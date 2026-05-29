@@ -3648,17 +3648,17 @@
         <div class="checkin-grid">
           <div class="checkin-field">
             <label for="ciBodyBattery">Body Battery</label>
-            <input type="number" id="ciBodyBattery" min="1" max="100" placeholder="—" inputmode="numeric">
+            <input type="text" inputmode="numeric" id="ciBodyBattery" min="1" max="100" placeholder="—" inputmode="numeric">
             <span class="hint">1–100 (Garmin)</span>
           </div>
           <div class="checkin-field">
             <label for="ciRHR">Resting HR</label>
-            <input type="number" id="ciRHR" min="30" max="120" placeholder="—" inputmode="numeric">
+            <input type="text" inputmode="numeric" id="ciRHR" min="30" max="120" placeholder="—" inputmode="numeric">
             <span class="hint">bpm, on wake</span>
           </div>
           <div class="checkin-field">
             <label for="ciEnergy">Energy</label>
-            <input type="number" id="ciEnergy" min="1" max="10" placeholder="—" inputmode="numeric">
+            <input type="text" inputmode="numeric" id="ciEnergy" min="1" max="10" placeholder="—" inputmode="numeric">
             <span class="hint">1–10 feeling</span>
           </div>
           <div class="checkin-field">
@@ -3674,12 +3674,12 @@
           </div>
           <div class="checkin-field" id="ciWeightField">
             <label for="ciWeight">Weight (lb)</label>
-            <input type="number" id="ciWeight" min="50" max="500" step="0.1" placeholder="—" inputmode="decimal">
+            <input type="text" inputmode="decimal" id="ciWeight" min="50" max="500" step="0.1" placeholder="—" inputmode="decimal">
             <span class="hint">Friday morning weigh-in</span>
           </div>
           <div class="checkin-field" id="ciBodyFatField">
             <label for="ciBodyFat">Body fat %</label>
-            <input type="number" id="ciBodyFat" min="5" max="60" step="0.1" placeholder="—" inputmode="decimal">
+            <input type="text" inputmode="decimal" id="ciBodyFat" min="5" max="60" step="0.1" placeholder="—" inputmode="decimal">
             <span class="hint">optional, Fridays</span>
           </div>
           <div class="checkin-field" id="ciWeighInNote" style="display:none">
@@ -3803,7 +3803,7 @@
               </label>
               <label class="fsp-field">
                 <span>× Quantity</span>
-                <input type="number" id="fspQty" min="0.25" step="0.25" value="1">
+                <input type="text" inputmode="decimal" id="fspQty" min="0.25" step="0.25" value="1">
               </label>
             </div>
             <div class="fsp-preview" id="fspPreview"></div>
@@ -3819,27 +3819,27 @@
           </div>
           <div class="ff-field">
             <label>Cal</label>
-            <input type="number" id="mealCal" min="0" placeholder="350" required inputmode="numeric">
+            <input type="text" inputmode="numeric" id="mealCal" min="0" placeholder="350" required inputmode="numeric">
           </div>
           <div class="ff-field">
             <label>Protein (g)</label>
-            <input type="number" id="mealP" min="0" step="0.1" placeholder="—" inputmode="decimal">
+            <input type="text" inputmode="decimal" id="mealP" min="0" step="0.1" placeholder="—" inputmode="decimal">
           </div>
           <div class="ff-field">
             <label>Carbs (g)</label>
-            <input type="number" id="mealC" min="0" step="0.1" placeholder="—" inputmode="decimal">
+            <input type="text" inputmode="decimal" id="mealC" min="0" step="0.1" placeholder="—" inputmode="decimal">
           </div>
           <div class="ff-field">
             <label>Fat (g)</label>
-            <input type="number" id="mealF" min="0" step="0.1" placeholder="—" inputmode="decimal">
+            <input type="text" inputmode="decimal" id="mealF" min="0" step="0.1" placeholder="—" inputmode="decimal">
           </div>
           <div class="ff-field">
             <label>Fiber (g)</label>
-            <input type="number" id="mealFi" min="0" step="0.1" placeholder="—" inputmode="decimal">
+            <input type="text" inputmode="decimal" id="mealFi" min="0" step="0.1" placeholder="—" inputmode="decimal">
           </div>
           <div class="ff-field">
             <label>Sodium (mg)</label>
-            <input type="number" id="mealNa" min="0" step="1" placeholder="—" inputmode="numeric">
+            <input type="text" inputmode="numeric" id="mealNa" min="0" step="1" placeholder="—" inputmode="numeric">
           </div>
           <button type="submit" class="btn btn-primary save-btn">Add</button>
         </form>
@@ -9088,7 +9088,7 @@
         html += `<div class="log-grid">
           <div class="log-field">
             <label>Distance (mi)</label>
-            <input type="number" id="logDistance" step="0.01" min="0" placeholder="${isBike ? "12.0" : "3.0"}" value="${log.distance ?? ""}">
+            <input type="text" inputmode="decimal" id="logDistance" step="0.01" min="0" placeholder="${isBike ? "12.0" : "3.0"}" value="${log.distance ?? ""}">
           </div>
           <div class="log-field">
             <label>${isBike ? "Time rode (min : sec)" : "Duration (min : sec)"}</label>
@@ -9914,7 +9914,7 @@
           </div>
           <div class="field">
             <label>Weight</label>
-            <input type="number" id="setWeightInput" min="0" step="0.5" placeholder="—" value="${defaultWeight ?? ""}" inputmode="decimal">
+            <input type="text" inputmode="decimal" id="setWeightInput" min="0" step="0.5" placeholder="—" value="${defaultWeight ?? ""}" inputmode="decimal">
           </div>
         </div>
         <div class="weight-unit-row">
@@ -11825,6 +11825,23 @@
       initCloudUI();
       initCheckin();
       initFuel();
+      // ── European decimal comma support ───────────────────────
+      // Replaces comma with period in real-time on any decimal input
+      // so parseFloat() always works regardless of keyboard locale.
+      document.addEventListener("input", (e) => {
+        const el = e.target;
+        if (el.inputMode === "decimal" && el.value.includes(",")) {
+          const pos = el.selectionStart;
+          el.value = el.value.replace(/,/g, ".");
+          try { el.setSelectionRange(pos, pos); } catch(_) {}
+        }
+      });
+
+      function parseDecimal(val) {
+        if (val === undefined || val === null) return NaN;
+        return parseFloat(String(val).replace(",", "."));
+      }
+
       initStrava();
       initTabs();
       renderThisWeek();
