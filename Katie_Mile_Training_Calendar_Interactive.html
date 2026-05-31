@@ -9698,14 +9698,7 @@
                 <div class="set-circles">${circlesHtml || `<span style="font-size:12px;color:var(--muted)">No sets parsed from prescription</span>`}</div>
               </div>
               ${historyHtml}
-            ` : `
-              <div class="ex-inputs full">
-                <div style="grid-column: 1 / -1">
-                  <label>Notes</label>
-                  <textarea class="ex-notes" placeholder="How it felt, form notes...">${log.notes ? log.notes.replace(/</g, "&lt;") : ""}</textarea>
-                </div>
-              </div>
-            `}
+            ` : ``}
           </div>`;
         }
 
