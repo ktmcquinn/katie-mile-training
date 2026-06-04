@@ -2,10 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Katie's Mile Training Calendar</title>
+    <title>The Copenhagen Mile</title>
     <meta
       name="viewport"
-      content="width=device-width,initial-scale=1,viewport-fit=cover"
+      content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"
     />
 
     <!-- PWA: web app manifest -->
@@ -152,7 +152,10 @@
         padding-bottom: 90px; /* room for fixed bottom tab bar */
       }
 
-      /* ---------- Fixed top menu bar (Strava-style) ---------- */
+      /* Prevent iOS auto-zoom on input focus — must be 16px+ */
+      input, select, textarea { font-size: 16px !important; }
+
+      
       /* Empty for now — sits pinned to the top of the viewport so it
          stays put while the page below scrolls. */
       .top-bar {
@@ -216,7 +219,6 @@
         width: 36px;
         height: 36px;
         border-radius: 8px;
-        border: none;
         background: transparent;
         color: var(--muted);
         cursor: pointer;
@@ -224,13 +226,26 @@
         align-items: center;
         justify-content: center;
         transition: background 0.15s, color 0.15s;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .top-bar-actions {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
       }
       .top-bar-btn:hover {
         background: var(--hover-bg);
         color: var(--ink);
       }
+      .top-bar-btn:active,
+      .top-bar-btn:focus {
+        background: transparent;
+        outline: none;
+      }
       .top-bar-btn.syncing {
         color: var(--accent);
+        background: transparent;
         animation: spin 1s linear infinite;
       }
       @keyframes spin {
@@ -379,11 +394,11 @@
         flex-direction: column;
         align-items: center;
         gap: 2px;
-        transition: color 0.15s, background 0.15s;
+        transition: color 0.15s;
+        -webkit-tap-highlight-color: transparent;
       }
       .tab-btn:hover {
         color: var(--ink);
-        background: var(--hover-bg);
       }
       .tab-btn.active {
         color: var(--accent);
@@ -2089,6 +2104,115 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
       }
+      /* ── Redesigned fuel target card ─────────────────────── */
+      .ftc-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+      .ftc-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        color: var(--accent);
+        text-transform: uppercase;
+      }
+      .ftc-meta {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .ftc-hero {
+        text-align: center;
+        margin: 4px 0 16px;
+      }
+      .ftc-remaining {
+        font-size: 48px;
+        font-weight: 800;
+        line-height: 1;
+        color: var(--ink);
+        letter-spacing: -2px;
+      }
+      .ftc-remaining.over { color: #E26972; }
+      .ftc-remaining-label {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .ftc-bar-wrap { margin-bottom: 16px; }
+      .ftc-bar-track {
+        height: 8px;
+        background: var(--hover-bg);
+        border-radius: 999px;
+        overflow: hidden;
+        margin-bottom: 6px;
+      }
+      .ftc-bar-fill {
+        height: 100%;
+        background: var(--accent);
+        border-radius: 999px;
+        transition: width 0.4s ease;
+        max-width: 100%;
+      }
+      .ftc-bar-fill.over { background: #E26972; }
+      .ftc-bar-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .ftc-macros {
+        display: flex;
+        align-items: center;
+        background: var(--hover-bg);
+        border-radius: 10px;
+        padding: 12px 0;
+        margin-bottom: 14px;
+      }
+      .ftc-macro {
+        flex: 1;
+        text-align: center;
+      }
+      .ftc-macro-val {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--ink);
+        letter-spacing: -0.5px;
+      }
+      .ftc-macro-val.over { color: #E26972; }
+      .ftc-macro-lbl {
+        font-size: 10px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-top: 2px;
+      }
+      .ftc-macro-bar-track {
+        height: 4px;
+        background: var(--border);
+        border-radius: 999px;
+        margin: 6px 12px 0;
+        overflow: hidden;
+      }
+      .ftc-macro-bar-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: var(--accent);
+        transition: width 0.4s ease;
+        max-width: 100%;
+      }
+      .ftc-macro-bar-fill.over { background: #E26972; }
+
+      .ftc-macro-divider {
+        width: 1px;
+        height: 32px;
+        background: var(--border);
+      }
+
       .fuel-target-meta {
         font-size: 12px;
         color: var(--muted);
@@ -3410,19 +3534,19 @@
       </div>
       <span class="top-bar-page" id="topBarPage">Home</span>
       <div class="top-bar-actions">
-        <button class="top-bar-btn" id="topBarSyncBtn" title="Sync Strava" aria-label="Sync Strava">
+        <div class="top-bar-btn" id="topBarSyncBtn" title="Sync Strava" aria-label="Sync Strava" role="button" tabindex="0">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="23 4 23 10 17 10"></polyline>
             <polyline points="1 20 1 14 7 14"></polyline>
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
           </svg>
-        </button>
-        <button class="top-bar-btn" id="topBarSettingsBtn" title="Settings" aria-label="Settings">
+        </div>
+        <div class="top-bar-btn" id="topBarSettingsBtn" title="Settings" aria-label="Settings" role="button" tabindex="0">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
-        </button>
+        </div>
       </div>
     </header>
 
@@ -3442,7 +3566,7 @@
         >
           🌙
         </button>
-        <h1>Katie's Mile Training Calendar</h1>
+        <h1>The Copenhagen Mile</h1>
         <div class="sub">
           Goal: 5:30-6:30 mile · Race: Saturday Sept 19, 2026 · Plan: Apr 27 -
           Sept 19, 2026
@@ -3461,7 +3585,8 @@
         <div class="v2-stat" id="v2StatDistance">
           <div class="v2-stat-icon v2-stat-icon-teal">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M13 4v16M7 4l6 8-6 8M17 4l-4 8 4 8"/>
+              <path d="M3 14c0 0 1-4 5-4s5 3 8 3 4-1 4-1v3c0 1-1 2-2 2H4a1 1 0 0 1-1-1v-2z"/>
+              <path d="M7 14V9l3 2 2-4 2 5"/>
             </svg>
             <svg class="v2-ring" viewBox="0 0 44 44">
               <circle class="ring-track" cx="22" cy="22" r="19"/>
@@ -3523,17 +3648,17 @@
         <div class="checkin-grid">
           <div class="checkin-field">
             <label for="ciBodyBattery">Body Battery</label>
-            <input type="number" id="ciBodyBattery" min="1" max="100" placeholder="—" inputmode="numeric">
+            <input type="text" inputmode="numeric" id="ciBodyBattery" min="1" max="100" placeholder="—" inputmode="numeric">
             <span class="hint">1–100 (Garmin)</span>
           </div>
           <div class="checkin-field">
             <label for="ciRHR">Resting HR</label>
-            <input type="number" id="ciRHR" min="30" max="120" placeholder="—" inputmode="numeric">
+            <input type="text" inputmode="numeric" id="ciRHR" min="30" max="120" placeholder="—" inputmode="numeric">
             <span class="hint">bpm, on wake</span>
           </div>
           <div class="checkin-field">
             <label for="ciEnergy">Energy</label>
-            <input type="number" id="ciEnergy" min="1" max="10" placeholder="—" inputmode="numeric">
+            <input type="text" inputmode="numeric" id="ciEnergy" min="1" max="10" placeholder="—" inputmode="numeric">
             <span class="hint">1–10 feeling</span>
           </div>
           <div class="checkin-field">
@@ -3549,12 +3674,12 @@
           </div>
           <div class="checkin-field" id="ciWeightField">
             <label for="ciWeight">Weight (lb)</label>
-            <input type="number" id="ciWeight" min="50" max="500" step="0.1" placeholder="—" inputmode="decimal">
+            <input type="text" inputmode="decimal" id="ciWeight" min="50" max="500" step="0.1" placeholder="—" inputmode="decimal">
             <span class="hint">Friday morning weigh-in</span>
           </div>
           <div class="checkin-field" id="ciBodyFatField">
             <label for="ciBodyFat">Body fat %</label>
-            <input type="number" id="ciBodyFat" min="5" max="60" step="0.1" placeholder="—" inputmode="decimal">
+            <input type="text" inputmode="decimal" id="ciBodyFat" min="5" max="60" step="0.1" placeholder="—" inputmode="decimal">
             <span class="hint">optional, Fridays</span>
           </div>
           <div class="checkin-field" id="ciWeighInNote" style="display:none">
@@ -3600,31 +3725,47 @@
 
       <!-- Today's target -->
       <div class="fuel-card" id="fuelTargetCard">
-        <h3>Today's target</h3>
-        <div class="fuel-target-meta" id="fuelTargetMeta">—</div>
-        <div class="fuel-target-grid">
-          <div class="fuel-target-stat cal"><div class="v" id="fuelTargetCal">—</div><div class="l">calories</div></div>
-          <div class="fuel-target-stat"><div class="v" id="fuelTargetP">—</div><div class="l">protein (g)</div></div>
-          <div class="fuel-target-stat"><div class="v" id="fuelTargetC">—</div><div class="l">carbs (g)</div></div>
-          <div class="fuel-target-stat"><div class="v" id="fuelTargetF">—</div><div class="l">fat (g)</div></div>
-          <div class="fuel-target-stat"><div class="v" id="fuelTargetFi">—</div><div class="l">fiber (g)</div></div>
-          <div class="fuel-target-stat"><div class="v" id="fuelTargetNa">—</div><div class="l">sodium (mg)</div></div>
+        <div class="ftc-header">
+          <span class="ftc-label">TODAY'S TARGET</span>
+          <span class="ftc-meta" id="fuelTargetMeta">—</span>
         </div>
-        <label class="luteal-toggle" id="lutealToggle">
-          <input type="checkbox" id="lutealCheck">
-          <span><b>Luteal phase / pre-period</b> — add +200 cal to today's target (recommended by your nutritionist for the 7-10 days before your period).</span>
-        </label>
-      </div>
 
-      <!-- Energy availability -->
-      <div class="ea-card" id="eaCard">
-        <div class="ea-label">Energy availability (today)</div>
-        <div class="ea-value" id="eaValue">—</div>
-        <div class="ea-zone" id="eaZone">Log some food to see your EA</div>
-        <div class="ea-detail" id="eaDetail">
-          EA = (intake − exercise calories) / lean body mass (47.8 kg).
-          Optimal ≥ 45 · subclinical LEA 30–45 · clinical / RED-S risk &lt; 30.
+        <div class="ftc-hero">
+          <div class="ftc-remaining" id="ftcRemaining">—</div>
+          <div class="ftc-remaining-label">calories remaining</div>
         </div>
+
+        <div class="ftc-bar-wrap">
+          <div class="ftc-bar-track">
+            <div class="ftc-bar-fill" id="ftcCalFill"></div>
+          </div>
+          <div class="ftc-bar-labels">
+            <span id="ftcConsumed">0 consumed</span>
+            <span id="ftcTarget">0 target</span>
+          </div>
+        </div>
+
+        <div class="ftc-macros">
+          <div class="ftc-macro">
+            <div class="ftc-macro-val" id="ftcProtein">—</div>
+            <div class="ftc-macro-lbl" id="ftcProteinLbl">protein left</div>
+            <div class="ftc-macro-bar-track"><div class="ftc-macro-bar-fill" id="ftcProteinBar"></div></div>
+          </div>
+          <div class="ftc-macro-divider"></div>
+          <div class="ftc-macro">
+            <div class="ftc-macro-val" id="ftcCarbs">—</div>
+            <div class="ftc-macro-lbl" id="ftcCarbsLbl">carbs left</div>
+            <div class="ftc-macro-bar-track"><div class="ftc-macro-bar-fill" id="ftcCarbsBar"></div></div>
+          </div>
+          <div class="ftc-macro-divider"></div>
+          <div class="ftc-macro">
+            <div class="ftc-macro-val" id="ftcFat">—</div>
+            <div class="ftc-macro-lbl" id="ftcFatLbl">fat left</div>
+            <div class="ftc-macro-bar-track"><div class="ftc-macro-bar-fill" id="ftcFatBar"></div></div>
+          </div>
+        </div>
+
+
       </div>
 
       <!-- Add meal form -->
@@ -3662,7 +3803,7 @@
               </label>
               <label class="fsp-field">
                 <span>× Quantity</span>
-                <input type="number" id="fspQty" min="0.25" step="0.25" value="1">
+                <input type="text" inputmode="decimal" id="fspQty" min="0.25" step="0.25" value="1">
               </label>
             </div>
             <div class="fsp-preview" id="fspPreview"></div>
@@ -3678,27 +3819,27 @@
           </div>
           <div class="ff-field">
             <label>Cal</label>
-            <input type="number" id="mealCal" min="0" placeholder="350" required inputmode="numeric">
-          </div>
-          <div class="ff-field">
-            <label>Protein (g)</label>
-            <input type="number" id="mealP" min="0" step="0.1" placeholder="—" inputmode="decimal">
-          </div>
-          <div class="ff-field">
-            <label>Carbs (g)</label>
-            <input type="number" id="mealC" min="0" step="0.1" placeholder="—" inputmode="decimal">
+            <input type="text" inputmode="numeric" id="mealCal" min="0" placeholder="350" required>
           </div>
           <div class="ff-field">
             <label>Fat (g)</label>
-            <input type="number" id="mealF" min="0" step="0.1" placeholder="—" inputmode="decimal">
+            <input type="text" inputmode="decimal" id="mealF" min="0" step="0.1" placeholder="—">
           </div>
           <div class="ff-field">
-            <label>Fiber (g)</label>
-            <input type="number" id="mealFi" min="0" step="0.1" placeholder="—" inputmode="decimal">
+            <label>Carbs (g)</label>
+            <input type="text" inputmode="decimal" id="mealC" min="0" step="0.1" placeholder="—">
+          </div>
+          <div class="ff-field">
+            <label>Protein (g)</label>
+            <input type="text" inputmode="decimal" id="mealP" min="0" step="0.1" placeholder="—">
           </div>
           <div class="ff-field">
             <label>Sodium (mg)</label>
-            <input type="number" id="mealNa" min="0" step="1" placeholder="—" inputmode="numeric">
+            <input type="text" inputmode="numeric" id="mealNa" min="0" step="1" placeholder="—">
+          </div>
+          <div class="ff-field">
+            <label>Fiber (g)</label>
+            <input type="text" inputmode="decimal" id="mealFi" min="0" step="0.1" placeholder="—">
           </div>
           <button type="submit" class="btn btn-primary save-btn">Add</button>
         </form>
@@ -3712,6 +3853,17 @@
         </div>
       </div>
 
+      <!-- Energy availability -->
+      <div class="ea-card" id="eaCard">
+        <div class="ea-label">Energy availability (today)</div>
+        <div class="ea-value" id="eaValue">—</div>
+        <div class="ea-zone" id="eaZone">Log some food to see your EA</div>
+        <div class="ea-detail" id="eaDetail">
+          EA = (intake − exercise calories) / lean body mass (47.8 kg).
+          Optimal ≥ 45 · subclinical LEA 30–45 · clinical / RED-S risk &lt; 30.
+        </div>
+      </div>
+
       <!-- Progress -->
       <div class="fuel-card" id="fuelProgressCard">
         <h3>Progress</h3>
@@ -3721,9 +3873,9 @@
           <span class="val" id="fuelValCal">0 / —</span>
         </div>
         <div class="fuel-progress-row">
-          <span class="lbl">Protein</span>
-          <div class="bar"><div class="bar-fill" id="fuelBarP" style="width:0%"></div></div>
-          <span class="val" id="fuelValP">0g / —</span>
+          <span class="lbl">Fat</span>
+          <div class="bar"><div class="bar-fill" id="fuelBarF" style="width:0%"></div></div>
+          <span class="val" id="fuelValF">0g / —</span>
         </div>
         <div class="fuel-progress-row">
           <span class="lbl">Carbs</span>
@@ -3731,19 +3883,19 @@
           <span class="val" id="fuelValC">0g / —</span>
         </div>
         <div class="fuel-progress-row">
-          <span class="lbl">Fat</span>
-          <div class="bar"><div class="bar-fill" id="fuelBarF" style="width:0%"></div></div>
-          <span class="val" id="fuelValF">0g / —</span>
-        </div>
-        <div class="fuel-progress-row">
-          <span class="lbl">Fiber</span>
-          <div class="bar"><div class="bar-fill" id="fuelBarFi" style="width:0%"></div></div>
-          <span class="val" id="fuelValFi">0g / —</span>
+          <span class="lbl">Protein</span>
+          <div class="bar"><div class="bar-fill" id="fuelBarP" style="width:0%"></div></div>
+          <span class="val" id="fuelValP">0g / —</span>
         </div>
         <div class="fuel-progress-row">
           <span class="lbl">Sodium</span>
           <div class="bar"><div class="bar-fill" id="fuelBarNa" style="width:0%"></div></div>
           <span class="val" id="fuelValNa">0mg / —</span>
+        </div>
+        <div class="fuel-progress-row">
+          <span class="lbl">Fiber</span>
+          <div class="bar"><div class="bar-fill" id="fuelBarFi" style="width:0%"></div></div>
+          <span class="val" id="fuelValFi">0g / —</span>
         </div>
       </div>
 
@@ -6698,23 +6850,69 @@
       function renderFuelTarget() {
         const target = buildTodayTarget();
         if (!target) return;
+
+        // Meta line
         const metaEl = document.getElementById("fuelTargetMeta");
         const lbl = dayTypeLabel[target.cat] || target.cat;
-        let meta = `Phase ${target.phase} · <b>${lbl}</b> — ${target.day.title}`;
-        if (target.luteal) meta += ` · <b>luteal bump +${LUTEAL_BUMP}</b>`;
-        metaEl.innerHTML = meta;
-        document.getElementById("fuelTargetCal").textContent = target.targetCal;
-        document.getElementById("fuelTargetP").textContent = target.targetP;
-        document.getElementById("fuelTargetC").textContent = target.targetC;
-        document.getElementById("fuelTargetF").textContent = target.targetF;
-        document.getElementById("fuelTargetFi").textContent = target.targetFi;
-        const naEl = document.getElementById("fuelTargetNa");
-        if (naEl) naEl.textContent = target.targetNa;
-        // Reflect luteal toggle in UI
-        const lutealEl = document.getElementById("lutealToggle");
+        let meta = `Phase ${target.phase} · ${lbl}`;
+        if (target.luteal) meta += ` · luteal +${LUTEAL_BUMP}`;
+        if (metaEl) metaEl.textContent = meta;
+
+        // Compute totals logged so far today
+        const meals = todaysMeals();
+        const totals = sumMacros(meals);
+
+        // Remaining
+        const remCal  = Math.round(target.targetCal - totals.cal);
+        const remP    = Math.round(target.targetP   - totals.p);
+        const remC    = Math.round(target.targetC   - totals.c);
+        const remF    = Math.round(target.targetF   - totals.f);
+        const pct     = Math.min(100, Math.round((totals.cal / Math.max(target.targetCal, 1)) * 100));
+        const isOver  = totals.cal > target.targetCal;
+
+        // Hero remaining cal
+        const remEl = document.getElementById("ftcRemaining");
+        if (remEl) {
+          remEl.textContent = Math.abs(remCal).toLocaleString();
+          remEl.className = "ftc-remaining" + (isOver ? " over" : "");
+        }
+        const remLblEl = document.querySelector(".ftc-remaining-label");
+        if (remLblEl) remLblEl.textContent = isOver ? "calories over target" : "calories remaining";
+
+        // Bar
+        const fill = document.getElementById("ftcCalFill");
+        if (fill) { fill.style.width = pct + "%"; fill.className = "ftc-bar-fill" + (isOver ? " over" : ""); }
+        const cons = document.getElementById("ftcConsumed");
+        const tgt  = document.getElementById("ftcTarget");
+        if (cons) cons.textContent = Math.round(totals.cal).toLocaleString() + " consumed";
+        if (tgt)  tgt.textContent  = target.targetCal.toLocaleString() + " target";
+
+        // Macro pills
+        const setMacro = (id, lblId, barId, val, target, name) => {
+          const el = document.getElementById(id);
+          const lbl = document.getElementById(lblId);
+          const bar = document.getElementById(barId);
+          if (!el) return;
+          el.textContent = Math.abs(val) + "g";
+          const over = val < 0;
+          el.className = "ftc-macro-val" + (over ? " over" : "");
+          if (lbl) lbl.textContent = name + (over ? " over" : " left");
+          if (bar) {
+            const pct = Math.min(100, Math.round(((target - Math.max(val, 0)) / Math.max(target, 1)) * 100));
+            bar.style.width = pct + "%";
+            bar.className = "ftc-macro-bar-fill" + (over ? " over" : "");
+          }
+        };
+        setMacro("ftcProtein", "ftcProteinLbl", "ftcProteinBar", remP, target.targetP, "protein");
+        setMacro("ftcCarbs",   "ftcCarbsLbl",   "ftcCarbsBar",   remC, target.targetC, "carbs");
+        setMacro("ftcFat",     "ftcFatLbl",      "ftcFatBar",     remF, target.targetF, "fat");
+
+        // Luteal toggle
         const lutealCb = document.getElementById("lutealCheck");
+        const lutealEl = document.getElementById("lutealToggle");
         if (lutealCb) lutealCb.checked = !!target.luteal;
         if (lutealEl) lutealEl.classList.toggle("active", !!target.luteal);
+
         return target;
       }
 
@@ -6748,7 +6946,7 @@
       function renderRecentChips() {
         const el = document.getElementById("recentFoods");
         if (!el) return;
-        const items = recentUniqueFoods(12);
+        const items = recentUniqueFoods(6);
         if (!items.length) { el.style.display = "none"; return; }
         el.style.display = "";
         let html = `<div class="recent-label">Recent — tap to log again</div><div class="recent-chips">`;
@@ -8890,7 +9088,7 @@
         html += `<div class="log-grid">
           <div class="log-field">
             <label>Distance (mi)</label>
-            <input type="number" id="logDistance" step="0.01" min="0" placeholder="${isBike ? "12.0" : "3.0"}" value="${log.distance ?? ""}">
+            <input type="text" inputmode="decimal" id="logDistance" step="0.01" min="0" placeholder="${isBike ? "12.0" : "3.0"}" value="${log.distance ?? ""}">
           </div>
           <div class="log-field">
             <label>${isBike ? "Time rode (min : sec)" : "Duration (min : sec)"}</label>
@@ -9500,14 +9698,7 @@
                 <div class="set-circles">${circlesHtml || `<span style="font-size:12px;color:var(--muted)">No sets parsed from prescription</span>`}</div>
               </div>
               ${historyHtml}
-            ` : `
-              <div class="ex-inputs full">
-                <div style="grid-column: 1 / -1">
-                  <label>Notes</label>
-                  <textarea class="ex-notes" placeholder="How it felt, form notes...">${log.notes ? log.notes.replace(/</g, "&lt;") : ""}</textarea>
-                </div>
-              </div>
-            `}
+            ` : ``}
           </div>`;
         }
 
@@ -9716,7 +9907,7 @@
           </div>
           <div class="field">
             <label>Weight</label>
-            <input type="number" id="setWeightInput" min="0" step="0.5" placeholder="—" value="${defaultWeight ?? ""}" inputmode="decimal">
+            <input type="text" inputmode="decimal" id="setWeightInput" min="0" step="0.5" placeholder="—" value="${defaultWeight ?? ""}" inputmode="decimal">
           </div>
         </div>
         <div class="weight-unit-row">
@@ -11627,6 +11818,23 @@
       initCloudUI();
       initCheckin();
       initFuel();
+      // ── European decimal comma support ───────────────────────
+      // Replaces comma with period in real-time on any decimal input
+      // so parseFloat() always works regardless of keyboard locale.
+      document.addEventListener("input", (e) => {
+        const el = e.target;
+        if (el.inputMode === "decimal" && el.value.includes(",")) {
+          const pos = el.selectionStart;
+          el.value = el.value.replace(/,/g, ".");
+          try { el.setSelectionRange(pos, pos); } catch(_) {}
+        }
+      });
+
+      function parseDecimal(val) {
+        if (val === undefined || val === null) return NaN;
+        return parseFloat(String(val).replace(",", "."));
+      }
+
       initStrava();
       initTabs();
       renderThisWeek();
