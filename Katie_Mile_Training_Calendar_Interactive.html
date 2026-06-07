@@ -2191,6 +2191,42 @@
         letter-spacing: 0.4px;
         margin-top: 2px;
       }
+      .ftc-actual {
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid var(--border);
+      }
+      .ftc-actual-label {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 10px;
+        font-weight: 600;
+      }
+      .ftc-actual-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .ftc-pill {
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1.5px solid var(--border);
+        background: transparent;
+        color: var(--ink);
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        -webkit-appearance: none;
+        appearance: none;
+        transition: border-color 0.15s, background 0.15s, color 0.15s;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .ftc-pill.selected {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #fff;
+      }
+
       .ftc-macro-bar-track {
         height: 4px;
         background: var(--border);
@@ -3766,6 +3802,17 @@
         </div>
 
 
+        <!-- Actual workout selector — shown when planned workout not checked off -->
+        <div class="ftc-actual" id="ftcActual" style="display:none">
+          <div class="ftc-actual-label">Workout not completed — what did you actually do?</div>
+          <div class="ftc-actual-pills" id="ftcActualPills">
+            <button class="ftc-pill" data-actual="nothing">Nothing</button>
+            <button class="ftc-pill" data-actual="walk">Walk / easy movement</button>
+            <button class="ftc-pill" data-actual="easy_run">Easy run</button>
+            <button class="ftc-pill" data-actual="bike">Bike / cross-train</button>
+            <button class="ftc-pill" data-actual="done">Did the planned workout</button>
+          </div>
+        </div>
       </div>
 
       <!-- Add meal form -->
@@ -6267,6 +6314,16 @@
       }
       let COMPLETED = loadCompleted();
 
+      // ── Actual workout override (for fuel target adjustment) ──
+      const WORKOUT_ACTUAL_KEY = "katie-mile-workout-actual";
+      function loadWorkoutActual() {
+        try { return JSON.parse(localStorage.getItem(WORKOUT_ACTUAL_KEY) || "{}"); } catch(e) { return {}; }
+      }
+      function saveWorkoutActual(data) {
+        try { localStorage.setItem(WORKOUT_ACTUAL_KEY, JSON.stringify(data)); } catch(e) {}
+      }
+      let WORKOUT_ACTUAL = loadWorkoutActual();
+
       // Get all section keys for a given day
       function getSections(day) {
         const sections = ["workout"];
@@ -6308,6 +6365,7 @@
         else COMPLETED[day.date] = state;
         saveCompleted(COMPLETED);
         renderProgress();
+        if (typeof renderFuelTarget === "function") renderFuelTarget();
       }
       function setDayDone(day, val) {
         if (val) {
@@ -6319,6 +6377,7 @@
         }
         saveCompleted(COMPLETED);
         renderProgress();
+        if (typeof renderFuelTarget === "function") renderFuelTarget();
       }
       function totalDays() {
         let n = 0;
@@ -6751,27 +6810,37 @@
         const day = ctx.day;
         const week = ctx.week;
         const phase = week.phase;
-        const cat = categorize(day);
+        const plannedCat = categorize(day);
+
+        // If workout not done, check for actual workout override
+        const workoutDone = isDone(day);
+        const actual = WORKOUT_ACTUAL[dateStr];
+
+        // Map actual selection to a calorie category
+        const actualCatMap = {
+          nothing:  "rest",
+          walk:     "easy",
+          easy_run: "easy",
+          bike:     "bike",
+          done:     plannedCat,
+        };
+        const cat = (!workoutDone && actual) ? (actualCatMap[actual] || plannedCat) : plannedCat;
+
         const baseCal = (PHASE_CAL_RANGES[phase] && PHASE_CAL_RANGES[phase][cat]) || PHASE_CAL_RANGES[phase].easy;
         const luteal = !!FUEL_PREFS.luteal;
         const targetCal = baseCal + (luteal ? LUTEAL_BUMP : 0);
-        // Protein 150g default (top of recommended PCOS range)
         const targetP = 150;
-        // Fat: 60g default, 70g if luteal
         const targetF = luteal ? 70 : 60;
-        // Fiber: 30g
         const targetFi = 30;
-        // Sodium: 2300mg base (FDA guideline upper limit). Quality/long/race
-        // days get +300mg because heavy sweat sessions need replacement.
         const targetNa = (cat === "quality" || cat === "long" || cat === "race") ? 2600 : 2300;
-        // Carbs: remaining calories / 4
         const carbCal = targetCal - targetP * 4 - targetF * 9;
         const targetC = Math.max(120, Math.round(carbCal / 4));
         return {
           date: dateStr,
-          day, week, phase, cat,
+          day, week, phase, cat, plannedCat,
           baseCal, targetCal, luteal,
           targetP, targetF, targetC, targetFi, targetNa,
+          workoutDone, actual,
         };
       }
 
@@ -6912,6 +6981,21 @@
         const lutealEl = document.getElementById("lutealToggle");
         if (lutealCb) lutealCb.checked = !!target.luteal;
         if (lutealEl) lutealEl.classList.toggle("active", !!target.luteal);
+
+        // Show/hide actual workout selector
+        const actualEl = document.getElementById("ftcActual");
+        if (actualEl) {
+          actualEl.style.display = target.workoutDone ? "none" : "block";
+          // Highlight selected pill
+          actualEl.querySelectorAll(".ftc-pill").forEach(btn => {
+            btn.classList.toggle("selected", btn.dataset.actual === (target.actual || ""));
+            btn.onclick = () => {
+              WORKOUT_ACTUAL[target.date] = btn.dataset.actual;
+              saveWorkoutActual(WORKOUT_ACTUAL);
+              renderFuelTarget();
+            };
+          });
+        }
 
         return target;
       }
