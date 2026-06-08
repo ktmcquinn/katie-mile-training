@@ -10646,10 +10646,11 @@
         setStravaStatus("syncing", "Pulling activities from Strava...");
         try {
           const token = await ensureStravaToken();
-          // Use last sync time if available, otherwise fall back to 30 days ago
+          // Use last sync time minus 24hr buffer (catches delayed Strava uploads),
+          // otherwise fall back to 30 days ago for first sync
           const lastSync = localStorage.getItem(STRAVA_LAST_SYNC_KEY);
           const after = lastSync
-            ? Math.floor(new Date(lastSync).getTime() / 1000)
+            ? Math.floor(new Date(lastSync).getTime() / 1000) - 86400
             : Math.floor(Date.now() / 1000) - 30 * 86400;
           const res = await fetch(`https://www.strava.com/api/v3/athlete/activities?after=${after}&per_page=50`, {
             headers: { "Authorization": `Bearer ${token}` },
@@ -10841,14 +10842,28 @@
         if (inboxBtn) inboxBtn.addEventListener("click", openStravaInbox);
         if (disconnectBtn) disconnectBtn.addEventListener("click", disconnectStrava);
 
-        // Top bar sync button
+        // Top bar sync button — tap for incremental, hold 1s for full 30-day sync
         const topSyncBtn = document.getElementById("topBarSyncBtn");
         if (topSyncBtn) {
-          topSyncBtn.addEventListener("click", async () => {
+          let holdTimer = null;
+          const startSync = async (force = false) => {
             topSyncBtn.classList.add("syncing");
+            if (force) {
+              localStorage.removeItem(STRAVA_LAST_SYNC_KEY);
+              alert("Syncing last 30 days from Strava…");
+            }
             try { await pullStravaActivities(); } finally {
               topSyncBtn.classList.remove("syncing");
             }
+          };
+          topSyncBtn.addEventListener("pointerdown", () => {
+            holdTimer = setTimeout(() => { holdTimer = null; startSync(true); }, 1000);
+          });
+          topSyncBtn.addEventListener("pointerup", () => {
+            if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; startSync(false); }
+          });
+          topSyncBtn.addEventListener("pointercancel", () => {
+            if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
           });
         }
 
