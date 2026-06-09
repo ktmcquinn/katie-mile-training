@@ -10887,7 +10887,15 @@
           } else {
             onSignedOut();
           }
-          // Listen for auth changes
+          // Listen for auth changes.
+          // IMPORTANT: Supabase fires this listener for every auth event,
+          // including TOKEN_REFRESHED (~every 50 min while signed in) and
+          // USER_UPDATED. Treating those the same as a real sign-in
+          // triggers a destructive pullFromCloud() that wipes local-only
+          // data — for example per-set strength logs that haven't been
+          // synced (the cloud schema doesn't even have a column for the
+          // sets array). So we ONLY trigger onSignedIn for actual sign-in
+          // events, not token refreshes.
           supaClient.auth.onAuthStateChange((event, session) => {
             // Password reset link from email — Supabase fires PASSWORD_RECOVERY
             // and gives us a temporary session. Show the "set new password" form.
@@ -10896,13 +10904,24 @@
               showPasswordRecovery();
               return;
             }
-            if (session && session.user) {
-              supaUser = session.user;
-              onSignedIn();
-            } else {
+            // Sign-out: clear user + flip UI back to the sign-in form.
+            if (event === "SIGNED_OUT" || !session || !session.user) {
               supaUser = null;
               onSignedOut();
+              return;
             }
+            // Real sign-in event — keep the existing behavior (auto-pull).
+            if (event === "SIGNED_IN") {
+              supaUser = session.user;
+              onSignedIn();
+              return;
+            }
+            // TOKEN_REFRESHED / USER_UPDATED / INITIAL_SESSION when we're
+            // already signed in: just keep supaUser fresh. NO pullFromCloud.
+            // The page-load path already pulled when it called onSignedIn
+            // the first time, and an automatic mid-session pull would clobber
+            // any in-progress local edits.
+            supaUser = session.user;
           });
         } catch (err) {
           console.error(err);
@@ -11185,20 +11204,52 @@
           }
           persistOverrides();
           applyOverrides();
-          // Exercise logs
-          EX_LOGS = {};
+          // Exercise logs — MERGE rather than overwrite.
+          // 1. Build the cloud snapshot, including the per-set `sets`
+          //    array (new column; older rows may have null/undefined).
+          // 2. For each (date, routineKey, exerciseKey) tuple that
+          //    exists locally but not in the cloud snapshot, keep the
+          //    local entry. This protects in-progress workout logs that
+          //    haven't yet been pushed (debounce window, push failure,
+          //    or a session token refresh racing the save).
+          const cloudEx = {};
           for (const r of ex.data) {
-            if (!EX_LOGS[r.date]) EX_LOGS[r.date] = {};
-            if (!EX_LOGS[r.date][r.routine_key]) EX_LOGS[r.date][r.routine_key] = {};
-            EX_LOGS[r.date][r.routine_key][r.exercise_key] = {
+            if (!cloudEx[r.date]) cloudEx[r.date] = {};
+            if (!cloudEx[r.date][r.routine_key]) cloudEx[r.date][r.routine_key] = {};
+            cloudEx[r.date][r.routine_key][r.exercise_key] = {
               completed: r.completed,
               weight: r.weight != null ? parseFloat(r.weight) : null,
               reps: r.reps,
               notes: r.notes,
+              sets: Array.isArray(r.sets) ? r.sets : (r.sets || undefined),
               updatedAt: r.updated_at,
             };
           }
+          // Layer any local-only entries on top so we don't lose them.
+          for (const date in EX_LOGS) {
+            for (const routineKey in EX_LOGS[date]) {
+              for (const exerciseKey in EX_LOGS[date][routineKey]) {
+                const localLog = EX_LOGS[date][routineKey][exerciseKey];
+                const cloudLog = cloudEx[date] && cloudEx[date][routineKey] && cloudEx[date][routineKey][exerciseKey];
+                if (!cloudLog) {
+                  if (!cloudEx[date]) cloudEx[date] = {};
+                  if (!cloudEx[date][routineKey]) cloudEx[date][routineKey] = {};
+                  cloudEx[date][routineKey][exerciseKey] = localLog;
+                } else if (Array.isArray(localLog.sets) && !Array.isArray(cloudLog.sets)) {
+                  // Cloud row exists but doesn't have a sets array yet
+                  // (legacy row from before the sets column existed).
+                  // Keep the local sets array so per-set history is
+                  // preserved.
+                  cloudLog.sets = localLog.sets;
+                }
+              }
+            }
+          }
+          EX_LOGS = cloudEx;
           try { localStorage.setItem(EX_LOG_KEY, JSON.stringify(EX_LOGS)); } catch (e) {}
+          // Re-push so any local-only entries we just preserved actually
+          // make it to the cloud on the next sync cycle.
+          if (typeof scheduleSync === "function") scheduleSync();
           // Check-ins
           CHECKINS = {};
           for (const r of ci.data) {
@@ -11352,7 +11403,11 @@
             cycle_phase: c.cyclePhase ?? null,
             updated_at: c.updatedAt || new Date().toISOString(),
           }));
-          // Flatten exercise logs into rows
+          // Flatten exercise logs into rows. Strength workouts use a
+          // per-set `sets` array (each entry has reps/weight/weightUnit/
+          // completed). Routine exercises use the top-level weight/reps/
+          // notes/completed. We push both so a single round-trip preserves
+          // either kind of log.
           const exerciseRows = [];
           for (const date in EX_LOGS) {
             for (const routineKey in EX_LOGS[date]) {
@@ -11365,6 +11420,7 @@
                   weight: log.weight ?? null,
                   reps: log.reps ?? null,
                   notes: log.notes ?? null,
+                  sets: Array.isArray(log.sets) ? log.sets : null,
                   updated_at: log.updatedAt || new Date().toISOString(),
                 });
               }

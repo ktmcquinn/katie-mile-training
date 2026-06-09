@@ -84,6 +84,11 @@ create table if not exists public.exercise_logs (
   updated_at    timestamptz default now(),
   primary key (user_id, date, routine_key, exercise_key)
 );
+-- Per-set tracking for strength workouts. Each element is an object
+-- { reps, weight, weightUnit, completed }. Older rows have null here,
+-- which the client treats as "no per-set data yet, fall back to the
+-- exercise-level fields above."
+alter table public.exercise_logs add column if not exists sets jsonb;
 
 -- =========================================================================
 -- 8) strava_tokens: OAuth tokens for the user's Strava connection.
