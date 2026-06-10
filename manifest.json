@@ -1,7 +1,7 @@
 {
-  "name": "Katie's Mile Training Calendar",
-  "short_name": "Mile Training",
-  "description": "Personal accountability app for mile race training: workouts, weight, and progress tracking.",
+  "name": "The Dresden Half",
+  "short_name": "Dresden Half",
+  "description": "Katie's half marathon training app — workouts, weight, and progress tracking.",
   "start_url": "./Katie_Mile_Training_Calendar_Interactive.html",
   "scope": "./",
   "display": "standalone",

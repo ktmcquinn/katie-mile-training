@@ -215,11 +215,11 @@ function normalizeFoodDetail(raw) {
 
 // ---- Handler ----------------------------------------------------------------
 
+import { setCorsHeaders } from "../_cors.js";
+
 export default async function handler(req, res) {
-  // CORS — same as the FatSecret proxy
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  // CORS — locked to ALLOWED_ORIGIN env var (see api/_cors.js)
+  setCorsHeaders(req, res, "GET, OPTIONS");
 
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "GET") {

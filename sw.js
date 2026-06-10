@@ -1,12 +1,13 @@
-// Katie's Mile Training - Service Worker
+// The Dresden Half - Service Worker
 // Bump CACHE_VERSION whenever the HTML changes to force clients to get the new version.
-const CACHE_VERSION = "v3.8.0";
+const CACHE_VERSION = "v3.9.0";
 const CACHE_NAME = `mile-training-${CACHE_VERSION}`;
 
 // Files to pre-cache on install. Anything not in this list will be cached on first fetch.
 const PRECACHE_URLS = [
   "./",
   "./Katie_Mile_Training_Calendar_Interactive.html",
+  "./plan.js",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png",

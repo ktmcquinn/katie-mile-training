@@ -2,11 +2,11 @@
 // The client_secret must NEVER appear in client-side code; that's why this runs server-side.
 // Triggered by a POST from the frontend after Strava redirects back with ?code=...
 
+import { setCorsHeaders } from "../_cors.js";
+
 export default async function handler(req, res) {
-  // CORS — allow your Vercel domain to call this from the browser
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  // CORS — locked to ALLOWED_ORIGIN env var (see api/_cors.js)
+  setCorsHeaders(req, res, "POST, OPTIONS");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
