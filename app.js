@@ -820,6 +820,8 @@
 
       function renderTrends() {
         renderStatsCards();
+        renderRecap();
+        renderRacePredictor();
         renderRecoveryTrends();
         renderPeriodStrip();
       }
@@ -1884,6 +1886,8 @@
         setTimeout(() => { if (statusEl) statusEl.textContent = ""; }, 2000);
         const btn = document.getElementById("ciSave");
         if (btn) btn.textContent = "Update check-in";
+        // Refresh Today so the readiness banner reflects the new check-in
+        if (typeof renderToday === "function") renderToday();
       }
 
       function initCheckin() {
@@ -2629,6 +2633,11 @@
         // brand-v2 class — i.e. once we roll out further this will be a
         // no-op on any tab that hasn't been migrated).
         renderBrandV2Stats();
+
+        // Performance features: pace target chip, readiness banner, recap
+        renderTodayPaceHint(day);
+        renderReadiness(day);
+        renderRecapToday();
       }
 
       // Populate the three quick-stat tiles in the brand-v2 Today header.
@@ -6096,6 +6105,355 @@
         renderProgress();
         if (typeof renderThisWeek === "function") renderThisWeek();
       });
+
+
+      // ==================================================================
+      // Performance features: race predictor, training paces, readiness
+      // nudge, weekly recap.
+      // Projections use the Riegel formula: T2 = T1 * (D2/D1)^1.06
+      // ==================================================================
+      const RIEGEL_EXP = 1.06;
+      const MI_5K = 3.1069, MI_HALF = 13.1094;
+      const GOAL_MILE_SEC = 6 * 60;   // Sub-6:00 mile (Copenhagen B-race)
+      const GOAL_HALF_SEC = 105 * 60; // Sub-1:45 half (Dresden A-race)
+      const TT_KEY = "katie-mile-tt-result";
+      const RECAP_DISMISS_KEY = "katie-mile-recap-dismissed";
+
+      function riegel(knownSec, knownMi, targetMi) {
+        return knownSec * Math.pow(targetMi / knownMi, RIEGEL_EXP);
+      }
+      // Race times can exceed an hour (half marathon) — h:mm:ss when needed.
+      function fmtRaceTime(totalSec) {
+        totalSec = Math.round(totalSec);
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        const s = totalSec % 60;
+        return h > 0
+          ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+          : `${m}:${String(s).padStart(2, "0")}`;
+      }
+      function loadTT() {
+        try { return JSON.parse(localStorage.getItem(TT_KEY)) || null; } catch (e) { return null; }
+      }
+
+      // Best reference effort = the logged run (last 60 days) or manually
+      // entered race/TT that projects the FASTEST mile. Picking the best
+      // means easy runs never drag the prediction down; they just lose.
+      function referenceEffort() {
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - 60);
+        const cutoffISO = cutoff.toISOString().slice(0, 10);
+        const cands = [];
+        for (const date in LOGS) {
+          const l = LOGS[date];
+          if (!l || !l.distance || !l.durationSec) continue;
+          if (l.avgSpeedMph != null) continue; // bike — doesn't predict run fitness
+          const dist = parseFloat(l.distance);
+          if (!dist || dist < 0.9) continue;   // too short to project from
+          if (date < cutoffISO) continue;
+          cands.push({ distance: dist, seconds: l.durationSec, date, source: "logged run" });
+        }
+        const tt = loadTT();
+        if (tt && tt.distance && tt.seconds) {
+          cands.push({ distance: tt.distance, seconds: tt.seconds, date: tt.date || todayISO(), source: "time trial" });
+        }
+        if (!cands.length) return null;
+        let best = null, bestMile = Infinity;
+        for (const c of cands) {
+          const mile = riegel(c.seconds, c.distance, 1);
+          if (mile < bestMile) { bestMile = mile; best = c; }
+        }
+        return best;
+      }
+      function currentProjections() {
+        const ref = referenceEffort();
+        if (!ref) return null;
+        return {
+          ref,
+          mileSec: riegel(ref.seconds, ref.distance, 1),
+          fiveKSec: riegel(ref.seconds, ref.distance, MI_5K),
+          halfSec: riegel(ref.seconds, ref.distance, MI_HALF),
+        };
+      }
+
+      // ---------- Race predictor card (Trends) ----------
+      function predTile(label, sec, goalSec, goalLbl) {
+        let goal = "";
+        if (goalSec) {
+          const diff = Math.round(sec - goalSec);
+          goal = diff <= 0
+            ? `<div class="pred-goal ahead">On track for ${goalLbl}</div>`
+            : `<div class="pred-goal behind">${goalLbl} +${fmtRaceTime(diff)}</div>`;
+        }
+        return `<div class="pred-tile"><div class="pred-time">${fmtRaceTime(sec)}</div><div class="pred-lbl">${label}</div>${goal}</div>`;
+      }
+      function parseTimeToSec(str) {
+        const parts = String(str || "").trim().split(":").map((x) => parseInt(x, 10));
+        if (parts.some(isNaN) || parts.length < 2 || parts.length > 3) return null;
+        return parts.length === 3
+          ? parts[0] * 3600 + parts[1] * 60 + parts[2]
+          : parts[0] * 60 + parts[1];
+      }
+      let ttWired = false;
+      function wireTTForm() {
+        if (ttWired) return;
+        const save = document.getElementById("ttSave");
+        const clear = document.getElementById("ttClear");
+        if (!save || !clear) return;
+        ttWired = true;
+        save.addEventListener("click", () => {
+          const dist = parseFloat(document.getElementById("ttDistance").value);
+          const sec = parseTimeToSec(document.getElementById("ttTime").value);
+          const date = document.getElementById("ttDate").value || todayISO();
+          if (!dist || dist <= 0 || !sec || sec <= 0) {
+            showToast("Enter a distance in miles and a time like 22:45 (or 1:45:00).", "error");
+            return;
+          }
+          localStorage.setItem(TT_KEY, JSON.stringify({ distance: dist, seconds: sec, date }));
+          showToast("Time trial saved — projections updated.");
+          renderRacePredictor();
+          renderToday();
+        });
+        clear.addEventListener("click", () => {
+          localStorage.removeItem(TT_KEY);
+          showToast("Time trial cleared.");
+          renderRacePredictor();
+          renderToday();
+        });
+      }
+      function renderRacePredictor() {
+        const grid = document.getElementById("predGrid");
+        const meta = document.getElementById("predMeta");
+        if (!grid || !meta) return;
+        wireTTForm();
+        const tt = loadTT();
+        const note = document.getElementById("ttNote");
+        if (note) note.textContent = tt ? `Saved: ${tt.distance} mi in ${fmtRaceTime(tt.seconds)} (${tt.date})` : "";
+        const proj = currentProjections();
+        if (!proj) {
+          meta.textContent = "Log a run (or enter a time trial below) to see projections.";
+          grid.innerHTML = "";
+          renderPacesCard(null);
+          return;
+        }
+        meta.textContent = `Based on your fastest recent effort — ${proj.ref.distance} mi in ${fmtRaceTime(proj.ref.seconds)} (${proj.ref.source}, ${fmtDate(proj.ref.date, { month: "short", day: "numeric" })})`;
+        grid.innerHTML =
+          predTile("Mile", proj.mileSec, GOAL_MILE_SEC, "Sub-6:00") +
+          predTile("5K", proj.fiveKSec, null, "") +
+          predTile("Half", proj.halfSec, GOAL_HALF_SEC, "Sub-1:45");
+        renderPacesCard(proj);
+      }
+
+      // ---------- Training paces (Daniels-style offsets from 5K pace) ----------
+      function paceZones(proj) {
+        if (!proj) return null;
+        const p5k = proj.fiveKSec / MI_5K; // sec per mile at 5K effort
+        return {
+          easy: [p5k + 75, p5k + 135],
+          long: [p5k + 55, p5k + 100],
+          half: [proj.halfSec / MI_HALF, null],
+          tempo: [p5k + 25, null],
+          interval: [p5k - 10, null],
+          mile: [proj.mileSec, null],
+        };
+      }
+      function fmtZone(z) {
+        return z[1]
+          ? `${fmtPace(z[0]).replace("/mi", "")}–${fmtPace(z[1])}`
+          : fmtPace(z[0]);
+      }
+      function renderPacesCard(proj) {
+        const card = document.getElementById("pacesCard");
+        const rows = document.getElementById("pacesRows");
+        const meta = document.getElementById("pacesMeta");
+        if (!card || !rows) return;
+        const z = paceZones(proj);
+        if (!z) { card.style.display = "none"; return; }
+        card.style.display = "";
+        if (meta) meta.textContent = "From the same reference effort as the predictor. Re-run a time trial (plan: after Week 12) to recalibrate.";
+        const order = [
+          ["Easy / recovery", z.easy],
+          ["Long run", z.long],
+          ["Half race pace", z.half],
+          ["Tempo / threshold", z.tempo],
+          ["Interval (VO2)", z.interval],
+          ["Mile / rep pace", z.mile],
+        ];
+        rows.innerHTML = order
+          .map(([lbl, zz]) => `<div class="pace-row"><span>${lbl}</span><b>${fmtZone(zz)}</b></div>`)
+          .join("");
+      }
+
+      // Pace hint chip on the Today card, keyed off the workout text.
+      function paceHintForDay(day) {
+        const z = paceZones(currentProjections());
+        if (!z) return null;
+        const t = (day.title + " " + day.detail).toUpperCase();
+        const cat = categorize(day);
+        if (cat === "rest" || cat === "bike" || cat === "race") return null;
+        if (cat === "quality" && /MILE-PACE|MILE PACE|400|800|REP/.test(t))
+          return `Mile/rep ${fmtZone(z.mile)} · Interval ${fmtZone(z.interval)}`;
+        if (/TRACK:|VO2|FARTLEK/.test(t)) return `Interval ${fmtZone(z.interval)}`;
+        if (/TEMPO|THRESHOLD/.test(t)) return `Tempo ${fmtZone(z.tempo)}`;
+        if (/RACE-PACE|HALF PACE|HMP/.test(t)) return `Half pace ${fmtZone(z.half)}`;
+        if (cat === "long") return `Long-run pace ${fmtZone(z.long)}`;
+        if (cat === "easy") return `Easy pace ${fmtZone(z.easy)}`;
+        return null;
+      }
+      function renderTodayPaceHint(day) {
+        const detailEl = document.getElementById("todayDetail");
+        if (!detailEl) return;
+        const old = document.getElementById("todayPaceHint");
+        if (old) old.remove();
+        if (!day) return;
+        const hint = paceHintForDay(day);
+        if (!hint) return;
+        const el = document.createElement("div");
+        el.id = "todayPaceHint";
+        el.className = "today-pace-hint";
+        el.textContent = `Target: ${hint}`;
+        detailEl.insertAdjacentElement("afterend", el);
+      }
+
+      // ---------- Readiness nudge (quality/long days) ----------
+      // Rolling RHR baseline: mean of the last 28 logged values before
+      // `beforeDate`. Needs >=5 values so one odd morning can't define it.
+      function rhrBaseline(beforeDate) {
+        const vals = [];
+        for (const date in CHECKINS) {
+          if (date >= beforeDate) continue;
+          const v = CHECKINS[date].restingHr;
+          if (v != null) vals.push({ date, v });
+        }
+        vals.sort((a, b) => a.date.localeCompare(b.date));
+        const recent = vals.slice(-28).map((x) => x.v);
+        if (recent.length < 5) return null;
+        return recent.reduce((a, b) => a + b, 0) / recent.length;
+      }
+      // Timezone-safe date arithmetic on ISO strings (parseISO is local).
+      function addDaysISO(iso, n) {
+        const d = parseISO(iso);
+        d.setDate(d.getDate() + n);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      }
+      function renderReadiness(day) {
+        const slot = document.getElementById("readinessSlot");
+        if (!slot) return;
+        slot.innerHTML = "";
+        if (!day || day.date !== todayISO()) return; // only for the real today
+        const cat = categorize(day);
+        if (cat !== "quality" && cat !== "long") return;
+        const ci = CHECKINS[day.date];
+        if (!ci) return;
+        const reasons = [];
+        const base = rhrBaseline(day.date);
+        if (base && ci.restingHr != null && ci.restingHr - base >= Math.max(4, base * 0.06)) {
+          reasons.push(`resting HR ${ci.restingHr} vs ~${Math.round(base)} baseline`);
+        }
+        if (ci.energy != null && ci.energy <= 3) reasons.push(`energy ${ci.energy}/10`);
+        if (ci.bodyBattery != null && ci.bodyBattery <= 25) reasons.push(`body battery ${ci.bodyBattery}`);
+        if (!reasons.length) return;
+        // Offer a one-tap swap with the next easy day (within 3 days).
+        let swapDate = null;
+        for (let i = 1; i <= 3; i++) {
+          const cand = addDaysISO(day.date, i);
+          const cd = findDay(cand);
+          if (cd && categorize(cd) === "easy") { swapDate = cand; break; }
+        }
+        const banner = document.createElement("div");
+        banner.className = "readiness-banner";
+        banner.innerHTML =
+          `<div class="rb-text"><b>Recovery flag:</b> ${reasons.join(" · ")}. ` +
+          `Today is a ${cat} day — consider keeping it easy and hitting the hard session when you're fresher.</div>` +
+          (swapDate ? `<button class="btn rb-swap" type="button">Swap with ${fmtDate(swapDate, { weekday: "short" })} (easy)</button>` : "");
+        const swapBtn = banner.querySelector(".rb-swap");
+        if (swapBtn) {
+          swapBtn.addEventListener("click", () => {
+            swapDays(day.date, swapDate);
+            showToast(`Swapped today with ${fmtDate(swapDate, { weekday: "long" })}.`);
+          });
+        }
+        slot.appendChild(banner);
+      }
+
+      // ---------- Weekly recap ----------
+      function lastCompletedWeek() {
+        const today = todayISO();
+        let last = null;
+        for (const w of DATA.weeks) {
+          const end = w.days[w.days.length - 1].date;
+          if (end < today) last = w;
+        }
+        return last;
+      }
+      function recapStats(week) {
+        let workouts = 0;
+        for (const d of week.days) {
+          const l = LOGS[d.date];
+          if (l && (l.distance || l.durationSec)) workouts++;
+        }
+        let done = 0, total = 0;
+        for (const d of week.days) {
+          const c = sectionCounts(d);
+          done += c.done;
+          total += c.total;
+        }
+        const first = week.days[0].date, lastD = week.days[week.days.length - 1].date;
+        const wDates = Object.keys(WEIGHTS).filter((x) => x >= first && x <= lastD).sort();
+        const wDelta = wDates.length >= 2
+          ? WEIGHTS[wDates[wDates.length - 1]].weight - WEIGHTS[wDates[0]].weight
+          : null;
+        return {
+          miles: actualWeekMiles(week),
+          planned: week.mileage,
+          workouts,
+          pct: total ? Math.round((done / total) * 100) : 0,
+          wDelta,
+        };
+      }
+      function recapHTML(week, s, dismissible) {
+        const milesCls = s.miles >= week.mileage * 0.85 ? "good" : "low";
+        const wTxt = s.wDelta == null ? "—" : `${s.wDelta > 0 ? "+" : ""}${s.wDelta.toFixed(1)} lb`;
+        return `
+          <div class="recap-head">
+            <h3>Week ${week.num} recap</h3>
+            ${dismissible ? `<button class="recap-dismiss" type="button" aria-label="Dismiss">✕</button>` : ""}
+          </div>
+          <div class="recap-grid">
+            <div class="recap-tile"><b class="${milesCls}">${s.miles.toFixed(1)}</b><span>of ${s.planned} planned mi</span></div>
+            <div class="recap-tile"><b>${s.pct}%</b><span>sections done</span></div>
+            <div class="recap-tile"><b>${s.workouts}</b><span>workouts logged</span></div>
+            <div class="recap-tile"><b>${wTxt}</b><span>weight</span></div>
+          </div>`;
+      }
+      // Trends card — always visible once a full plan week has elapsed.
+      function renderRecap() {
+        const card = document.getElementById("recapCard");
+        if (!card) return;
+        const week = lastCompletedWeek();
+        if (!week) { card.style.display = "none"; return; }
+        card.style.display = "";
+        card.innerHTML = recapHTML(week, recapStats(week), false);
+      }
+      // Today slot — surfaces Mon–Wed only, dismissible per week.
+      function renderRecapToday() {
+        const slot = document.getElementById("weeklyRecapSlot");
+        if (!slot) return;
+        slot.innerHTML = "";
+        const week = lastCompletedWeek();
+        if (!week) return;
+        const dow = new Date().getDay(); // 1=Mon ... 3=Wed
+        if (dow < 1 || dow > 3) return;
+        if (localStorage.getItem(`${RECAP_DISMISS_KEY}:${week.num}`)) return;
+        const card = document.createElement("div");
+        card.className = "recap-card";
+        card.innerHTML = recapHTML(week, recapStats(week), true);
+        card.querySelector(".recap-dismiss").addEventListener("click", () => {
+          localStorage.setItem(`${RECAP_DISMISS_KEY}:${week.num}`, "1");
+          slot.innerHTML = "";
+        });
+        slot.appendChild(card);
+      }
 
       // ---------- Boot ----------
       // Snapshot original DATA before applying any overrides (needed for "reset plan")
