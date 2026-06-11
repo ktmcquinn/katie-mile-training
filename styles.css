@@ -2412,10 +2412,13 @@
         min-width: 0;
         transition: background 0.15s, border-color 0.15s, color 0.15s;
       }
-      .recent-chip:hover {
-        background: var(--pace-bg);
-        border-color: var(--pace-border);
-        color: var(--p1);
+      @media (hover: hover) and (pointer: fine) {
+        .recent-chip:hover {
+          background: var(--pace-bg);
+          border-color: var(--pace-border);
+          color: var(--p1);
+        }
+        .recent-chip:hover .chip-cal { color: var(--p1); }
       }
       .recent-chip .chip-name {
         overflow: hidden;
@@ -2433,7 +2436,6 @@
         flex-shrink: 0;
         white-space: nowrap;
       }
-      .recent-chip:hover .chip-cal { color: var(--p1); }
       .recent-chip .chip-count {
         display: inline-block;
         margin-left: 5px;

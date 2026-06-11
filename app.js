@@ -1141,6 +1141,7 @@
             };
             addMeal(todayISO(), meal);
             renderFuel();
+            showToast(`Logged ${item.name} (${item.cal} cal).`);
           });
         });
       }
