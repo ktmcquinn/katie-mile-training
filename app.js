@@ -1318,6 +1318,7 @@
         initFoodSearch();
         // Camera scan (barcode / nutrition label) wiring
         initFoodScan();
+        initScanPortion();
         renderFuel();
       }
 
@@ -1423,6 +1424,88 @@
         data.source = "label_scan";
         return data;
       }
+      // ---------- Scan portion picker ----------
+      // Scanned values are per 100 g or per serving — this panel scales them
+      // to what was actually eaten (e.g. a 250 ml energy drink scanned per
+      // 100 ml) before the form is filled. Mirrors the USDA serving picker.
+      let SCAN_RESULT = null;
+      // Pull a number out of serving text like "250 ml", "40 g", "1 cup (240ml)".
+      function servingGrams(text) {
+        const m = String(text || "").match(/(\d+(?:[.,]\d+)?)\s*(?:g|ml)\b/i);
+        return m ? parseFloat(m[1].replace(",", ".")) : null;
+      }
+      function scanScale() {
+        const amt = parseFloat(String(document.getElementById("spAmount").value).replace(",", ".")) || 0;
+        if (!SCAN_RESULT || amt <= 0) return null;
+        return SCAN_RESULT.basis === "per_100g" ? amt / 100 : amt;
+      }
+      function renderScanPreview() {
+        const el = document.getElementById("spPreview");
+        if (!el || !SCAN_RESULT) return;
+        const k = scanScale();
+        if (k == null) { el.textContent = "Enter an amount above 0."; return; }
+        const r = SCAN_RESULT;
+        const f1 = (v) => (v == null ? "—" : (v * k).toFixed(1).replace(/\.0$/, ""));
+        el.textContent = `${Math.round(r.cal * k)} kcal · ${f1(r.protein_g)}g P · ${f1(r.carbs_g)}g C · ${f1(r.fat_g)}g F`;
+      }
+      function showScanPortion(result) {
+        SCAN_RESULT = result;
+        const panel = document.getElementById("scanPortion");
+        if (!panel) { prefillMealForm(result); return; } // fallback: no panel in DOM
+        const per100 = result.basis === "per_100g";
+        document.getElementById("spName").textContent = result.name || "Scanned food";
+        document.getElementById("spBasis").textContent = per100
+          ? "label values are per 100 g/ml"
+          : `per serving${result.serving ? ` (${result.serving})` : ""}`;
+        document.getElementById("spAmountLbl").textContent = per100 ? "Amount eaten (g/ml)" : "× Servings";
+        // Sensible default: the stated serving size (e.g. "250 ml" for an
+        // energy drink) when we know it, else 100 g / 1 serving.
+        const def = per100 ? (servingGrams(result.serving) || 100) : 1;
+        document.getElementById("spAmount").value = String(def);
+        panel.style.display = "";
+        renderScanPreview();
+        if (panel.scrollIntoView) panel.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      function hideScanPortion() {
+        SCAN_RESULT = null;
+        const panel = document.getElementById("scanPortion");
+        if (panel) panel.style.display = "none";
+      }
+      function applyScanPortion() {
+        const k = scanScale();
+        if (!SCAN_RESULT || k == null) return;
+        const r = SCAN_RESULT;
+        const per100 = r.basis === "per_100g";
+        const amtTxt = document.getElementById("spAmount").value;
+        const portion = per100
+          ? `${amtTxt} g/ml`
+          : (parseFloat(amtTxt) === 1 ? (r.serving || "1 serving") : `${amtTxt} × ${r.serving || "serving"}`);
+        const sc = (v) => (v == null ? null : v * k);
+        prefillMealForm({
+          name: `${r.name || "Scanned food"} (${portion})`,
+          brand: r.brand || null,
+          serving: portion,
+          basis: "scaled",
+          cal: r.cal * k,
+          protein_g: sc(r.protein_g),
+          carbs_g: sc(r.carbs_g),
+          fat_g: sc(r.fat_g),
+          fiber_g: sc(r.fiber_g),
+          sodium_mg: sc(r.sodium_mg),
+          source: r.source,
+          foodId: r.foodId || null,
+        });
+        hideScanPortion();
+      }
+      function initScanPortion() {
+        const apply = document.getElementById("spApply");
+        const cancel = document.getElementById("spCancel");
+        const amount = document.getElementById("spAmount");
+        if (apply) apply.addEventListener("click", applyScanPortion);
+        if (cancel) cancel.addEventListener("click", hideScanPortion);
+        if (amount) amount.addEventListener("input", renderScanPreview);
+      }
+
       // Prefill the existing manual meal form so the user reviews before Add.
       function prefillMealForm(r) {
         const set = (id, v, dp) => {
@@ -1430,8 +1513,8 @@
           if (el) el.value = v == null ? "" : (dp != null ? Number(v).toFixed(dp).replace(/\.0$/, "") : String(v));
         };
         let name = r.name || "Scanned food";
-        if (r.basis === "per_100g") name += " (per 100 g — adjust for your portion)";
-        else if (r.serving) name += ` (${r.serving})`;
+        if (r.basis === "per_100g") name += " (per 100 g)";
+        else if (r.basis !== "scaled" && r.serving) name += ` (${r.serving})`;
         set("mealName", name);
         set("mealCal", Math.round(r.cal));
         set("mealP", r.protein_g, 1);
@@ -1455,6 +1538,7 @@
         const btn = document.getElementById("scanFoodBtn");
         if (btn) btn.disabled = true;
         try {
+          hideScanPortion(); // a new scan replaces any pending portion picker
           setScanStatus("Reading photo…");
           const img = await fileToImage(file);
           // 1) Barcode first — exact and free
@@ -1463,9 +1547,9 @@
             setScanStatus("Barcode found — looking up…");
             const off = await lookupOpenFoodFacts(code);
             if (off) {
-              prefillMealForm(off);
+              showScanPortion(off);
               setScanStatus("");
-              showToast(`Found ${off.name}${off.basis === "per_100g" ? " — values are per 100 g" : ""}. Review, then tap Add.`);
+              showToast(`Found ${off.name} — set your portion below.`);
               return;
             }
             // Barcode read but product unknown — fall through to the label reader
@@ -1473,13 +1557,13 @@
           // 2) Vision label read
           setScanStatus("Reading nutrition label…");
           const result = await readLabelWithVision(downscaleToBase64(img));
-          prefillMealForm(result);
+          showScanPortion(result);
           setScanStatus("");
           const warn = result.confidence != null && result.confidence < 0.5;
           showToast(
             warn
               ? "Label was hard to read — double-check the values before adding."
-              : `Read ${result.name || "label"}${result.basis === "per_100g" ? " — values are per 100 g" : ""}. Review, then tap Add.`,
+              : `Read ${result.name || "label"} — set your portion below.`,
             warn ? "error" : undefined
           );
         } catch (err) {

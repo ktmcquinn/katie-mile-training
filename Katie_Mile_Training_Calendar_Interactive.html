@@ -325,6 +325,23 @@
           <span class="scan-status" id="scanStatus"></span>
         </div>
 
+        <!-- Scan portion picker: appears after a scan so the per-100g or
+             per-serving values can be scaled to what was actually eaten. -->
+        <div class="scan-portion" id="scanPortion" style="display:none">
+          <div class="sp-head">
+            <div class="sp-name"><b id="spName">—</b><span class="sp-basis" id="spBasis"></span></div>
+            <button type="button" class="fsp-cancel" id="spCancel" title="Cancel">×</button>
+          </div>
+          <div class="sp-controls">
+            <label class="fsp-field">
+              <span id="spAmountLbl">Amount (g/ml)</span>
+              <input type="text" inputmode="decimal" id="spAmount" value="100">
+            </label>
+          </div>
+          <div class="sp-preview" id="spPreview"></div>
+          <button type="button" class="btn btn-primary sp-apply" id="spApply">Use this — fill the form</button>
+        </div>
+
         <div class="food-search">
           <label class="food-search-lbl" for="foodSearchInput">Search foods (USDA)</label>
           <div class="food-search-input-wrap">
