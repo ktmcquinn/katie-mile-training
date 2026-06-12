@@ -315,6 +315,16 @@
              serving size — the form below auto-fills with the nutrition data.
              You can still edit any value before hitting Add, or fill the form
              manually for custom recipes. -->
+        <!-- Photo scan: barcode (Open Food Facts) or nutrition label (vision AI) -->
+        <div class="scan-row">
+          <button type="button" class="btn scan-btn" id="scanFoodBtn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Scan barcode or label
+          </button>
+          <input type="file" id="scanFoodInput" accept="image/*" capture="environment" style="display:none">
+          <span class="scan-status" id="scanStatus"></span>
+        </div>
+
         <div class="food-search">
           <label class="food-search-lbl" for="foodSearchInput">Search foods (USDA)</label>
           <div class="food-search-input-wrap">

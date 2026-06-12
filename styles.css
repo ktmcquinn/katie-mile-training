@@ -3767,3 +3767,24 @@
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
+
+/* --- Food scan (barcode / label photo) --- */
+.scan-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.scan-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.scan-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.scan-status {
+  font-size: 0.78rem;
+  color: var(--muted);
+}

@@ -1294,7 +1294,7 @@
             foodId: pending.foodId || null,
             brand: pending.brand || null,
             serving: pending.serving || null,
-            source: pending.foodId ? "usda" : "manual",
+            source: pending.source || (pending.foodId ? "usda" : "manual"),
             loggedAt: new Date().toISOString(),
           };
           addMeal(todayISO(), meal);
@@ -1316,7 +1316,189 @@
         }
         // FatSecret food-search wiring (search box, dropdown, serving picker)
         initFoodSearch();
+        // Camera scan (barcode / nutrition label) wiring
+        initFoodScan();
         renderFuel();
+      }
+
+
+      // ---------- Food scan: barcode (Open Food Facts) or label photo (vision AI) ----------
+      // One photo, two attempts: try to decode a barcode from the image first
+      // (free, exact, great EU coverage via Open Food Facts); if there is no
+      // readable barcode, send the downscaled photo to /api/label/proxy where
+      // a vision model reads the nutrition table (handles German/Danish labels,
+      // per-100g vs per-serving, salt->sodium conversion).
+      const ZXING_CDN = "https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js";
+      let zxingLoading = null;
+      function loadZXing() {
+        if (window.ZXing) return Promise.resolve(window.ZXing);
+        if (zxingLoading) return zxingLoading;
+        zxingLoading = new Promise((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = ZXING_CDN;
+          s.onload = () => resolve(window.ZXing);
+          s.onerror = () => { zxingLoading = null; reject(new Error("barcode lib failed to load")); };
+          document.head.appendChild(s);
+        });
+        return zxingLoading;
+      }
+      function setScanStatus(text) {
+        const el = document.getElementById("scanStatus");
+        if (el) el.textContent = text || "";
+      }
+      function fileToImage(file) {
+        return new Promise((resolve, reject) => {
+          const url = URL.createObjectURL(file);
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("could not read photo")); };
+          img.src = url;
+        });
+      }
+      // Downscale for upload: vision models don't need more than ~1280px,
+      // and Vercel functions cap request size.
+      function downscaleToBase64(img, maxDim = 1280, quality = 0.85) {
+        const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.naturalWidth * scale);
+        canvas.height = Math.round(img.naturalHeight * scale);
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL("image/jpeg", quality).split(",")[1];
+      }
+      // Try to find a barcode in the (full-resolution) photo. Returns the
+      // digits or null — never throws, a miss just means "use the vision path".
+      async function tryDecodeBarcode(img) {
+        try {
+          const ZX = await loadZXing();
+          const reader = new ZX.BrowserMultiFormatReader();
+          const result = reader.decodeFromImageElement
+            ? await reader.decodeFromImageElement(img)
+            : await reader.decodeFromImage(img);
+          const text = result && (result.getText ? result.getText() : result.text);
+          return text && /^\d{8,14}$/.test(text) ? text : null;
+        } catch (e) {
+          return null; // NotFoundException etc. — no barcode in frame
+        }
+      }
+      async function lookupOpenFoodFacts(code) {
+        const url = `https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=product_name,brands,serving_size,nutriments`;
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (data.status !== 1 || !data.product) return null;
+        const p = data.product;
+        const n = p.nutriments || {};
+        // Prefer per-serving values when present; otherwise per 100 g.
+        const perServing = n["energy-kcal_serving"] != null;
+        const sfx = perServing ? "_serving" : "_100g";
+        const cal = n["energy-kcal" + sfx];
+        if (cal == null) return null;
+        // OFF stores sodium in grams; some products only list salt (salt/2.5 = sodium).
+        let sodiumMg = null;
+        if (n["sodium" + sfx] != null) sodiumMg = Math.round(n["sodium" + sfx] * 1000);
+        else if (n["salt" + sfx] != null) sodiumMg = Math.round((n["salt" + sfx] / 2.5) * 1000);
+        return {
+          name: p.product_name || "Scanned food",
+          brand: p.brands || null,
+          serving: perServing ? (p.serving_size || "1 serving") : "100 g",
+          basis: perServing ? "per_serving" : "per_100g",
+          cal: Math.round(cal),
+          protein_g: n["proteins" + sfx] ?? null,
+          carbs_g: n["carbohydrates" + sfx] ?? null,
+          fat_g: n["fat" + sfx] ?? null,
+          fiber_g: n["fiber" + sfx] ?? null,
+          sodium_mg: sodiumMg,
+          source: "barcode",
+          foodId: "off:" + code,
+        };
+      }
+      async function readLabelWithVision(base64) {
+        const res = await fetch("/api/label/proxy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: base64, mediaType: "image/jpeg" }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "label read failed");
+        data.source = "label_scan";
+        return data;
+      }
+      // Prefill the existing manual meal form so the user reviews before Add.
+      function prefillMealForm(r) {
+        const set = (id, v, dp) => {
+          const el = document.getElementById(id);
+          if (el) el.value = v == null ? "" : (dp != null ? Number(v).toFixed(dp).replace(/\.0$/, "") : String(v));
+        };
+        let name = r.name || "Scanned food";
+        if (r.basis === "per_100g") name += " (per 100 g — adjust for your portion)";
+        else if (r.serving) name += ` (${r.serving})`;
+        set("mealName", name);
+        set("mealCal", Math.round(r.cal));
+        set("mealP", r.protein_g, 1);
+        set("mealC", r.carbs_g, 1);
+        set("mealF", r.fat_g, 1);
+        set("mealFi", r.fiber_g, 1);
+        set("mealNa", r.sodium_mg != null ? Math.round(r.sodium_mg) : null);
+        PENDING_FOOD_PICK = {
+          foodId: r.foodId || null,
+          brand: r.brand || null,
+          serving: r.serving || null,
+          source: r.source,
+        };
+        const nameEl = document.getElementById("mealName");
+        if (nameEl) {
+          nameEl.focus();
+          if (nameEl.scrollIntoView) nameEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+      async function handleScanPhoto(file) {
+        const btn = document.getElementById("scanFoodBtn");
+        if (btn) btn.disabled = true;
+        try {
+          setScanStatus("Reading photo…");
+          const img = await fileToImage(file);
+          // 1) Barcode first — exact and free
+          const code = await tryDecodeBarcode(img);
+          if (code) {
+            setScanStatus("Barcode found — looking up…");
+            const off = await lookupOpenFoodFacts(code);
+            if (off) {
+              prefillMealForm(off);
+              setScanStatus("");
+              showToast(`Found ${off.name}${off.basis === "per_100g" ? " — values are per 100 g" : ""}. Review, then tap Add.`);
+              return;
+            }
+            // Barcode read but product unknown — fall through to the label reader
+          }
+          // 2) Vision label read
+          setScanStatus("Reading nutrition label…");
+          const result = await readLabelWithVision(downscaleToBase64(img));
+          prefillMealForm(result);
+          setScanStatus("");
+          const warn = result.confidence != null && result.confidence < 0.5;
+          showToast(
+            warn
+              ? "Label was hard to read — double-check the values before adding."
+              : `Read ${result.name || "label"}${result.basis === "per_100g" ? " — values are per 100 g" : ""}. Review, then tap Add.`,
+            warn ? "error" : undefined
+          );
+        } catch (err) {
+          setScanStatus("");
+          showToast("Scan failed: " + (err.message || err), "error");
+        } finally {
+          if (btn) btn.disabled = false;
+        }
+      }
+      function initFoodScan() {
+        const btn = document.getElementById("scanFoodBtn");
+        const input = document.getElementById("scanFoodInput");
+        if (!btn || !input) return;
+        btn.addEventListener("click", () => input.click());
+        input.addEventListener("change", () => {
+          const file = input.files && input.files[0];
+          input.value = ""; // allow rescanning the same file
+          if (file) handleScanPhoto(file);
+        });
       }
 
       // ---------- FatSecret food search ----------

@@ -4,9 +4,25 @@
   "outputDirectory": null,
   "framework": null,
   "rewrites": [
-    { "source": "/api/strava/exchange", "destination": "/api/strava/exchange.js" },
-    { "source": "/api/strava/refresh", "destination": "/api/strava/refresh.js" },
-    { "source": "/api/fatsecret/proxy", "destination": "/api/fatsecret/proxy.js" },
-    { "source": "/api/usda/proxy", "destination": "/api/usda/proxy.js" }
+    {
+      "source": "/api/strava/exchange",
+      "destination": "/api/strava/exchange.js"
+    },
+    {
+      "source": "/api/strava/refresh",
+      "destination": "/api/strava/refresh.js"
+    },
+    {
+      "source": "/api/fatsecret/proxy",
+      "destination": "/api/fatsecret/proxy.js"
+    },
+    {
+      "source": "/api/usda/proxy",
+      "destination": "/api/usda/proxy.js"
+    },
+    {
+      "source": "/api/label/proxy",
+      "destination": "/api/label/proxy.js"
+    }
   ]
 }
