@@ -2040,6 +2040,8 @@
         renderToday();
         renderProgress();
         if (typeof renderThisWeek === "function") renderThisWeek();
+        // Day content/completion changed — today's Fuel targets may shift too.
+        if (typeof renderFuel === "function") renderFuel();
       }
 
       // Move a SINGLE section from sourceDate to targetDate.
@@ -2161,6 +2163,8 @@
         renderToday();
         renderProgress();
         if (typeof renderThisWeek === "function") renderThisWeek();
+        // Day content/completion changed — today's Fuel targets may shift too.
+        if (typeof renderFuel === "function") renderFuel();
         return true;
       }
 
@@ -2305,6 +2309,8 @@
         renderToday();
         renderProgress();
         if (typeof renderThisWeek === "function") renderThisWeek();
+        // Day content/completion changed — today's Fuel targets may shift too.
+        if (typeof renderFuel === "function") renderFuel();
       }
 
       // Tap-based swap (works on touch screens)
@@ -6105,6 +6111,8 @@
         renderToday();
         renderProgress();
         if (typeof renderThisWeek === "function") renderThisWeek();
+        // Day content/completion changed — today's Fuel targets may shift too.
+        if (typeof renderFuel === "function") renderFuel();
       });
 
 
