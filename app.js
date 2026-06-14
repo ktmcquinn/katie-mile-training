@@ -950,6 +950,86 @@
       }
       let FUEL_PREFS = loadFuelPrefs();
 
+      // ---------- Saved scans (searchable pantry of past scans + USDA picks) ----------
+      // Every successful barcode/label scan and every applied USDA pick is
+      // remembered here with its BASE values (per_100g or per_serving), so it
+      // can be searched and re-logged later without re-photographing the label
+      // or re-running the USDA lookup. The search box (initFoodSearch) surfaces
+      // matches; clicking one reopens the normal portion picker (showScanPortion).
+      const SAVED_FOODS_KEY = "katie-mile-saved-foods";
+      function loadSavedFoods() {
+        try { const raw = localStorage.getItem(SAVED_FOODS_KEY); return raw ? JSON.parse(raw) : []; }
+        catch (e) { return []; }
+      }
+      function persistSavedFoods() {
+        try { localStorage.setItem(SAVED_FOODS_KEY, JSON.stringify(SAVED_FOODS)); } catch (e) {}
+        if (typeof scheduleSync === "function") scheduleSync();
+      }
+      let SAVED_FOODS = loadSavedFoods();
+
+      // Identity for a saved food so re-scanning the same product updates one
+      // entry instead of piling up duplicates.
+      function savedFoodKey(r) {
+        return [
+          (r.name || "").toLowerCase().trim(),
+          (r.brand || "").toLowerCase().trim(),
+          r.basis || "",
+          Math.round(r.cal || 0),
+        ].join("|");
+      }
+
+      // Remember (or refresh) a scanned / looked-up product. `r` must carry the
+      // BASE nutrition (per_100g or per_serving), not a scaled portion.
+      function rememberSavedFood(r) {
+        if (!r) return;
+        if (r.cal == null && r.protein_g == null && r.carbs_g == null) return;
+        const key = savedFoodKey(r);
+        const now = new Date().toISOString();
+        const existing = SAVED_FOODS.find((f) => f.key === key);
+        if (existing) {
+          existing.lastUsed = now;
+          existing.useCount = (existing.useCount || 1) + 1;
+          Object.assign(existing, {
+            name: r.name || existing.name,
+            brand: r.brand != null ? r.brand : existing.brand,
+            serving: r.serving != null ? r.serving : existing.serving,
+            basis: r.basis || existing.basis,
+            cal: r.cal, protein_g: r.protein_g, carbs_g: r.carbs_g, fat_g: r.fat_g,
+            fiber_g: r.fiber_g, sodium_mg: r.sodium_mg,
+            source: r.source || existing.source, foodId: r.foodId || existing.foodId,
+          });
+        } else {
+          SAVED_FOODS.push({
+            key,
+            name: r.name || "Saved food", brand: r.brand || null,
+            serving: r.serving || null, basis: r.basis || "unknown",
+            cal: r.cal, protein_g: r.protein_g ?? null, carbs_g: r.carbs_g ?? null,
+            fat_g: r.fat_g ?? null, fiber_g: r.fiber_g ?? null, sodium_mg: r.sodium_mg ?? null,
+            source: r.source || "scan", foodId: r.foodId || null,
+            savedAt: now, lastUsed: now, useCount: 1,
+          });
+        }
+        // Keep the library bounded (most-recently-used 200).
+        if (SAVED_FOODS.length > 200) {
+          SAVED_FOODS.sort((a, b) => (b.lastUsed || "").localeCompare(a.lastUsed || ""));
+          SAVED_FOODS = SAVED_FOODS.slice(0, 200);
+        }
+        persistSavedFoods();
+      }
+
+      // Local fuzzy-ish search over saved foods: substring match on name or
+      // brand, ranked by how often / how recently it's been used.
+      function searchSavedFoods(q, limit = 6) {
+        const needle = (q || "").toLowerCase().trim();
+        if (!needle) return [];
+        return SAVED_FOODS
+          .filter((f) => (f.name || "").toLowerCase().includes(needle) ||
+                         (f.brand || "").toLowerCase().includes(needle))
+          .sort((a, b) => (b.useCount || 0) - (a.useCount || 0) ||
+                          (b.lastUsed || "").localeCompare(a.lastUsed || ""))
+          .slice(0, limit);
+      }
+
       // Holds the FatSecret food-pick metadata between "user picked a result
       // and clicked Use this" and "user clicks Add on the form". Lets us
       // attach food_id / brand / serving to the meal row even though the
@@ -1450,6 +1530,8 @@
       }
       function showScanPortion(result) {
         SCAN_RESULT = result;
+        // Remember the base scan so it's searchable later (Monster, etc.).
+        rememberSavedFood(result);
         const panel = document.getElementById("scanPortion");
         if (!panel) { prefillMealForm(result); return; } // fallback: no panel in DOM
         const per100 = result.basis === "per_100g";
@@ -1649,6 +1731,10 @@
             setStatus("");
             return;
           }
+          // Saved scans/USDA picks are local — show them instantly while the
+          // USDA network search runs in the background.
+          const savedNow = searchSavedFoods(q);
+          renderResults([], savedNow);
           setStatus("Searching…");
           foodSearchDebounceId = setTimeout(async () => {
             const myReq = ++foodSearchInFlight;
@@ -1656,12 +1742,16 @@
               const results = await foodSearchApi(q);
               // Bail if a newer request finished before us
               if (myReq !== foodSearchInFlight) return;
-              renderResults(results);
-              setStatus(results.length ? "" : "No matches.");
+              const saved = searchSavedFoods(q);
+              renderResults(results, saved);
+              setStatus((results.length || saved.length) ? "" : "No matches.");
             } catch (err) {
               if (myReq !== foodSearchInFlight) return;
-              setStatus("Search failed: " + (err.message || err), true);
-              clearResults();
+              // Network search failed, but saved matches may still be useful.
+              const saved = searchSavedFoods(q);
+              renderResults([], saved);
+              setStatus(saved.length ? "Showing saved foods (USDA search failed)."
+                                     : "Search failed: " + (err.message || err), !saved.length);
             }
           }, 300);
         });
@@ -1675,22 +1765,56 @@
           input.focus();
         });
 
-        // ---- Results dropdown: click to open serving picker ----
-        function renderResults(results) {
-          if (!results.length) {
+        // ---- Results dropdown: saved scans on top, USDA matches below ----
+        function renderResults(results, saved = []) {
+          if (!results.length && !saved.length) {
             resultsEl.style.display = "none";
             resultsEl.innerHTML = "";
             return;
           }
           resultsEl.style.display = "";
           const safe = (s) => String(s || "").replace(/</g, "&lt;");
-          resultsEl.innerHTML = results.map((r) => `
-            <div class="food-result" data-id="${safe(r.food_id)}">
-              <div class="fr-name">${safe(r.name)}${r.brand ? `<span class="fr-brand">${safe(r.brand)}</span>` : ""}</div>
-              ${r.description ? `<div class="fr-desc">${safe(r.description)}</div>` : ""}
-            </div>
-          `).join("");
-          resultsEl.querySelectorAll(".food-result").forEach((row) => {
+          let html = "";
+          if (saved.length) {
+            html += `<div class="fr-section-lbl">★ Saved — tap to log again</div>`;
+            html += saved.map((f, i) => {
+              const tag = f.source === "usda" ? "USDA"
+                        : (f.source === "barcode" ? "barcode" : "label scan");
+              const per = f.basis === "per_100g" ? "per 100 g/ml"
+                        : (f.serving ? safe(f.serving) : "per serving");
+              return `
+              <div class="food-result saved" data-saved-idx="${i}">
+                <div class="fr-name">${safe(f.name)}${f.brand ? `<span class="fr-brand">${safe(f.brand)}</span>` : ""}</div>
+                <div class="fr-desc">${Math.round(f.cal || 0)} cal · ${per} · ${tag}</div>
+              </div>`;
+            }).join("");
+          }
+          if (results.length) {
+            if (saved.length) html += `<div class="fr-section-lbl">USDA database</div>`;
+            html += results.map((r) => `
+              <div class="food-result" data-id="${safe(r.food_id)}">
+                <div class="fr-name">${safe(r.name)}${r.brand ? `<span class="fr-brand">${safe(r.brand)}</span>` : ""}</div>
+                ${r.description ? `<div class="fr-desc">${safe(r.description)}</div>` : ""}
+              </div>
+            `).join("");
+          }
+          resultsEl.innerHTML = html;
+          // Saved item → reopen the normal portion picker with its base values.
+          resultsEl.querySelectorAll(".food-result.saved").forEach((row) => {
+            row.addEventListener("click", () => {
+              const f = saved[parseInt(row.dataset.savedIdx, 10)];
+              if (!f) return;
+              clearResults();
+              showScanPortion({
+                name: f.name, brand: f.brand, serving: f.serving, basis: f.basis,
+                cal: f.cal, protein_g: f.protein_g, carbs_g: f.carbs_g, fat_g: f.fat_g,
+                fiber_g: f.fiber_g, sodium_mg: f.sodium_mg,
+                source: f.source, foodId: f.foodId,
+              });
+            });
+          });
+          // USDA item → existing lookup → serving picker.
+          resultsEl.querySelectorAll(".food-result:not(.saved)").forEach((row) => {
             row.addEventListener("click", () => onPickResult(row.dataset.id));
           });
         }
@@ -1777,6 +1901,18 @@
             brand: currentFoodDetail.brand || null,
             serving: qtyLabel + servingLabel,
           };
+          // Remember this USDA pick as a re-searchable saved food. Store the
+          // single-serving base values (basis per_serving) so re-logging via
+          // the portion picker's "× Servings" reproduces it cleanly.
+          rememberSavedFood({
+            name: currentFoodDetail.name,
+            brand: currentFoodDetail.brand || null,
+            serving: servingLabel || "1 serving",
+            basis: "per_serving",
+            cal: s.calories, protein_g: s.protein, carbs_g: s.carbs,
+            fat_g: s.fat, fiber_g: s.fiber, sodium_mg: s.sodium,
+            source: "usda", foodId: currentFoodDetail.food_id,
+          });
           // Reset the search UI for the next entry
           closePicker();
           input.value = "";
@@ -5587,7 +5723,7 @@
         setCloudStatus("syncing", "Pulling from cloud...");
         try {
           const uid = supaUser.id;
-          const [w, c, weight, ov, ex, ci, ml] = await Promise.all([
+          const [w, c, weight, ov, ex, ci, ml, sf] = await Promise.all([
             supaClient.from("workouts").select("*").eq("user_id", uid),
             supaClient.from("completions").select("*").eq("user_id", uid),
             supaClient.from("weights").select("*").eq("user_id", uid),
@@ -5595,9 +5731,10 @@
             supaClient.from("exercise_logs").select("*").eq("user_id", uid),
             supaClient.from("checkins").select("*").eq("user_id", uid),
             supaClient.from("meals").select("*").eq("user_id", uid),
+            supaClient.from("saved_foods").select("*").eq("user_id", uid),
           ]);
-          if (w.error || c.error || weight.error || ov.error || ex.error || ci.error || ml.error) {
-            throw w.error || c.error || weight.error || ov.error || ex.error || ci.error || ml.error;
+          if (w.error || c.error || weight.error || ov.error || ex.error || ci.error || ml.error || (sf && sf.error)) {
+            throw w.error || c.error || weight.error || ov.error || ex.error || ci.error || ml.error || sf.error;
           }
           // Workouts — last-write-wins per date using loggedAt timestamp.
           // If the local record is newer than the cloud version, keep local
@@ -5838,6 +5975,35 @@
           }
           MEALS = mergedMeals;
           try { localStorage.setItem(MEAL_KEY, JSON.stringify(MEALS)); } catch (e) {}
+          // Saved foods — MERGE by key. Cloud is the source of truth for a
+          // key unless the local copy was used more recently (last_used is
+          // newer), which can happen when a scan/pick happened on this device
+          // before the previous push landed. Local-only keys are preserved
+          // and re-pushed on the next sync. Mirrors the MEALS merge above.
+          if (sf && Array.isArray(sf.data)) {
+            const mergedSaved = {};
+            for (const r of sf.data) {
+              mergedSaved[r.key] = {
+                key: r.key,
+                name: r.name, brand: r.brand || null,
+                serving: r.serving || null, basis: r.basis || "unknown",
+                cal: r.calories, protein_g: r.protein, carbs_g: r.carbs,
+                fat_g: r.fat, fiber_g: r.fiber, sodium_mg: r.sodium,
+                source: r.source || "scan", foodId: r.food_id || null,
+                useCount: r.use_count || 1,
+                savedAt: r.saved_at || r.last_used || new Date().toISOString(),
+                lastUsed: r.last_used || new Date().toISOString(),
+              };
+            }
+            for (const f of SAVED_FOODS) {
+              const cloud = mergedSaved[f.key];
+              if (!cloud || (f.lastUsed && tsNewer(f.lastUsed, cloud.lastUsed))) {
+                mergedSaved[f.key] = f;
+              }
+            }
+            SAVED_FOODS = Object.values(mergedSaved);
+            try { localStorage.setItem(SAVED_FOODS_KEY, JSON.stringify(SAVED_FOODS)); } catch (e) {}
+          }
           // Re-push so the local-only meals make it to the cloud on the
           // next sync cycle (the debounce queue may have been cleared by a
           // page reload between addMeal and this pull).
@@ -5932,6 +6098,28 @@
               });
             }
           }
+          // Saved foods (searchable pantry of scans + USDA picks). One row
+          // per saved product, keyed by its stable `key` so re-scanning the
+          // same product updates a single row instead of duplicating.
+          const savedFoodRows = SAVED_FOODS.map((f) => ({
+            user_id: uid,
+            key: f.key,
+            name: f.name,
+            brand: f.brand || null,
+            serving: f.serving || null,
+            basis: f.basis || "unknown",
+            calories: f.cal != null ? Math.round(f.cal) : null,
+            protein: f.protein_g ?? null,
+            carbs: f.carbs_g ?? null,
+            fat: f.fat_g ?? null,
+            fiber: f.fiber_g ?? null,
+            sodium: f.sodium_mg ?? null,
+            source: f.source || "scan",
+            food_id: f.foodId || null,
+            use_count: f.useCount || 1,
+            saved_at: f.savedAt || new Date().toISOString(),
+            last_used: f.lastUsed || new Date().toISOString(),
+          }));
           // Check-ins (morning Body Battery, RHR, energy, cycle phase)
           const checkinRows = Object.entries(CHECKINS).map(([date, c]) => ({
             user_id: uid,
@@ -6007,6 +6195,12 @@
               supaClient
                 .from("meals")
                 .upsert(mealRows, { onConflict: "id" }),
+            );
+          if (savedFoodRows.length)
+            ops.push(
+              supaClient
+                .from("saved_foods")
+                .upsert(savedFoodRows, { onConflict: "user_id,key" }),
             );
           const results = await Promise.all(ops);
           for (const r of results) if (r.error) throw r.error;
@@ -6263,6 +6457,7 @@
           exerciseLogs: EX_LOGS,
           checkins: CHECKINS,
           meals: MEALS,
+          savedFoods: SAVED_FOODS,
           fuelPrefs: FUEL_PREFS,
         };
         const date = new Date().toISOString().slice(0, 10);
@@ -6323,6 +6518,10 @@
               MEALS = data.meals;
               try { localStorage.setItem(MEAL_KEY, JSON.stringify(MEALS)); } catch (e) {}
               if (typeof renderFuel === "function") renderFuel();
+            }
+            if (data.savedFoods) {
+              SAVED_FOODS = data.savedFoods;
+              try { localStorage.setItem(SAVED_FOODS_KEY, JSON.stringify(SAVED_FOODS)); } catch (e) {}
             }
             if (data.fuelPrefs) {
               FUEL_PREFS = data.fuelPrefs;

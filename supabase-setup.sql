@@ -152,6 +152,36 @@ create table if not exists public.checkins (
 );
 
 -- =========================================================================
+-- 8) saved_foods: searchable pantry of scanned/looked-up foods. One row per
+-- product so a scan or USDA pick made on any device can be searched and
+-- re-logged later without re-photographing the label. `key` is a stable
+-- identity (lowercased name|brand|basis|calories) so re-scanning the same
+-- product updates a single row. Values are the BASE nutrition (per_100g or
+-- per_serving — see `basis`), which the app scales at log time.
+-- =========================================================================
+create table if not exists public.saved_foods (
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  key        text not null,
+  name       text,
+  brand      text,
+  serving    text,
+  basis      text default 'unknown',   -- 'per_100g' | 'per_serving' | 'unknown'
+  calories   integer,
+  protein    numeric,
+  carbs      numeric,
+  fat        numeric,
+  fiber      numeric,
+  sodium     numeric,
+  source     text default 'scan',      -- 'label_scan' | 'barcode' | 'usda' | 'scan'
+  food_id    text,
+  use_count  integer default 1,
+  saved_at   timestamptz default now(),
+  last_used  timestamptz default now(),
+  primary key (user_id, key)
+);
+create index if not exists saved_foods_user_idx on public.saved_foods(user_id);
+
+-- =========================================================================
 -- Row Level Security (RLS): each user sees only their own data
 -- =========================================================================
 alter table public.workouts      enable row level security;
@@ -161,6 +191,7 @@ alter table public.day_overrides enable row level security;
 alter table public.exercise_logs enable row level security;
 alter table public.checkins      enable row level security;
 alter table public.meals         enable row level security;
+alter table public.saved_foods   enable row level security;
 alter table public.strava_tokens enable row level security;
 
 -- Drop any existing policies so this script is idempotent
@@ -178,6 +209,8 @@ drop policy if exists "own_checkins_select" on public.checkins;
 drop policy if exists "own_checkins_modify" on public.checkins;
 drop policy if exists "own_meals_select" on public.meals;
 drop policy if exists "own_meals_modify" on public.meals;
+drop policy if exists "own_saved_foods_select" on public.saved_foods;
+drop policy if exists "own_saved_foods_modify" on public.saved_foods;
 drop policy if exists "own_strava_select" on public.strava_tokens;
 drop policy if exists "own_strava_modify" on public.strava_tokens;
 
@@ -216,6 +249,11 @@ create policy "own_checkins_modify" on public.checkins
 create policy "own_meals_select" on public.meals
   for select using (auth.uid() = user_id);
 create policy "own_meals_modify" on public.meals
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "own_saved_foods_select" on public.saved_foods
+  for select using (auth.uid() = user_id);
+create policy "own_saved_foods_modify" on public.saved_foods
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create policy "own_strava_select" on public.strava_tokens

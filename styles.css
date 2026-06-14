@@ -332,8 +332,12 @@
         width: min(92vw, 420px);
       }
       .toast {
-        background: var(--ink, #1f2937);
+        /* Fixed dark snackbar — independent of --ink, which flips to a
+           near-white value in dark mode and previously left white text on a
+           near-white background. */
+        background: #1f2937;
         color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 10px;
         padding: 10px 16px;
         font-size: 0.85rem;
@@ -345,12 +349,25 @@
         max-width: 100%;
         text-align: center;
       }
+      /* In dark mode, ride the elevated card surface with light ink text so
+         the toast reads as part of the theme while keeping strong contrast. */
+      [data-theme="dark"] .toast {
+        background: var(--card);
+        color: var(--ink);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-pop, 0 4px 18px rgba(0, 0, 0, 0.7));
+      }
       .toast.show {
         opacity: 1;
         transform: translateY(0);
       }
       .toast.toast-error {
         background: #b85450;
+        color: #fff;
+      }
+      [data-theme="dark"] .toast.toast-error {
+        background: #b85450;
+        color: #fff;
       }
 
       .ref-exercise {
@@ -2544,6 +2561,23 @@
         color: var(--muted);
         line-height: 1.4;
       }
+      /* Section header inside the results dropdown (Saved scans / USDA). */
+      .fr-section-lbl {
+        padding: 7px 12px 5px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: var(--muted);
+        background: var(--strength-bg);
+        border-bottom: 1px solid var(--border);
+      }
+      /* Saved entries get a left accent so they read as "already yours". */
+      .food-result.saved {
+        border-left: 3px solid var(--p1);
+        background: color-mix(in srgb, var(--pace-bg) 45%, transparent);
+      }
+      .food-result.saved:hover { background: var(--pace-bg); }
       .food-search-attribution {
         margin-top: 8px;
         font-size: 10px;
