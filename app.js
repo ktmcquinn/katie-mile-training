@@ -6598,7 +6598,18 @@
       const GOAL_HALF_SEC = 105 * 60; // Sub-1:45 half (Dresden A-race)
       const TT_KEY = "katie-mile-tt-result";    // legacy single result (auto-migrated)
       const RESULTS_KEY = "katie-mile-results";  // list of real races / time trials
+      const RESULTS_SEED_KEY = "katie-mile-results-seeded";
       const RECAP_DISMISS_KEY = "katie-mile-recap-dismissed";
+
+      // Garmin race-predictor baseline (entered on request) — seeds the
+      // predictor once so it mirrors Garmin until you log real results. Cleared
+      // results won't be re-seeded (a flag is set on first load).
+      const GARMIN_BASELINE = [
+        { distance: 3.106855,  seconds: 22 * 60 + 3,             date: "2026-06-16" }, // 5K  22:03
+        { distance: 6.213712,  seconds: 47 * 60 + 1,             date: "2026-06-16" }, // 10K 47:01
+        { distance: 13.109375, seconds: 113 * 60 + 9,            date: "2026-06-16" }, // Half 1:53:09
+        { distance: 26.21875,  seconds: 4 * 3600 + 26 * 60 + 59, date: "2026-06-16" }, // Marathon 4:26:59
+      ];
 
       // --- VDOT engine (Daniels–Gilbert) ---
       function pctVO2max(tMin) {
@@ -6650,6 +6661,13 @@
             }
           } catch (e) {}
         }
+        // One-time seed of the Garmin baseline so the predictor mirrors Garmin
+        // out of the box. The flag means clearing results won't re-seed them.
+        if (!list.length && !localStorage.getItem(RESULTS_SEED_KEY)) {
+          list = GARMIN_BASELINE.map((r) => ({ ...r }));
+          localStorage.setItem(RESULTS_KEY, JSON.stringify(list));
+        }
+        try { localStorage.setItem(RESULTS_SEED_KEY, "1"); } catch (e) {}
         return list;
       }
       function saveResults(list) {
@@ -6827,16 +6845,31 @@
       }
 
       // ---------- Training paces (Daniels-style offsets from 5K pace) ----------
+      // Hybrid training paces:
+      //   • SPEED (interval/5K + mile/rep) are pinned to the NRC pace-chart
+      //     "mile best" row you train off (default 6:30) — matches your speed.
+      //   • ENDURANCE (easy, long, tempo, half) are anchored to your CURRENT
+      //     fitness via the half projection, so easy stays truly easy. They
+      //     speed up on their own as you log faster results.
+      const NRC_PACE_ROWS = {
+        // sec/mile from the NRC chart: mile best, 5K avg, 10K avg, tempo, half avg, recovery
+        "6:00": { mile: 360, fiveK: 390, tenK: 405, tempo: 425, half: 435, recovery: 490 },
+        "6:30": { mile: 390, fiveK: 425, tenK: 440, tempo: 460, half: 455, recovery: 525 },
+        "7:00": { mile: 420, fiveK: 460, tenK: 475, tempo: 495, half: 500, recovery: 560 },
+      };
+      const NRC_ROW = "6:30";
       function paceZones(proj) {
-        if (!proj || proj.fiveKSec == null) return null;
-        const p5k = proj.fiveKSec / MI_5K; // sec per mile at 5K effort
+        const row = NRC_PACE_ROWS[NRC_ROW] || NRC_PACE_ROWS["6:30"];
+        // Endurance anchor: current half pace (calibrated to your Garmin/real
+        // results); fall back to the NRC row's half pace if there's no data.
+        const halfPace = (proj && proj.halfSec != null) ? proj.halfSec / MI_HALF : row.half;
         return {
-          easy: [p5k + 75, p5k + 135],
-          long: [p5k + 55, p5k + 100],
-          half: proj.halfSec != null ? [proj.halfSec / MI_HALF, null] : null,
-          tempo: [p5k + 25, null],
-          interval: [p5k - 10, null],
-          mile: proj.mileSec != null ? [proj.mileSec, null] : null,
+          easy: [halfPace + 75, halfPace + 120],
+          long: [halfPace + 45, halfPace + 90],
+          half: [halfPace, null],
+          tempo: [halfPace - 25, halfPace - 10],
+          interval: [row.fiveK, null], // NRC 6:30 row — your speed
+          mile: [row.mile, null],      // NRC 6:30 row — your speed
         };
       }
       function fmtZone(z) {
@@ -6853,7 +6886,7 @@
         const z = paceZones(proj);
         if (!z) { card.style.display = "none"; return; }
         card.style.display = "";
-        if (meta) meta.textContent = "Derived from your VDOT (same basis as the predictor). Add/refresh a time trial to recalibrate.";
+        if (meta) meta.textContent = "Speed (mile, interval) from the NRC mile-best 6:30 row; easy/long/tempo/half from your current fitness. Endurance paces speed up as you log faster results.";
         const order = [
           ["Easy / recovery", z.easy],
           ["Long run", z.long],
