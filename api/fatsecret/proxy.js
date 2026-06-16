@@ -156,6 +156,7 @@ function toNum(v) {
 // ---- Handler ----------------------------------------------------------------
 
 import { setCorsHeaders } from "../_cors.js";
+import { rateLimit } from "../_ratelimit.js";
 
 export default async function handler(req, res) {
   // CORS — locked to ALLOWED_ORIGIN env var (see api/_cors.js)
@@ -165,6 +166,7 @@ export default async function handler(req, res) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
+  if (!rateLimit(req, res, { name: "fatsecret", limit: 60, windowMs: 60000 })) return;
 
   const method = String(req.query.method || "").trim();
 

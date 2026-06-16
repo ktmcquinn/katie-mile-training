@@ -15,6 +15,7 @@
 //   ANTHROPIC_MODEL   — optional override; defaults to Haiku (cheap + fast)
 
 import { setCorsHeaders } from "../_cors.js";
+import { rateLimit } from "../_ratelimit.js";
 
 const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
 
@@ -45,6 +46,8 @@ export default async function handler(req, res) {
   setCorsHeaders(req, res, "POST, OPTIONS");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  // Tight cap — this endpoint calls Anthropic and costs money per request.
+  if (!rateLimit(req, res, { name: "label", limit: 15, windowMs: 60000 })) return;
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {

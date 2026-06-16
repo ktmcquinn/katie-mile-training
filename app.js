@@ -18,6 +18,33 @@
       const STRAVA_CLIENT_ID_PUBLIC = "246580";
       // =========================================================================
 
+      // ---------- localStorage schema versioning ----------
+      // Runs once per device, before any state is loaded, so future changes to
+      // the shape of stored data are explicit and safe. To change a data shape,
+      // bump SCHEMA_VERSION and append a migration function that converts the
+      // PREVIOUS shape to the new one (it receives no args — read/write
+      // localStorage directly). Migrations run in order and only for versions
+      // the device hasn't applied yet.
+      const SCHEMA_VERSION = 1;
+      const SCHEMA_VERSION_KEY = "katie-mile-schema-version";
+      const SCHEMA_MIGRATIONS = [
+        // index 0 → version 1: baseline. (The legacy single time-trial → results
+        // list conversion still runs lazily in loadResults(); new shape changes
+        // belong here so they're applied exactly once and in a known order.)
+        function v0_to_v1() {},
+      ];
+      function runSchemaMigrations() {
+        let from = 0;
+        try { from = parseInt(localStorage.getItem(SCHEMA_VERSION_KEY) || "0", 10) || 0; } catch (e) {}
+        if (from >= SCHEMA_VERSION) return;
+        for (let i = from; i < SCHEMA_MIGRATIONS.length && i < SCHEMA_VERSION; i++) {
+          try { SCHEMA_MIGRATIONS[i](); }
+          catch (e) { console.warn("[schema] migration", i, "→", i + 1, "failed:", e); }
+        }
+        try { localStorage.setItem(SCHEMA_VERSION_KEY, String(SCHEMA_VERSION)); } catch (e) {}
+      }
+      runSchemaMigrations();
+
       // ---------- Theme (light/dark) - run early to avoid flash ----------
       const THEME_KEY = "katie-mile-theme";
       function loadTheme() {
@@ -6592,8 +6619,9 @@
       // so the mile (and every target) is projected from your nearest REAL
       // result whenever you have one — personal calibration; see projectTarget.
       // ==================================================================
-      const MI_MILE = 1, MI_5K = 3.106855, MI_HALF = 13.109375;
-      const MILE_M = 1609.344;
+      // Distance constants (MILE_M, MI_MILE, MI_5K, MI_HALF, …) and the VDOT
+      // engine / time formatters now live in lib/training-math.js, which loads
+      // before this script and shares the global scope. See that file.
       const GOAL_MILE_SEC = 6 * 60;   // Sub-6:00 mile (Copenhagen B-race)
       const GOAL_HALF_SEC = 105 * 60; // Sub-1:45 half (Dresden A-race)
       const TT_KEY = "katie-mile-tt-result";    // legacy single result (auto-migrated)
@@ -6611,40 +6639,9 @@
         { distance: 26.21875,  seconds: 4 * 3600 + 26 * 60 + 59, date: "2026-06-16" }, // Marathon 4:26:59
       ];
 
-      // --- VDOT engine (Daniels–Gilbert) ---
-      function pctVO2max(tMin) {
-        return 0.8 + 0.1894393 * Math.exp(-0.012778 * tMin)
-                   + 0.2989558 * Math.exp(-0.1932605 * tMin);
-      }
-      function o2Cost(vMetersPerMin) {
-        return -4.60 + 0.182258 * vMetersPerMin + 0.000104 * vMetersPerMin * vMetersPerMin;
-      }
-      // VDOT (VO2max-equivalent) implied by covering distMi in sec.
-      function vdotOf(distMi, sec) {
-        const tMin = sec / 60;
-        const v = (distMi * MILE_M) / tMin;
-        return o2Cost(v) / pctVO2max(tMin);
-      }
-      // Predicted time (sec) to race distMi at a VDOT — binary search, since
-      // vdotOf is monotonic decreasing in time.
-      function timeAtVdot(distMi, vdot) {
-        let lo = 10, hi = 36000;
-        for (let i = 0; i < 60; i++) {
-          const mid = (lo + hi) / 2;
-          if (vdotOf(distMi, mid) > vdot) lo = mid; else hi = mid;
-        }
-        return (lo + hi) / 2;
-      }
-      // Race times can exceed an hour (half marathon) — h:mm:ss when needed.
-      function fmtRaceTime(totalSec) {
-        totalSec = Math.round(totalSec);
-        const h = Math.floor(totalSec / 3600);
-        const m = Math.floor((totalSec % 3600) / 60);
-        const s = totalSec % 60;
-        return h > 0
-          ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
-          : `${m}:${String(s).padStart(2, "0")}`;
-      }
+      // VDOT engine (pctVO2max, o2Cost, vdotOf, timeAtVdot) and fmtRaceTime
+      // now live in lib/training-math.js (loaded first, shared global scope).
+
       // Saved real results (races / time trials) — a list, so calibration can
       // use several efforts at once (e.g. a mile and a long race).
       function loadResults() {
@@ -6752,13 +6749,7 @@
           : ` <span class="pred-est" title="Estimated from your overall fitness — add a real result at this distance to calibrate">~</span>`;
         return `<div class="pred-tile"><div class="pred-time">${fmtRaceTime(sec)}</div><div class="pred-lbl">${label}${tag}</div>${goal}</div>`;
       }
-      function parseTimeToSec(str) {
-        const parts = String(str || "").trim().split(":").map((x) => parseInt(x, 10));
-        if (parts.some(isNaN) || parts.length < 2 || parts.length > 3) return null;
-        return parts.length === 3
-          ? parts[0] * 3600 + parts[1] * 60 + parts[2]
-          : parts[0] * 60 + parts[1];
-      }
+      // parseTimeToSec now lives in lib/training-math.js (shared global scope).
       let ttWired = false;
       function wireTTForm() {
         if (ttWired) return;

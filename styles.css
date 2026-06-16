@@ -3888,3 +3888,56 @@
   margin-bottom: 10px;
 }
 .scan-portion .sp-apply { width: 100%; }
+
+/* ============================================================
+   Accessibility
+   ============================================================ */
+
+/* Keyboard skip link — visually hidden until focused, then pinned top-left. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 10000;
+  background: var(--card);
+  color: var(--ink);
+  border: 2px solid var(--accent, #6B9FD4);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.skip-link:focus {
+  left: 12px;
+  top: 12px;
+}
+
+/* Clear, consistent keyboard-focus ring on all interactive elements.
+   :focus-visible only shows it for keyboard users, not mouse clicks. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--accent, #6B9FD4);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+/* The main content region shouldn't show a ring when focused via skip link. */
+#mainContent:focus-visible { outline: none; }
+
+/* Respect reduced-motion: neutralize transitions/animations & smooth scroll. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

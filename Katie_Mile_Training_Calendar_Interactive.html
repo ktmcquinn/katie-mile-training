@@ -35,10 +35,13 @@
 
     <!-- Training plan data — separate file so workouts can be edited without touching app code -->
     <script src="plan.js"></script>
+    <script src="lib/training-math.js"></script>
 
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
+    <!-- Keyboard skip link — first focusable element, jumps past the bars -->
+    <a href="#mainContent" class="skip-link">Skip to main content</a>
     <!-- SW update banner — shown when a new service worker is waiting -->
     <div id="sw-update-banner" role="status" aria-live="polite">
       <span>Update available — tap to get the latest version.</span>
@@ -71,7 +74,7 @@
       </div>
     </header>
 
-    <div class="wrap">
+    <div class="wrap" id="mainContent" role="main" tabindex="-1">
 
       <!-- ========== TAB: TODAY ========== -->
       <!-- brand-v2 class scopes the new brand preview styles below.
@@ -831,22 +834,22 @@
         <div class="trend-card">
           <h3>Body Battery</h3>
           <div class="trend-meta" id="bbMeta">No data yet</div>
-          <div id="bbChart" class="sparkline"></div>
+          <div id="bbChart" class="sparkline" role="img" aria-label="Body Battery trend chart — see summary above"></div>
         </div>
         <div class="trend-card">
           <h3>Resting HR</h3>
           <div class="trend-meta" id="rhrMeta">No data yet</div>
-          <div id="rhrChart" class="sparkline"></div>
+          <div id="rhrChart" class="sparkline" role="img" aria-label="Resting heart rate trend chart — see summary above"></div>
         </div>
         <div class="trend-card">
           <h3>Energy</h3>
           <div class="trend-meta" id="energyMeta">No data yet</div>
-          <div id="energyChart" class="sparkline"></div>
+          <div id="energyChart" class="sparkline" role="img" aria-label="Energy trend chart — see summary above"></div>
         </div>
         <div class="trend-card">
           <h3>Weight</h3>
           <div class="trend-meta" id="weightSlMeta">No data yet</div>
-          <div id="weightSlChart" class="sparkline"></div>
+          <div id="weightSlChart" class="sparkline" role="img" aria-label="Weight trend chart — see summary above"></div>
         </div>
       </div>
 

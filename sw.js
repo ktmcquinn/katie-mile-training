@@ -1,15 +1,17 @@
 // The Dresden Half - Service Worker
 //
 // Strategy:
-//   - App code (HTML, JS, CSS, manifest): NETWORK-FIRST with cache fallback.
-//     Deploys propagate automatically on next load — no version bump needed —
-//     and the app still boots offline from the last cached copy.
+//   - App code (HTML, JS, CSS, manifest): STALE-WHILE-REVALIDATE. Serve the
+//     cached copy instantly (fast launches, works offline), and refresh the
+//     cache from the network in the background so the next launch is current.
+//     The page's update banner (SKIP_WAITING) still lets the user jump to a
+//     fresh version immediately when one is installed.
 //   - Static assets (icons, images): CACHE-FIRST. They never change without
 //     also renaming, so cache hits are always safe and fast.
 //
 // CACHE_VERSION only needs bumping if you want to force-purge old caches
 // (e.g. after renaming/removing files), not on every content change.
-const CACHE_VERSION = "v4.0.0";
+const CACHE_VERSION = "v5.0.0";
 const CACHE_NAME = `mile-training-${CACHE_VERSION}`;
 
 // Files to pre-cache on install so the app can boot offline immediately.
@@ -19,6 +21,7 @@ const PRECACHE_URLS = [
   "./styles.css",
   "./app.js",
   "./plan.js",
+  "./lib/training-math.js",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png",
@@ -68,19 +71,22 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
 
   if (isAppCode(req)) {
-    // Network-first: always try for the freshest app code; fall back to
-    // cache (then to the main HTML for navigations) when offline.
+    // Stale-while-revalidate: serve cache immediately, refresh it in the
+    // background. Falls back to network (then the main HTML for navigations)
+    // when there's no cached copy yet.
     event.respondWith(
-      fetch(req)
-        .then((res) => cachePut(req, res))
-        .catch(() =>
-          caches.match(req).then((cached) => {
-            if (cached) return cached;
-            if (req.mode === "navigate") {
+      caches.match(req).then((cached) => {
+        const network = fetch(req)
+          .then((res) => cachePut(req, res))
+          .catch(() => {
+            if (!cached && req.mode === "navigate") {
               return caches.match("./Katie_Mile_Training_Calendar_Interactive.html");
             }
-          })
-        )
+            return cached;
+          });
+        // Cached copy now (fast), network refresh in the background.
+        return cached || network;
+      })
     );
     return;
   }
