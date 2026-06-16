@@ -3686,6 +3686,9 @@
 }
 .pred-goal.ahead { color: var(--p1); }
 .pred-goal.behind { color: var(--p4); }
+/* Calibration badges on prediction tiles */
+.pred-cal { color: var(--p1); font-weight: 700; }
+.pred-est { color: var(--muted); font-weight: 700; }
 
 /* Time-trial entry */
 .tt-entry { margin-top: 12px; }
@@ -3715,6 +3718,29 @@
   color: var(--muted);
   margin-top: 6px;
 }
+.tt-list { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.tt-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  color: var(--ink);
+}
+.tt-del {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+.tt-del:hover { color: var(--p4); }
 
 /* Paces table */
 .pace-row {

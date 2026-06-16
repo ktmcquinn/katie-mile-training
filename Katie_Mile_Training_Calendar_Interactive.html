@@ -802,19 +802,19 @@
       <!-- Last-week recap (rendered by renderRecap) -->
       <div class="recap-card" id="recapCard" style="display:none"></div>
 
-      <!-- Race predictor: Riegel projections from best recent effort -->
+      <!-- Race predictor: VDOT projections, calibrated to your real results -->
       <div class="pred-card" id="predCard">
         <h3>Race Predictor</h3>
-        <div class="pred-meta" id="predMeta">Log a run or enter a time trial to see projections.</div>
+        <div class="pred-meta" id="predMeta">Log a run or add a race / time-trial result to see projections.</div>
         <div class="pred-grid" id="predGrid"></div>
         <details class="tt-entry" id="ttEntry">
-          <summary>Race / time-trial result</summary>
+          <summary>Race / time-trial results</summary>
           <div class="tt-form">
             <input type="text" inputmode="decimal" id="ttDistance" placeholder="Distance (mi)">
             <input type="text" id="ttTime" placeholder="Time (22:45 or 1:45:00)">
             <input type="date" id="ttDate">
-            <button class="btn" id="ttSave" type="button">Save</button>
-            <button class="btn" id="ttClear" type="button">Clear</button>
+            <button class="btn" id="ttSave" type="button">Add</button>
+            <button class="btn" id="ttClear" type="button">Clear all</button>
           </div>
           <div class="tt-note" id="ttNote"></div>
         </details>

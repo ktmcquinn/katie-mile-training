@@ -6586,17 +6586,43 @@
       // ==================================================================
       // Performance features: race predictor, training paces, readiness
       // nudge, weekly recap.
-      // Projections use the Riegel formula: T2 = T1 * (D2/D1)^1.06
+      // Projections use Daniels' VDOT model (O2 cost + %VO2max curve). It's
+      // distance-aware and far more accurate across 5K–half than a single
+      // Riegel exponent. The mile is the model's weak spot at short durations,
+      // so the mile (and every target) is projected from your nearest REAL
+      // result whenever you have one — personal calibration; see projectTarget.
       // ==================================================================
-      const RIEGEL_EXP = 1.06;
-      const MI_5K = 3.1069, MI_HALF = 13.1094;
+      const MI_MILE = 1, MI_5K = 3.106855, MI_HALF = 13.109375;
+      const MILE_M = 1609.344;
       const GOAL_MILE_SEC = 6 * 60;   // Sub-6:00 mile (Copenhagen B-race)
       const GOAL_HALF_SEC = 105 * 60; // Sub-1:45 half (Dresden A-race)
-      const TT_KEY = "katie-mile-tt-result";
+      const TT_KEY = "katie-mile-tt-result";    // legacy single result (auto-migrated)
+      const RESULTS_KEY = "katie-mile-results";  // list of real races / time trials
       const RECAP_DISMISS_KEY = "katie-mile-recap-dismissed";
 
-      function riegel(knownSec, knownMi, targetMi) {
-        return knownSec * Math.pow(targetMi / knownMi, RIEGEL_EXP);
+      // --- VDOT engine (Daniels–Gilbert) ---
+      function pctVO2max(tMin) {
+        return 0.8 + 0.1894393 * Math.exp(-0.012778 * tMin)
+                   + 0.2989558 * Math.exp(-0.1932605 * tMin);
+      }
+      function o2Cost(vMetersPerMin) {
+        return -4.60 + 0.182258 * vMetersPerMin + 0.000104 * vMetersPerMin * vMetersPerMin;
+      }
+      // VDOT (VO2max-equivalent) implied by covering distMi in sec.
+      function vdotOf(distMi, sec) {
+        const tMin = sec / 60;
+        const v = (distMi * MILE_M) / tMin;
+        return o2Cost(v) / pctVO2max(tMin);
+      }
+      // Predicted time (sec) to race distMi at a VDOT — binary search, since
+      // vdotOf is monotonic decreasing in time.
+      function timeAtVdot(distMi, vdot) {
+        let lo = 10, hi = 36000;
+        for (let i = 0; i < 60; i++) {
+          const mid = (lo + hi) / 2;
+          if (vdotOf(distMi, mid) > vdot) lo = mid; else hi = mid;
+        }
+        return (lo + hi) / 2;
       }
       // Race times can exceed an hour (half marathon) — h:mm:ss when needed.
       function fmtRaceTime(totalSec) {
@@ -6608,52 +6634,94 @@
           ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
           : `${m}:${String(s).padStart(2, "0")}`;
       }
-      function loadTT() {
-        try { return JSON.parse(localStorage.getItem(TT_KEY)) || null; } catch (e) { return null; }
+      // Saved real results (races / time trials) — a list, so calibration can
+      // use several efforts at once (e.g. a mile and a long race).
+      function loadResults() {
+        let list = [];
+        try { list = JSON.parse(localStorage.getItem(RESULTS_KEY)) || []; } catch (e) { list = []; }
+        if (!Array.isArray(list)) list = [];
+        // One-time migration of the old single time-trial entry.
+        if (!list.length) {
+          try {
+            const old = JSON.parse(localStorage.getItem(TT_KEY));
+            if (old && old.distance && old.seconds) {
+              list = [{ distance: +old.distance, seconds: +old.seconds, date: old.date || todayISO() }];
+              localStorage.setItem(RESULTS_KEY, JSON.stringify(list));
+            }
+          } catch (e) {}
+        }
+        return list;
+      }
+      function saveResults(list) {
+        try { localStorage.setItem(RESULTS_KEY, JSON.stringify(list)); } catch (e) {}
       }
 
-      // Best reference effort = the logged run (last 60 days) or manually
-      // entered race/TT that projects the FASTEST mile. Picking the best
-      // means easy runs never drag the prediction down; they just lose.
-      function referenceEffort() {
-        const cutoff = new Date();
-        cutoff.setDate(cutoff.getDate() - 60);
+      // Gather candidate efforts. REAL results (races/TTs you enter) are
+      // trusted at any distance. Logged training runs are soft proxies, used
+      // only when sustained (>=1.5 mi) so a short fast rep can't over-rate
+      // fitness; the best (fastest-equivalent) one wins so easy jogs don't
+      // drag it down. Each effort carries its VDOT.
+      function gatherEfforts() {
+        const results = loadResults()
+          .filter((r) => r && +r.distance >= 0.5 && +r.seconds > 0)
+          .map((r) => ({ distMi: +r.distance, sec: +r.seconds, date: r.date || todayISO(),
+                         genuine: true, vdot: vdotOf(+r.distance, +r.seconds) }));
+        const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 60);
         const cutoffISO = cutoff.toISOString().slice(0, 10);
-        const cands = [];
+        const logged = [];
         for (const date in LOGS) {
           const l = LOGS[date];
           if (!l || !l.distance || !l.durationSec) continue;
-          if (l.avgSpeedMph != null) continue; // bike — doesn't predict run fitness
-          const dist = parseFloat(l.distance);
-          if (!dist || dist < 0.9) continue;   // too short to project from
-          if (date < cutoffISO) continue;
-          cands.push({ distance: dist, seconds: l.durationSec, date, source: "logged run" });
+          if (l.avgSpeedMph != null) continue;            // bike — not a run-fitness signal
+          const d = parseFloat(l.distance);
+          if (!d || d < 1.5 || date < cutoffISO) continue; // sustained efforts only
+          logged.push({ distMi: d, sec: l.durationSec, date, genuine: false, vdot: vdotOf(d, l.durationSec) });
         }
-        const tt = loadTT();
-        if (tt && tt.distance && tt.seconds) {
-          cands.push({ distance: tt.distance, seconds: tt.seconds, date: tt.date || todayISO(), source: "time trial" });
-        }
-        if (!cands.length) return null;
-        let best = null, bestMile = Infinity;
-        for (const c of cands) {
-          const mile = riegel(c.seconds, c.distance, 1);
-          if (mile < bestMile) { bestMile = mile; best = c; }
-        }
-        return best;
+        return { results, logged };
+      }
+      // Overall fitness = the highest VDOT among sustained efforts (best wins).
+      function fitnessVdot(eff) {
+        let pool = [...eff.results.filter((e) => e.distMi >= 1.5),
+                    ...eff.logged.filter((e) => e.distMi >= 3)];
+        if (!pool.length) pool = [...eff.results, ...eff.logged]; // relax if nothing sustained
+        if (!pool.length) return null;
+        return pool.reduce((b, e) => (e.vdot > b.vdot ? e : b));
+      }
+      // Project one target distance. Prefer a REAL result within ~2x of that
+      // distance so the mile anchors to your real mile and the half to a real
+      // long effort (personal calibration); otherwise estimate from fitness.
+      function projectTarget(targetMi, eff, fitV) {
+        // Calibrate from a real result within ~2.2x of the target distance —
+        // wide enough that a 10K calibrates the half, narrow enough that a
+        // mile never "calibrates" the half.
+        const LOGWIN = Math.log(2.2);
+        const near = eff.results
+          .map((e) => ({ e, d: Math.abs(Math.log(e.distMi / targetMi)) }))
+          .filter((x) => x.d <= LOGWIN + 1e-9)
+          .sort((a, b) => a.d - b.d)[0];
+        if (near) return { sec: timeAtVdot(targetMi, near.e.vdot), vdot: near.e.vdot, ref: near.e, calibrated: true };
+        if (fitV) return { sec: timeAtVdot(targetMi, fitV.vdot), vdot: fitV.vdot, ref: fitV, calibrated: false };
+        return null;
       }
       function currentProjections() {
-        const ref = referenceEffort();
-        if (!ref) return null;
+        const eff = gatherEfforts();
+        if (!eff.results.length && !eff.logged.length) return null;
+        const fitV = fitnessVdot(eff);
+        const mile = projectTarget(MI_MILE, eff, fitV);
+        const fiveK = projectTarget(MI_5K, eff, fitV);
+        const half = projectTarget(MI_HALF, eff, fitV);
+        if (!mile && !fiveK && !half) return null;
         return {
-          ref,
-          mileSec: riegel(ref.seconds, ref.distance, 1),
-          fiveKSec: riegel(ref.seconds, ref.distance, MI_5K),
-          halfSec: riegel(ref.seconds, ref.distance, MI_HALF),
+          eff, fitV, mile, fiveK, half,
+          // back-compat scalar fields used by paceZones()
+          mileSec: mile ? mile.sec : null,
+          fiveKSec: fiveK ? fiveK.sec : null,
+          halfSec: half ? half.sec : null,
         };
       }
 
       // ---------- Race predictor card (Trends) ----------
-      function predTile(label, sec, goalSec, goalLbl) {
+      function predTile(label, sec, goalSec, goalLbl, calibrated) {
         let goal = "";
         if (goalSec) {
           const diff = Math.round(sec - goalSec);
@@ -6661,7 +6729,10 @@
             ? `<div class="pred-goal ahead">On track for ${goalLbl}</div>`
             : `<div class="pred-goal behind">${goalLbl} +${fmtRaceTime(diff)}</div>`;
         }
-        return `<div class="pred-tile"><div class="pred-time">${fmtRaceTime(sec)}</div><div class="pred-lbl">${label}</div>${goal}</div>`;
+        const tag = calibrated
+          ? ` <span class="pred-cal" title="Calibrated to a real result near this distance">✓</span>`
+          : ` <span class="pred-est" title="Estimated from your overall fitness — add a real result at this distance to calibrate">~</span>`;
+        return `<div class="pred-tile"><div class="pred-time">${fmtRaceTime(sec)}</div><div class="pred-lbl">${label}${tag}</div>${goal}</div>`;
       }
       function parseTimeToSec(str) {
         const parts = String(str || "").trim().split(":").map((x) => parseInt(x, 10));
@@ -6685,55 +6756,91 @@
             showToast("Enter a distance in miles and a time like 22:45 (or 1:45:00).", "error");
             return;
           }
-          localStorage.setItem(TT_KEY, JSON.stringify({ distance: dist, seconds: sec, date }));
-          showToast("Time trial saved — projections updated.");
+          const list = loadResults();
+          list.push({ distance: dist, seconds: sec, date });
+          saveResults(list);
+          document.getElementById("ttDistance").value = "";
+          document.getElementById("ttTime").value = "";
+          showToast("Result saved — projections updated.");
           renderRacePredictor();
           renderToday();
         });
         clear.addEventListener("click", () => {
-          localStorage.removeItem(TT_KEY);
-          showToast("Time trial cleared.");
+          saveResults([]);
+          try { localStorage.removeItem(TT_KEY); } catch (e) {}
+          showToast("All results cleared.");
           renderRacePredictor();
           renderToday();
         });
+      }
+      // Render the saved-results list with per-item remove buttons.
+      function renderResultsList() {
+        const note = document.getElementById("ttNote");
+        if (!note) return;
+        const list = loadResults();
+        if (!list.length) {
+          note.textContent = "No results saved yet. For best accuracy add a mile and a longer effort (e.g. a 5K or 10K).";
+          return;
+        }
+        note.innerHTML = `<div class="tt-list">` + list.map((r, i) =>
+          `<div class="tt-item"><span>${r.distance} mi · ${fmtRaceTime(r.seconds)} · ${r.date || ""}</span>` +
+          `<button type="button" class="tt-del" data-idx="${i}" title="Remove">×</button></div>`).join("") + `</div>`;
+        note.querySelectorAll(".tt-del").forEach((b) => b.addEventListener("click", () => {
+          const l = loadResults();
+          l.splice(parseInt(b.dataset.idx, 10), 1);
+          saveResults(l);
+          renderRacePredictor();
+          renderToday();
+        }));
       }
       function renderRacePredictor() {
         const grid = document.getElementById("predGrid");
         const meta = document.getElementById("predMeta");
         if (!grid || !meta) return;
         wireTTForm();
-        const tt = loadTT();
-        const note = document.getElementById("ttNote");
-        if (note) note.textContent = tt ? `Saved: ${tt.distance} mi in ${fmtRaceTime(tt.seconds)} (${tt.date})` : "";
+        renderResultsList();
         const proj = currentProjections();
         if (!proj) {
-          meta.textContent = "Log a run (or enter a time trial below) to see projections.";
+          meta.textContent = "Log a run (or add a race / time-trial result below) to see projections.";
           grid.innerHTML = "";
           renderPacesCard(null);
           return;
         }
-        meta.textContent = `Based on your fastest recent effort — ${proj.ref.distance} mi in ${fmtRaceTime(proj.ref.seconds)} (${proj.ref.source}, ${fmtDate(proj.ref.date, { month: "short", day: "numeric" })})`;
-        grid.innerHTML =
-          predTile("Mile", proj.mileSec, GOAL_MILE_SEC, "Sub-6:00") +
-          predTile("5K", proj.fiveKSec, null, "") +
-          predTile("Half", proj.halfSec, GOAL_HALF_SEC, "Sub-1:45");
+        const tiles = [];
+        if (proj.mile)  tiles.push(predTile("Mile", proj.mile.sec, GOAL_MILE_SEC, "Sub-6:00", proj.mile.calibrated));
+        if (proj.fiveK) tiles.push(predTile("5K", proj.fiveK.sec, null, "", proj.fiveK.calibrated));
+        if (proj.half)  tiles.push(predTile("Half", proj.half.sec, GOAL_HALF_SEC, "Sub-1:45", proj.half.calibrated));
+        grid.innerHTML = tiles.join("");
+        const fit = proj.fitV;
+        const calAny = [proj.mile, proj.fiveK, proj.half].some((p) => p && p.calibrated);
+        let m = "";
+        if (fit) {
+          m = `Fitness estimate: VDOT ${fit.vdot.toFixed(1)} from your best sustained effort — ` +
+              `${fit.distMi.toFixed(1)} mi in ${fmtRaceTime(fit.sec)} ` +
+              `(${fit.genuine ? "result" : "logged run"}, ${fmtDate(fit.date, { month: "short", day: "numeric" })}). `;
+        }
+        m += calAny
+          ? `Tiles marked ✓ are calibrated to a real result near that distance; ~ are estimated.`
+          : `Add real results below — a mile and a longer effort — to calibrate (✓) instead of estimate (~).`;
+        meta.innerHTML = m;
         renderPacesCard(proj);
       }
 
       // ---------- Training paces (Daniels-style offsets from 5K pace) ----------
       function paceZones(proj) {
-        if (!proj) return null;
+        if (!proj || proj.fiveKSec == null) return null;
         const p5k = proj.fiveKSec / MI_5K; // sec per mile at 5K effort
         return {
           easy: [p5k + 75, p5k + 135],
           long: [p5k + 55, p5k + 100],
-          half: [proj.halfSec / MI_HALF, null],
+          half: proj.halfSec != null ? [proj.halfSec / MI_HALF, null] : null,
           tempo: [p5k + 25, null],
           interval: [p5k - 10, null],
-          mile: [proj.mileSec, null],
+          mile: proj.mileSec != null ? [proj.mileSec, null] : null,
         };
       }
       function fmtZone(z) {
+        if (!z) return "—";
         return z[1]
           ? `${fmtPace(z[0]).replace("/mi", "")}–${fmtPace(z[1])}`
           : fmtPace(z[0]);
@@ -6746,7 +6853,7 @@
         const z = paceZones(proj);
         if (!z) { card.style.display = "none"; return; }
         card.style.display = "";
-        if (meta) meta.textContent = "From the same reference effort as the predictor. Re-run a time trial (plan: after Week 12) to recalibrate.";
+        if (meta) meta.textContent = "Derived from your VDOT (same basis as the predictor). Add/refresh a time trial to recalibrate.";
         const order = [
           ["Easy / recovery", z.easy],
           ["Long run", z.long],
@@ -6756,6 +6863,7 @@
           ["Mile / rep pace", z.mile],
         ];
         rows.innerHTML = order
+          .filter(([, zz]) => zz)
           .map(([lbl, zz]) => `<div class="pace-row"><span>${lbl}</span><b>${fmtZone(zz)}</b></div>`)
           .join("");
       }
@@ -6767,11 +6875,11 @@
         const t = (day.title + " " + day.detail).toUpperCase();
         const cat = categorize(day);
         if (cat === "rest" || cat === "bike" || cat === "race") return null;
-        if (cat === "quality" && /MILE-PACE|MILE PACE|400|800|REP/.test(t))
+        if (cat === "quality" && z.mile && /MILE-PACE|MILE PACE|400|800|REP/.test(t))
           return `Mile/rep ${fmtZone(z.mile)} · Interval ${fmtZone(z.interval)}`;
         if (/TRACK:|VO2|FARTLEK/.test(t)) return `Interval ${fmtZone(z.interval)}`;
         if (/TEMPO|THRESHOLD/.test(t)) return `Tempo ${fmtZone(z.tempo)}`;
-        if (/RACE-PACE|HALF PACE|HMP/.test(t)) return `Half pace ${fmtZone(z.half)}`;
+        if (z.half && /RACE-PACE|HALF PACE|HMP/.test(t)) return `Half pace ${fmtZone(z.half)}`;
         if (cat === "long") return `Long-run pace ${fmtZone(z.long)}`;
         if (cat === "easy") return `Easy pace ${fmtZone(z.easy)}`;
         return null;
