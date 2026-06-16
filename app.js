@@ -112,7 +112,9 @@
         yoga: "anytime",
         pre_run: "pre",
         pre_bike: "pre",
-        plyo: "pre",
+        // Plyometrics is power/strength work, not running or biking — keep it
+        // out of the Cardio group and render it under Strength instead.
+        plyo: "core",
         core: "core",
         post_run: "post",
         post_bike: "post",
