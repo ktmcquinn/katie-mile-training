@@ -35,7 +35,7 @@ const DATA = {
       name: "Half-Marathon Base Build",
       weeks: "8-12",
       color: "#6B9FD4",
-      goal: "Return from injury conservatively. Build from ~17 to ~26 mpw, establish daily hip protocol, introduce easy strides. No hard track work yet. 5K time trial after Week 12 to recalibrate zones.",
+      goal: "Return from injury conservatively. Build from ~20 to ~29 mpw, establish daily hip protocol, introduce easy strides. No hard track work yet. 5K time trial after Week 12 to recalibrate zones.",
     },
     {
       num: 4,
@@ -615,7 +615,7 @@ const DATA = {
     {
       num: 8,
       phase: 3,
-      mileage: 17,
+      mileage: 20,
       theme: "RETURN FROM INJURY. Conservative re-entry; settle the hip before loading anything hard. If pain by Day 3, take the full week as rest and push start to Jun 22.",
       days: [
         {
@@ -687,7 +687,7 @@ const DATA = {
     {
       num: 9,
       phase: 3,
-      mileage: 19,
+      mileage: 22,
       theme:
         "Build week. Add Z3 finish + strides. Hip should feel better than last week.",
       days: [
@@ -762,7 +762,7 @@ const DATA = {
     {
       num: 10,
       phase: 3,
-      mileage: 22,
+      mileage: 25,
       theme:
         "Tempo enters. Mileage climbs. Hip protocol every day still non-negotiable.",
       days: [
@@ -837,7 +837,7 @@ const DATA = {
     {
       num: 11,
       phase: 3,
-      mileage: 18,
+      mileage: 21,
       theme:
         "RECOVERY WEEK. Reduced volume + light lift. Let the body absorb the work.",
       days: [
@@ -912,7 +912,7 @@ const DATA = {
     {
       num: 12,
       phase: 3,
-      mileage: 26,
+      mileage: 29,
       theme:
         "Mileage peak of Phase 1. After this: 5K time trial to recalibrate all zones for Phases 2-3.",
       days: [
