@@ -1,6 +1,7 @@
 // Training plan data — edit this file to update workouts without touching app code.
 // Loaded via <script src="plan.js"> before the main app script.
-// NRC-based dual-race plan ported 2026-06-18; days on/before that date are the original completed workouts.
+// NRC dual-race plan: Mon recovery · Tue rest/cross · Wed+Fri quality · Thu recovery · Sat heavy lift · Sun long.
+// Days on/before 2026-06-18 are the original completed workouts (untouched).
 
 const DATA = {
   "meta": {
@@ -755,24 +756,24 @@ const DATA = {
         {
           "date": "2026-06-19",
           "day_name": "Fri",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Light tempo / fartlek",
+          "detail": "5:00 WU · 12-15:00 steady @ ~8:20-8:30/mi (comfortably hard) · 5:00 CD",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-06-20",
           "day_name": "Sat",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Strength — heavy lift",
+          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
           "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
+            "hip_protocol"
           ],
-          "strength": "BLOCK A — 60% load (recovery / injury return week): Same exercises as full Block A, drop weights 30-40%. Focus on form, slow tempo, and right glute activation. Barbell RDL 4x6; Bulgarian split squat 3x8/leg; Barbell hip thrust 4x8; Nordic hamstring curl 3x6; Lateral band walk 3x15/side; Copenhagen hold 3x8/side."
+          "strength": "BLOCK B (60-75 min, Saturday gym): Trap bar deadlift 4x5 (heavy); Single-leg box step-up 3x10/leg (moderate DBs, controlled descent); Goblet squat 3x10 (tempo: 3 sec down, 1 sec up); Single-leg RDL 3x8/leg (right-side balance focus); Pallof press 3x12/side (anti-rotation); Glute-ham raise OR band pull-through 3x10."
         },
         {
           "date": "2026-06-21",
@@ -799,28 +800,6 @@ const DATA = {
         {
           "date": "2026-06-22",
           "day_name": "Mon",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
-          "routines": [
-            "hip_protocol"
-          ],
-          "strength": null
-        },
-        {
-          "date": "2026-06-23",
-          "day_name": "Tue",
-          "title": "Strides / light fartlek",
-          "detail": "5:00 WU · 8×20s relaxed strides OR 6×(1:00 hard / 2:00 easy) · controlled, not hard · 5:00 CD",
-          "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
-          ],
-          "strength": null
-        },
-        {
-          "date": "2026-06-24",
-          "day_name": "Wed",
           "title": "Recovery run",
           "detail": "Easy 30-35 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
@@ -831,10 +810,32 @@ const DATA = {
           "strength": null
         },
         {
+          "date": "2026-06-23",
+          "day_name": "Tue",
+          "title": "Rest / cross-train",
+          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "routines": [
+            "hip_protocol"
+          ],
+          "strength": null
+        },
+        {
+          "date": "2026-06-24",
+          "day_name": "Wed",
+          "title": "Strides / light fartlek",
+          "detail": "5:00 WU · 8×20s relaxed strides OR 6×(1:00 hard / 2:00 easy) · controlled, not hard · 5:00 CD",
+          "routines": [
+            "hip_protocol",
+            "pre_run",
+            "post_run"
+          ],
+          "strength": null
+        },
+        {
           "date": "2026-06-25",
           "day_name": "Thu",
-          "title": "Light tempo / fartlek",
-          "detail": "5:00 WU · 12-15:00 steady @ ~8:20-8:30/mi (comfortably hard) · 5:00 CD",
+          "title": "Recovery run",
+          "detail": "Easy 30-35 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -845,24 +846,24 @@ const DATA = {
         {
           "date": "2026-06-26",
           "day_name": "Fri",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Light tempo / fartlek",
+          "detail": "5:00 WU · 12-15:00 steady @ ~8:20-8:30/mi (comfortably hard) · 5:00 CD",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-06-27",
           "day_name": "Sat",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Strength — heavy lift",
+          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
           "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
+            "hip_protocol"
           ],
-          "strength": "BLOCK B (60-75 min, Saturday gym): Trap bar deadlift 4x5 (heavy); Single-leg box step-up 3x10/leg (moderate DBs, controlled descent); Goblet squat 3x10 (tempo: 3 sec down, 1 sec up); Single-leg RDL 3x8/leg (right-side balance focus); Pallof press 3x12/side (anti-rotation); Glute-ham raise OR band pull-through 3x10."
+          "strength": "BLOCK A (60-75 min, Saturday gym): Barbell Romanian Deadlift 4x6 (heavy, hip hinge); Bulgarian split squat 3x8/leg (right leg as REAR to load right glute); Barbell hip thrust 4x8 (drive through right heel); Nordic hamstring curl 3x6 (slow eccentric); Lateral band walk 3x15/side (heavy band); Copenhagen adductor hold 3x8/side (3-sec holds)."
         },
         {
           "date": "2026-06-28",
@@ -889,28 +890,6 @@ const DATA = {
         {
           "date": "2026-06-29",
           "day_name": "Mon",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
-          "routines": [
-            "hip_protocol"
-          ],
-          "strength": null
-        },
-        {
-          "date": "2026-06-30",
-          "day_name": "Tue",
-          "title": "Strides / light fartlek",
-          "detail": "5:00 WU · 8×20s relaxed strides OR 6×(1:00 hard / 2:00 easy) · controlled, not hard · 5:00 CD",
-          "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
-          ],
-          "strength": null
-        },
-        {
-          "date": "2026-07-01",
-          "day_name": "Wed",
           "title": "Recovery run",
           "detail": "Easy 30-35 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
@@ -921,10 +900,32 @@ const DATA = {
           "strength": null
         },
         {
+          "date": "2026-06-30",
+          "day_name": "Tue",
+          "title": "Rest / cross-train",
+          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "routines": [
+            "hip_protocol"
+          ],
+          "strength": null
+        },
+        {
+          "date": "2026-07-01",
+          "day_name": "Wed",
+          "title": "Strides / light fartlek",
+          "detail": "5:00 WU · 8×20s relaxed strides OR 6×(1:00 hard / 2:00 easy) · controlled, not hard · 5:00 CD",
+          "routines": [
+            "hip_protocol",
+            "pre_run",
+            "post_run"
+          ],
+          "strength": null
+        },
+        {
           "date": "2026-07-02",
           "day_name": "Thu",
-          "title": "Light tempo / fartlek",
-          "detail": "5:00 WU · 12-15:00 steady @ ~8:20-8:30/mi (comfortably hard) · 5:00 CD",
+          "title": "Recovery run",
+          "detail": "Easy 30-35 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -935,24 +936,24 @@ const DATA = {
         {
           "date": "2026-07-03",
           "day_name": "Fri",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Light tempo / fartlek",
+          "detail": "5:00 WU · 12-15:00 steady @ ~8:20-8:30/mi (comfortably hard) · 5:00 CD",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-07-04",
           "day_name": "Sat",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Strength — heavy lift",
+          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
           "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
+            "hip_protocol"
           ],
-          "strength": "BLOCK A (60-75 min, Saturday gym): Barbell Romanian Deadlift 4x6 (heavy, hip hinge); Bulgarian split squat 3x8/leg (right leg as REAR to load right glute); Barbell hip thrust 4x8 (drive through right heel); Nordic hamstring curl 3x6 (slow eccentric); Lateral band walk 3x15/side (heavy band); Copenhagen adductor hold 3x8/side (3-sec holds)."
+          "strength": "BLOCK B (60-75 min, Saturday gym): Trap bar deadlift 4x5 (heavy); Single-leg box step-up 3x10/leg (moderate DBs, controlled descent); Goblet squat 3x10 (tempo: 3 sec down, 1 sec up); Single-leg RDL 3x8/leg (right-side balance focus); Pallof press 3x12/side (anti-rotation); Glute-ham raise OR band pull-through 3x10."
         },
         {
           "date": "2026-07-05",
@@ -979,28 +980,6 @@ const DATA = {
         {
           "date": "2026-07-06",
           "day_name": "Mon",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
-          "routines": [
-            "hip_protocol"
-          ],
-          "strength": null
-        },
-        {
-          "date": "2026-07-07",
-          "day_name": "Tue",
-          "title": "Strides / light fartlek",
-          "detail": "5:00 WU · 8×20s relaxed strides OR 6×(1:00 hard / 2:00 easy) · controlled, not hard · 5:00 CD",
-          "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
-          ],
-          "strength": null
-        },
-        {
-          "date": "2026-07-08",
-          "day_name": "Wed",
           "title": "Recovery run",
           "detail": "Easy 30-35 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
@@ -1011,10 +990,32 @@ const DATA = {
           "strength": null
         },
         {
+          "date": "2026-07-07",
+          "day_name": "Tue",
+          "title": "Rest / cross-train",
+          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "routines": [
+            "hip_protocol"
+          ],
+          "strength": null
+        },
+        {
+          "date": "2026-07-08",
+          "day_name": "Wed",
+          "title": "Strides / light fartlek",
+          "detail": "5:00 WU · 8×20s relaxed strides OR 6×(1:00 hard / 2:00 easy) · controlled, not hard · 5:00 CD",
+          "routines": [
+            "hip_protocol",
+            "pre_run",
+            "post_run"
+          ],
+          "strength": null
+        },
+        {
           "date": "2026-07-09",
           "day_name": "Thu",
-          "title": "Light tempo / fartlek",
-          "detail": "5:00 WU · 12-15:00 steady @ ~8:20-8:30/mi (comfortably hard) · 5:00 CD",
+          "title": "Recovery run",
+          "detail": "Easy 30-35 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1025,24 +1026,24 @@ const DATA = {
         {
           "date": "2026-07-10",
           "day_name": "Fri",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Light tempo / fartlek",
+          "detail": "5:00 WU · 12-15:00 steady @ ~8:20-8:30/mi (comfortably hard) · 5:00 CD",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-07-11",
           "day_name": "Sat",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Strength — heavy lift",
+          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
           "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
+            "hip_protocol"
           ],
-          "strength": "BLOCK B — 60% load (recovery week): Same exercises as full Block B, drop weights 30-40%. Trap bar deadlift 4x5; Single-leg box step-up 3x10/leg; Goblet squat 3x10 (tempo); Single-leg RDL 3x8/leg; Pallof press 3x12/side; GHR or band pull-through 3x10."
+          "strength": "BLOCK A (60-75 min, Saturday gym): Barbell Romanian Deadlift 4x6 (heavy, hip hinge); Bulgarian split squat 3x8/leg (right leg as REAR to load right glute); Barbell hip thrust 4x8 (drive through right heel); Nordic hamstring curl 3x6 (slow eccentric); Lateral band walk 3x15/side (heavy band); Copenhagen adductor hold 3x8/side (3-sec holds)."
         },
         {
           "date": "2026-07-12",
@@ -1069,28 +1070,6 @@ const DATA = {
         {
           "date": "2026-07-13",
           "day_name": "Mon",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
-          "routines": [
-            "hip_protocol"
-          ],
-          "strength": null
-        },
-        {
-          "date": "2026-07-14",
-          "day_name": "Tue",
-          "title": "Strides / light fartlek",
-          "detail": "5:00 WU · 8×20s relaxed strides OR 6×(1:00 hard / 2:00 easy) · controlled, not hard · 5:00 CD",
-          "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
-          ],
-          "strength": null
-        },
-        {
-          "date": "2026-07-15",
-          "day_name": "Wed",
           "title": "Recovery run",
           "detail": "Easy 30-35 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
@@ -1101,10 +1080,32 @@ const DATA = {
           "strength": null
         },
         {
+          "date": "2026-07-14",
+          "day_name": "Tue",
+          "title": "Rest / cross-train",
+          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "routines": [
+            "hip_protocol"
+          ],
+          "strength": null
+        },
+        {
+          "date": "2026-07-15",
+          "day_name": "Wed",
+          "title": "Strides / light fartlek",
+          "detail": "5:00 WU · 8×20s relaxed strides OR 6×(1:00 hard / 2:00 easy) · controlled, not hard · 5:00 CD",
+          "routines": [
+            "hip_protocol",
+            "pre_run",
+            "post_run"
+          ],
+          "strength": null
+        },
+        {
           "date": "2026-07-16",
           "day_name": "Thu",
-          "title": "Light tempo / fartlek",
-          "detail": "5:00 WU · 12-15:00 steady @ ~8:20-8:30/mi (comfortably hard) · 5:00 CD",
+          "title": "Recovery run",
+          "detail": "Easy 30-35 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1115,24 +1116,24 @@ const DATA = {
         {
           "date": "2026-07-17",
           "day_name": "Fri",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Light tempo / fartlek",
+          "detail": "5:00 WU · 12-15:00 steady @ ~8:20-8:30/mi (comfortably hard) · 5:00 CD",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-07-18",
           "day_name": "Sat",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Strength — reduced load",
+          "detail": "Cutback week — drop loads ~30-40%, focus on form.",
           "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
+            "hip_protocol"
           ],
-          "strength": "BLOCK A (60-75 min, Saturday gym): Barbell Romanian Deadlift 4x6 (heavy, hip hinge); Bulgarian split squat 3x8/leg (right leg as REAR to load right glute); Barbell hip thrust 4x8 (drive through right heel); Nordic hamstring curl 3x6 (slow eccentric); Lateral band walk 3x15/side (heavy band); Copenhagen adductor hold 3x8/side (3-sec holds)."
+          "strength": "BLOCK B — 60% load (recovery week): Same exercises as full Block B, drop weights 30-40%. Trap bar deadlift 4x5; Single-leg box step-up 3x10/leg; Goblet squat 3x10 (tempo); Single-leg RDL 3x8/leg; Pallof press 3x12/side; GHR or band pull-through 3x10."
         },
         {
           "date": "2026-07-19",
@@ -1159,16 +1160,28 @@ const DATA = {
         {
           "date": "2026-07-20",
           "day_name": "Mon",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-07-21",
           "day_name": "Tue",
+          "title": "Rest / cross-train",
+          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "routines": [
+            "hip_protocol"
+          ],
+          "strength": null
+        },
+        {
+          "date": "2026-07-22",
+          "day_name": "Wed",
           "title": "Speed: First Speed Run (intervals)",
           "detail": "5:00 WU · 8×1:00 @5K pace (~7:05/mi) · 1:00 jog between · 5:00 CD",
           "routines": [
@@ -1179,22 +1192,10 @@ const DATA = {
           "strength": null
         },
         {
-          "date": "2026-07-22",
-          "day_name": "Wed",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
-          "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
-          ],
-          "strength": null
-        },
-        {
           "date": "2026-07-23",
           "day_name": "Thu",
-          "title": "Speed: One Hard Two Easy (fartlek)",
-          "detail": "5:00 WU · 21:00 alternating 1:00 hard / 2:00 easy · 5:00 CD",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1205,24 +1206,24 @@ const DATA = {
         {
           "date": "2026-07-24",
           "day_name": "Fri",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Speed: One Hard Two Easy (fartlek)",
+          "detail": "5:00 WU · 21:00 alternating 1:00 hard / 2:00 easy · 5:00 CD",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-07-25",
           "day_name": "Sat",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Strength — heavy lift",
+          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
           "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
+            "hip_protocol"
           ],
-          "strength": "BLOCK B (60-75 min, Saturday gym): Trap bar deadlift 4x5 (heavy); Single-leg box step-up 3x10/leg (moderate DBs, controlled descent); Goblet squat 3x10 (tempo: 3 sec down, 1 sec up); Single-leg RDL 3x8/leg (right-side balance focus); Pallof press 3x12/side (anti-rotation); Glute-ham raise OR band pull-through 3x10."
+          "strength": "BLOCK A (60-75 min, Saturday gym): Barbell Romanian Deadlift 4x6 (heavy, hip hinge); Bulgarian split squat 3x8/leg (right leg as REAR to load right glute); Barbell hip thrust 4x8 (drive through right heel); Nordic hamstring curl 3x6 (slow eccentric); Lateral band walk 3x15/side (heavy band); Copenhagen adductor hold 3x8/side (3-sec holds)."
         },
         {
           "date": "2026-07-26",
@@ -1249,16 +1250,28 @@ const DATA = {
         {
           "date": "2026-07-27",
           "day_name": "Mon",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-07-28",
           "day_name": "Tue",
+          "title": "Rest / cross-train",
+          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "routines": [
+            "hip_protocol"
+          ],
+          "strength": null
+        },
+        {
+          "date": "2026-07-29",
+          "day_name": "Wed",
           "title": "Speed: No Time Go Time (intervals)",
           "detail": "5:00 WU · 1:00 mile / 2:00 5K / 3:00 10K / 2:00 5K / 1:00 mile · 1:00 jog between · 5:00 CD",
           "routines": [
@@ -1269,22 +1282,10 @@ const DATA = {
           "strength": null
         },
         {
-          "date": "2026-07-29",
-          "day_name": "Wed",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
-          "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
-          ],
-          "strength": null
-        },
-        {
           "date": "2026-07-30",
           "day_name": "Thu",
-          "title": "Speed: Run Strong. Repeat.",
-          "detail": "5:00 WU · [4×1:30 @5K + 1×1:30 @mile] ×2 · 45s after 5K reps, 1:00 after mile rep",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1295,24 +1296,24 @@ const DATA = {
         {
           "date": "2026-07-31",
           "day_name": "Fri",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Speed: Run Strong. Repeat.",
+          "detail": "5:00 WU · [4×1:30 @5K + 1×1:30 @mile] ×2 · 45s after 5K reps, 1:00 after mile rep",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-08-01",
           "day_name": "Sat",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Strength — heavy lift",
+          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
           "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
+            "hip_protocol"
           ],
-          "strength": "BLOCK A (60-75 min, Saturday gym): Barbell Romanian Deadlift 4x6 (heavy, hip hinge); Bulgarian split squat 3x8/leg (right leg as REAR to load right glute); Barbell hip thrust 4x8 (drive through right heel); Nordic hamstring curl 3x6 (slow eccentric); Lateral band walk 3x15/side (heavy band); Copenhagen adductor hold 3x8/side (3-sec holds)."
+          "strength": "BLOCK B (60-75 min, Saturday gym): Trap bar deadlift 4x5 (heavy); Single-leg box step-up 3x10/leg (moderate DBs, controlled descent); Goblet squat 3x10 (tempo: 3 sec down, 1 sec up); Single-leg RDL 3x8/leg (right-side balance focus); Pallof press 3x12/side (anti-rotation); Glute-ham raise OR band pull-through 3x10."
         },
         {
           "date": "2026-08-02",
@@ -1339,16 +1340,28 @@ const DATA = {
         {
           "date": "2026-08-03",
           "day_name": "Mon",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-08-04",
           "day_name": "Tue",
+          "title": "Rest / cross-train",
+          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "routines": [
+            "hip_protocol"
+          ],
+          "strength": null
+        },
+        {
+          "date": "2026-08-05",
+          "day_name": "Wed",
           "title": "Speed: Runner Up (hills)",
           "detail": "5:00 WU · 5×[45s @10K effort + 15s best effort] · 1:15/45s recovery · 5:00 CD",
           "routines": [
@@ -1359,22 +1372,10 @@ const DATA = {
           "strength": null
         },
         {
-          "date": "2026-08-05",
-          "day_name": "Wed",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
-          "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
-          ],
-          "strength": null
-        },
-        {
           "date": "2026-08-06",
           "day_name": "Thu",
-          "title": "Speed: Triple 7s",
-          "detail": "5:00 WU · 3×7:00 @5K pace · 2:30 jog between · 5:00 CD",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1385,24 +1386,24 @@ const DATA = {
         {
           "date": "2026-08-07",
           "day_name": "Fri",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Speed: Triple 7s",
+          "detail": "5:00 WU · 3×7:00 @5K pace · 2:30 jog between · 5:00 CD",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-08-08",
           "day_name": "Sat",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Strength — heavy lift",
+          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
           "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
+            "hip_protocol"
           ],
-          "strength": "BLOCK B — 60% load (recovery week): Same exercises as full Block B, drop weights 30-40%. Trap bar deadlift 4x5; Single-leg box step-up 3x10/leg; Goblet squat 3x10 (tempo); Single-leg RDL 3x8/leg; Pallof press 3x12/side; GHR or band pull-through 3x10."
+          "strength": "BLOCK A (60-75 min, Saturday gym): Barbell Romanian Deadlift 4x6 (heavy, hip hinge); Bulgarian split squat 3x8/leg (right leg as REAR to load right glute); Barbell hip thrust 4x8 (drive through right heel); Nordic hamstring curl 3x6 (slow eccentric); Lateral band walk 3x15/side (heavy band); Copenhagen adductor hold 3x8/side (3-sec holds)."
         },
         {
           "date": "2026-08-09",
@@ -1429,16 +1430,28 @@ const DATA = {
         {
           "date": "2026-08-10",
           "day_name": "Mon",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-08-11",
           "day_name": "Tue",
+          "title": "Rest / cross-train",
+          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "routines": [
+            "hip_protocol"
+          ],
+          "strength": null
+        },
+        {
+          "date": "2026-08-12",
+          "day_name": "Wed",
           "title": "Speed: The Rundown (ladder)",
           "detail": "5:00 WU · 3×1:00 mile + 3×2:00 5K · 2×1:00 mile + 2×2:00 5K · 1×1:00 mile + 1×2:00 5K · 1:00/1:30 rec",
           "routines": [
@@ -1449,22 +1462,10 @@ const DATA = {
           "strength": null
         },
         {
-          "date": "2026-08-12",
-          "day_name": "Wed",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
-          "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
-          ],
-          "strength": null
-        },
-        {
           "date": "2026-08-13",
           "day_name": "Thu",
-          "title": "Speed: Tempo",
-          "detail": "7:00 WU · 25:00 tempo @ ~8:13-8:28/mi · 5:00 CD",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1475,24 +1476,24 @@ const DATA = {
         {
           "date": "2026-08-14",
           "day_name": "Fri",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Speed: Tempo",
+          "detail": "7:00 WU · 25:00 tempo @ ~8:13-8:28/mi · 5:00 CD",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-08-15",
           "day_name": "Sat",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Strength — heavy lift",
+          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
           "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
+            "hip_protocol"
           ],
-          "strength": "BLOCK A (60-75 min, Saturday gym): Barbell Romanian Deadlift 4x6 (heavy, hip hinge); Bulgarian split squat 3x8/leg (right leg as REAR to load right glute); Barbell hip thrust 4x8 (drive through right heel); Nordic hamstring curl 3x6 (slow eccentric); Lateral band walk 3x15/side (heavy band); Copenhagen adductor hold 3x8/side (3-sec holds)."
+          "strength": "BLOCK B (60-75 min, Saturday gym): Trap bar deadlift 4x5 (heavy); Single-leg box step-up 3x10/leg (moderate DBs, controlled descent); Goblet squat 3x10 (tempo: 3 sec down, 1 sec up); Single-leg RDL 3x8/leg (right-side balance focus); Pallof press 3x12/side (anti-rotation); Glute-ham raise OR band pull-through 3x10."
         },
         {
           "date": "2026-08-16",
@@ -1519,16 +1520,28 @@ const DATA = {
         {
           "date": "2026-08-17",
           "day_name": "Mon",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-08-18",
           "day_name": "Tue",
+          "title": "Rest / cross-train",
+          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "routines": [
+            "hip_protocol"
+          ],
+          "strength": null
+        },
+        {
+          "date": "2026-08-19",
+          "day_name": "Wed",
           "title": "Speed: Sneaky Speed",
           "detail": "5:00 WU · [1×1:30 @5K + 3×45s @mile] ×3 · 1:00 jog between · 5:00 CD",
           "routines": [
@@ -1539,22 +1552,10 @@ const DATA = {
           "strength": null
         },
         {
-          "date": "2026-08-19",
-          "day_name": "Wed",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
-          "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
-          ],
-          "strength": null
-        },
-        {
           "date": "2026-08-20",
           "day_name": "Thu",
-          "title": "Speed: Out Strong, Back Fast",
-          "detail": "5:00 WU · 23:00 progression tempo (build from easy to ~8:15/mi) · 5:00 CD",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1565,22 +1566,22 @@ const DATA = {
         {
           "date": "2026-08-21",
           "day_name": "Fri",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Speed: Out Strong, Back Fast",
+          "detail": "5:00 WU · 23:00 progression tempo (build from easy to ~8:15/mi) · 5:00 CD",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-08-22",
           "day_name": "Sat",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Strength — heavy lift",
+          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
           "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
+            "hip_protocol"
           ],
           "strength": "BLOCK A (60-75 min, Saturday gym): Barbell Romanian Deadlift 4x6 (heavy, hip hinge); Bulgarian split squat 3x8/leg (right leg as REAR to load right glute); Barbell hip thrust 4x8 (drive through right heel); Nordic hamstring curl 3x6 (slow eccentric); Lateral band walk 3x15/side (heavy band); Copenhagen adductor hold 3x8/side (3-sec holds)."
         },
@@ -1609,16 +1610,28 @@ const DATA = {
         {
           "date": "2026-08-24",
           "day_name": "Mon",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-08-25",
           "day_name": "Tue",
+          "title": "Rest / cross-train",
+          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "routines": [
+            "hip_protocol"
+          ],
+          "strength": null
+        },
+        {
+          "date": "2026-08-26",
+          "day_name": "Wed",
           "title": "Speed: Run Fast. Repeat.",
           "detail": "5:00 WU · 20×0:30 @mile pace (#1 & #11 @5K) · 1:00 jog between · 5:00 CD",
           "routines": [
@@ -1629,22 +1642,10 @@ const DATA = {
           "strength": null
         },
         {
-          "date": "2026-08-26",
-          "day_name": "Wed",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
-          "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
-          ],
-          "strength": null
-        },
-        {
           "date": "2026-08-27",
           "day_name": "Thu",
-          "title": "Speed: Hill Hillier Hilliest",
-          "detail": "5:00 WU · [1:00 10K + 0:45 5K + 0:30 mile] ×3 · full recovery between · 5:00 CD",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1655,24 +1656,24 @@ const DATA = {
         {
           "date": "2026-08-28",
           "day_name": "Fri",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Speed: Hill Hillier Hilliest",
+          "detail": "5:00 WU · [1:00 10K + 0:45 5K + 0:30 mile] ×3 · full recovery between · 5:00 CD",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-08-29",
           "day_name": "Sat",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Strength — reduced load",
+          "detail": "Cutback week — drop loads ~30-40%, focus on form.",
           "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
+            "hip_protocol"
           ],
-          "strength": "BLOCK B (60-75 min, Saturday gym): Trap bar deadlift 4x5 (heavy); Single-leg box step-up 3x10/leg (moderate DBs, controlled descent); Goblet squat 3x10 (tempo: 3 sec down, 1 sec up); Single-leg RDL 3x8/leg (right-side balance focus); Pallof press 3x12/side (anti-rotation); Glute-ham raise OR band pull-through 3x10."
+          "strength": "BLOCK B — 60% load (recovery week): Same exercises as full Block B, drop weights 30-40%. Trap bar deadlift 4x5; Single-leg box step-up 3x10/leg; Goblet squat 3x10 (tempo); Single-leg RDL 3x8/leg; Pallof press 3x12/side; GHR or band pull-through 3x10."
         },
         {
           "date": "2026-08-30",
@@ -1699,16 +1700,28 @@ const DATA = {
         {
           "date": "2026-08-31",
           "day_name": "Mon",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-09-01",
           "day_name": "Tue",
+          "title": "Rest / cross-train",
+          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "routines": [
+            "hip_protocol"
+          ],
+          "strength": null
+        },
+        {
+          "date": "2026-09-02",
+          "day_name": "Wed",
           "title": "Speed: The Shifter",
           "detail": "5:00 WU · descending blocks (recovery→10K→5K) each into a 1:00 mile-pace surge · 5:00 CD",
           "routines": [
@@ -1719,22 +1732,10 @@ const DATA = {
           "strength": null
         },
         {
-          "date": "2026-09-02",
-          "day_name": "Wed",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
-          "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
-          ],
-          "strength": null
-        },
-        {
           "date": "2026-09-03",
           "day_name": "Thu",
-          "title": "Speed: Power Pyramid",
-          "detail": "5:00 WU · 1:00 mile / 5:00 5K / 10:00 10K / 5:00 5K / 1:00 mile · 5:00 CD",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1745,24 +1746,24 @@ const DATA = {
         {
           "date": "2026-09-04",
           "day_name": "Fri",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Speed: Power Pyramid",
+          "detail": "5:00 WU · 1:00 mile / 5:00 5K / 10:00 10K / 5:00 5K / 1:00 mile · 5:00 CD",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-09-05",
           "day_name": "Sat",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Strength — heavy lift",
+          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
           "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
+            "hip_protocol"
           ],
-          "strength": "BLOCK A — 70% load (sharpening / last moderate lift before taper): Barbell RDL 4x6; Bulgarian split squat 3x8/leg; Barbell hip thrust 4x8; Nordic hamstring curl 3x6; Lateral band walk 3x15/side; Copenhagen hold 3x8/side. Same exercises at moderate load."
+          "strength": "BLOCK A (60-75 min, Saturday gym): Barbell Romanian Deadlift 4x6 (heavy, hip hinge); Bulgarian split squat 3x8/leg (right leg as REAR to load right glute); Barbell hip thrust 4x8 (drive through right heel); Nordic hamstring curl 3x6 (slow eccentric); Lateral band walk 3x15/side (heavy band); Copenhagen adductor hold 3x8/side (3-sec holds)."
         },
         {
           "date": "2026-09-06",
@@ -1789,16 +1790,28 @@ const DATA = {
         {
           "date": "2026-09-07",
           "day_name": "Mon",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-09-08",
           "day_name": "Tue",
+          "title": "Rest / cross-train",
+          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "routines": [
+            "hip_protocol"
+          ],
+          "strength": null
+        },
+        {
+          "date": "2026-09-09",
+          "day_name": "Wed",
           "title": "Speed: Deuces",
           "detail": "5:00 WU · 10×2:00 @5K (trim to 6-7 reps if legs are heavy) · 1:00 rec (2:00 after #4 & #8) · 5:00 CD",
           "routines": [
@@ -1809,22 +1822,10 @@ const DATA = {
           "strength": null
         },
         {
-          "date": "2026-09-09",
-          "day_name": "Wed",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
-          "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
-          ],
-          "strength": null
-        },
-        {
           "date": "2026-09-10",
           "day_name": "Thu",
-          "title": "Speed: One Hard. One Easy. (fartlek)",
-          "detail": "5:00 WU · 15:00 alternating 1:00 hard / 1:00 easy · keep it crisp · 5:00 CD",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1835,24 +1836,24 @@ const DATA = {
         {
           "date": "2026-09-11",
           "day_name": "Fri",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
-          "routines": [
-            "hip_protocol"
-          ],
-          "strength": null
-        },
-        {
-          "date": "2026-09-12",
-          "day_name": "Sat",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Speed: One Hard. One Easy. (fartlek)",
+          "detail": "5:00 WU · 15:00 alternating 1:00 hard / 1:00 easy · keep it crisp · 5:00 CD",
           "routines": [
             "hip_protocol",
             "pre_run",
             "post_run"
           ],
           "strength": null
+        },
+        {
+          "date": "2026-09-12",
+          "day_name": "Sat",
+          "title": "Strength — moderate (pre-taper)",
+          "detail": "Last moderate lift before tapering. ~70% load, crisp.",
+          "routines": [
+            "hip_protocol"
+          ],
+          "strength": "BLOCK B — 70% load (last meaningful lift before half taper): Trap bar deadlift 4x5; Single-leg box step-up 3x10/leg; Goblet squat 3x10 (tempo); Single-leg RDL 3x8/leg; Pallof press 3x12/side; GHR or band pull-through 3x10."
         },
         {
           "date": "2026-09-13",
@@ -1879,28 +1880,6 @@ const DATA = {
         {
           "date": "2026-09-14",
           "day_name": "Mon",
-          "title": "Rest / mobility",
-          "detail": "Easy week — legs fresh for Saturday's mile.",
-          "routines": [
-            "hip_protocol"
-          ],
-          "strength": null
-        },
-        {
-          "date": "2026-09-15",
-          "day_name": "Tue",
-          "title": "Mile sharpener",
-          "detail": "10:00 easy WU · 6×20s @ mile pace (~6:30/mi) with FULL recovery · 4 strides · 10:00 easy. Short and snappy.",
-          "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
-          ],
-          "strength": null
-        },
-        {
-          "date": "2026-09-16",
-          "day_name": "Wed",
           "title": "Recovery run",
           "detail": "Easy 25-30 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
@@ -1911,20 +1890,44 @@ const DATA = {
           "strength": null
         },
         {
-          "date": "2026-09-17",
-          "day_name": "Thu",
-          "title": "Rest / mobility",
-          "detail": "Pre-race: rest, or 12 min easy + 3 strides.",
+          "date": "2026-09-15",
+          "day_name": "Tue",
+          "title": "Rest / cross-train",
+          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
           "routines": [
             "hip_protocol"
           ],
           "strength": null
         },
         {
+          "date": "2026-09-16",
+          "day_name": "Wed",
+          "title": "Mile sharpener",
+          "detail": "10:00 easy WU · 6×20s @ mile pace (~6:30/mi) FULL recovery · 4 strides · 10:00 easy. Short and snappy.",
+          "routines": [
+            "hip_protocol",
+            "pre_run",
+            "post_run"
+          ],
+          "strength": null
+        },
+        {
+          "date": "2026-09-17",
+          "day_name": "Thu",
+          "title": "Recovery run",
+          "detail": "Easy easy 20-25 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "routines": [
+            "hip_protocol",
+            "pre_run",
+            "post_run"
+          ],
+          "strength": null
+        },
+        {
           "date": "2026-09-18",
           "day_name": "Fri",
-          "title": "Rest / mobility",
-          "detail": "Full rest — legs up, hydrate.",
+          "title": "Rest (pre-race)",
+          "detail": "Full rest or 10 min easy + 3 strides. Legs up, hydrate. No lifting.",
           "routines": [
             "hip_protocol"
           ],
@@ -1934,7 +1937,7 @@ const DATA = {
           "date": "2026-09-19",
           "day_name": "Sat",
           "title": "🏁 COPENHAGEN MILE",
-          "detail": "Race day! 15 min easy WU + drills + 4-6 build-up strides to mile pace. Race the mile (goal sub-6:00). 10-15 min easy cooldown.",
+          "detail": "Race day! 15 min easy WU + drills + 4-6 build-up strides to mile pace. Race the mile (goal sub-6:00). 10-15 min easy CD.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1967,16 +1970,28 @@ const DATA = {
         {
           "date": "2026-09-21",
           "day_name": "Mon",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-09-22",
           "day_name": "Tue",
+          "title": "Rest / cross-train",
+          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "routines": [
+            "hip_protocol"
+          ],
+          "strength": null
+        },
+        {
+          "date": "2026-09-23",
+          "day_name": "Wed",
           "title": "Speed: 90s",
           "detail": "5:00 WU · [1:30 5K / 1:30 10K / 1:30 mile] ×3 · 1:30 jog between · 5:00 CD",
           "routines": [
@@ -1987,22 +2002,10 @@ const DATA = {
           "strength": null
         },
         {
-          "date": "2026-09-23",
-          "day_name": "Wed",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
-          "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
-          ],
-          "strength": null
-        },
-        {
           "date": "2026-09-24",
           "day_name": "Thu",
-          "title": "Speed: Speedurance",
-          "detail": "7:00 WU · 3×2:00 @5K · 10:00 tempo · 3×2:00 @5K · 1:00/2:00 rec",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -2013,24 +2016,24 @@ const DATA = {
         {
           "date": "2026-09-25",
           "day_name": "Fri",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Speed: Speedurance",
+          "detail": "7:00 WU · 3×2:00 @5K · 10:00 tempo · 3×2:00 @5K · 1:00/2:00 rec",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-09-26",
           "day_name": "Sat",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Strength — heavy lift",
+          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
           "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
+            "hip_protocol"
           ],
-          "strength": "BLOCK A (60-75 min, Saturday gym): Barbell Romanian Deadlift 4x6 (heavy, hip hinge); Bulgarian split squat 3x8/leg (right leg as REAR to load right glute); Barbell hip thrust 4x8 (drive through right heel); Nordic hamstring curl 3x6 (slow eccentric); Lateral band walk 3x15/side (heavy band); Copenhagen adductor hold 3x8/side (3-sec holds)."
+          "strength": "BLOCK B (60-75 min, Saturday gym): Trap bar deadlift 4x5 (heavy); Single-leg box step-up 3x10/leg (moderate DBs, controlled descent); Goblet squat 3x10 (tempo: 3 sec down, 1 sec up); Single-leg RDL 3x8/leg (right-side balance focus); Pallof press 3x12/side (anti-rotation); Glute-ham raise OR band pull-through 3x10."
         },
         {
           "date": "2026-09-27",
@@ -2057,16 +2060,28 @@ const DATA = {
         {
           "date": "2026-09-28",
           "day_name": "Mon",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-09-29",
           "day_name": "Tue",
+          "title": "Rest / cross-train",
+          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "routines": [
+            "hip_protocol"
+          ],
+          "strength": null
+        },
+        {
+          "date": "2026-09-30",
+          "day_name": "Wed",
           "title": "Speed: 5×5:00 @10K",
           "detail": "5:00 WU · 5×5:00 @10K pace · 2:00 jog between · 5:00 CD",
           "routines": [
@@ -2077,22 +2092,10 @@ const DATA = {
           "strength": null
         },
         {
-          "date": "2026-09-30",
-          "day_name": "Wed",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
-          "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
-          ],
-          "strength": null
-        },
-        {
           "date": "2026-10-01",
           "day_name": "Thu",
-          "title": "Speed: Two Hard. One Easy. (fartlek)",
-          "detail": "5:00 WU · 21:00 alternating 2:00 hard / 1:00 easy · 5:00 CD",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -2103,30 +2106,30 @@ const DATA = {
         {
           "date": "2026-10-02",
           "day_name": "Fri",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Speed: Two Hard. One Easy. (fartlek)",
+          "detail": "5:00 WU · 21:00 alternating 2:00 hard / 1:00 easy · 5:00 CD",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-10-03",
           "day_name": "Sat",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Strength — heavy lift",
+          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
           "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
+            "hip_protocol"
           ],
-          "strength": "BLOCK B — 70% load (last meaningful lift before half taper): Trap bar deadlift 4x5; Single-leg box step-up 3x10/leg; Goblet squat 3x10 (tempo); Single-leg RDL 3x8/leg; Pallof press 3x12/side; GHR or band pull-through 3x10."
+          "strength": "BLOCK A (60-75 min, Saturday gym): Barbell Romanian Deadlift 4x6 (heavy, hip hinge); Bulgarian split squat 3x8/leg (right leg as REAR to load right glute); Barbell hip thrust 4x8 (drive through right heel); Nordic hamstring curl 3x6 (slow eccentric); Lateral band walk 3x15/side (heavy band); Copenhagen adductor hold 3x8/side (3-sec holds)."
         },
         {
           "date": "2026-10-04",
           "day_name": "Sun",
           "title": "Long run 13 mi",
-          "detail": "13 mi as a progression: ease in ~9:15/mi, finish ~8:15/mi. Peak long run — run the last 3-4 mi at half goal pace (~8:00).",
+          "detail": "13 mi as a progression: ease in ~9:15/mi, finish ~8:15/mi. Peak long run — last 3-4 mi at half goal pace (~8:00).",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -2147,16 +2150,28 @@ const DATA = {
         {
           "date": "2026-10-05",
           "day_name": "Mon",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-10-06",
           "day_name": "Tue",
+          "title": "Rest / cross-train",
+          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "routines": [
+            "hip_protocol"
+          ],
+          "strength": null
+        },
+        {
+          "date": "2026-10-07",
+          "day_name": "Wed",
           "title": "Speed: Long and Strong and Fast",
           "detail": "5:00 WU · [8:00 10K + 4:00 5K + 2:00 mile] ×3 · 3:00/2:00 recovery · 5:00 CD",
           "routines": [
@@ -2167,22 +2182,10 @@ const DATA = {
           "strength": null
         },
         {
-          "date": "2026-10-07",
-          "day_name": "Wed",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
-          "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
-          ],
-          "strength": null
-        },
-        {
           "date": "2026-10-08",
           "day_name": "Thu",
-          "title": "Speed: Bring It Down (progression tempo)",
-          "detail": "5:00 WU · 15:00 progression: 5:00 recovery → 4:00 10K → 3:00 5K → 2:00 mile → 1:00 best",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -2193,24 +2196,24 @@ const DATA = {
         {
           "date": "2026-10-09",
           "day_name": "Fri",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Speed: Bring It Down (progression tempo)",
+          "detail": "5:00 WU · 15:00 progression: 5:00 recovery → 4:00 10K → 3:00 5K → 2:00 mile → 1:00 best",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-10-10",
           "day_name": "Sat",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Strength — moderate (pre-taper)",
+          "detail": "Last moderate lift before tapering. ~70% load, crisp.",
           "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
+            "hip_protocol"
           ],
-          "strength": "BLOCK A — 70% load (sharpening / last moderate lift before taper): Barbell RDL 4x6; Bulgarian split squat 3x8/leg; Barbell hip thrust 4x8; Nordic hamstring curl 3x6; Lateral band walk 3x15/side; Copenhagen hold 3x8/side. Same exercises at moderate load."
+          "strength": "BLOCK B — 70% load (last meaningful lift before half taper): Trap bar deadlift 4x5; Single-leg box step-up 3x10/leg; Goblet squat 3x10 (tempo); Single-leg RDL 3x8/leg; Pallof press 3x12/side; GHR or band pull-through 3x10."
         },
         {
           "date": "2026-10-11",
@@ -2237,16 +2240,28 @@ const DATA = {
         {
           "date": "2026-10-12",
           "day_name": "Mon",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-10-13",
           "day_name": "Tue",
+          "title": "Rest / cross-train",
+          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "routines": [
+            "hip_protocol"
+          ],
+          "strength": null
+        },
+        {
+          "date": "2026-10-14",
+          "day_name": "Wed",
           "title": "Speed: Stronger Faster",
           "detail": "5:00 WU · [3:00 5K + 4×0:30 mile] ×3 · 2:00/1:00 recovery · 5:00 CD",
           "routines": [
@@ -2257,22 +2272,10 @@ const DATA = {
           "strength": null
         },
         {
-          "date": "2026-10-14",
-          "day_name": "Wed",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
-          "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
-          ],
-          "strength": null
-        },
-        {
           "date": "2026-10-15",
           "day_name": "Thu",
-          "title": "Speed: In Control",
-          "detail": "6:00 WU · 1:00 mile / 3:00 5K / 5:00 10K / 7:00 recovery pace · controlled · CD",
+          "title": "Recovery run",
+          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -2283,22 +2286,22 @@ const DATA = {
         {
           "date": "2026-10-16",
           "day_name": "Fri",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
+          "title": "Speed: In Control",
+          "detail": "6:00 WU · 1:00 mile / 3:00 5K / 5:00 10K / 7:00 recovery pace · controlled · CD",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-10-17",
           "day_name": "Sat",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Strength — light (taper)",
+          "detail": "Taper week — keep it light and sharp, no heavy loading.",
           "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
+            "hip_protocol"
           ],
           "strength": "STRENGTH LIGHT (~25 min, bodyweight only — TAPER WEEK): No heavy lifting. Bodyweight squat 2x12; glute bridge 2x15; push-up 2x10-15; band row 2x12; side plank 2x30s/side; dead bug 2x10/side. Maintenance only — keep RPE 5-6."
         },
@@ -2327,18 +2330,8 @@ const DATA = {
         {
           "date": "2026-10-19",
           "day_name": "Mon",
-          "title": "Rest / mobility",
-          "detail": "Full rest or 10-min hip/ankle mobility. Optional very easy spin.",
-          "routines": [
-            "hip_protocol"
-          ],
-          "strength": null
-        },
-        {
-          "date": "2026-10-20",
-          "day_name": "Tue",
-          "title": "Speed: The Speed Run Before…",
-          "detail": "5:00 WU · 1:00 5K / 2:00 10K / 5:00 @half goal pace (~8:00) / 2:00 10K / 1:00 5K · 1:00 jog · primes race rhythm",
+          "title": "Recovery run",
+          "detail": "Easy 25 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -2347,10 +2340,20 @@ const DATA = {
           "strength": null
         },
         {
+          "date": "2026-10-20",
+          "day_name": "Tue",
+          "title": "Rest / cross-train",
+          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "routines": [
+            "hip_protocol"
+          ],
+          "strength": null
+        },
+        {
           "date": "2026-10-21",
           "day_name": "Wed",
-          "title": "Recovery run",
-          "detail": "Easy 25 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Speed: The Speed Run Before…",
+          "detail": "5:00 WU · 1:00 5K / 2:00 10K / 5:00 @half goal pace (~8:00) / 2:00 10K / 1:00 5K · 1:00 jog · primes race rhythm",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -2373,8 +2376,8 @@ const DATA = {
         {
           "date": "2026-10-23",
           "day_name": "Fri",
-          "title": "Rest / mobility",
-          "detail": "Rest — off your feet, hydrate, carb-load.",
+          "title": "Rest (pre-race)",
+          "detail": "Off your feet, hydrate, carb-load. No lifting.",
           "routines": [
             "hip_protocol"
           ],
@@ -2383,10 +2386,12 @@ const DATA = {
         {
           "date": "2026-10-24",
           "day_name": "Sat",
-          "title": "Rest / mobility",
+          "title": "Rest — shakeout",
           "detail": "Shakeout 10-15 min easy + 3 strides, then rest. Lay out race kit.",
           "routines": [
-            "hip_protocol"
+            "hip_protocol",
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
@@ -2394,7 +2399,7 @@ const DATA = {
           "date": "2026-10-25",
           "day_name": "Sun",
           "title": "🏁 DRESDEN HALF MARATHON",
-          "detail": "Race day! 13.1 mi. Even or slightly negative split — settle into ~8:00/mi (or your recalibrated target) by mile 2. Trust the work.",
+          "detail": "Race day! 13.1 mi. Even or slightly negative split — settle into ~8:00/mi by mile 2. Trust the work.",
           "routines": [
             "hip_protocol",
             "pre_run",

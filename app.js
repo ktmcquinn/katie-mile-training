@@ -2800,6 +2800,10 @@
         const t = (day.title + " " + day.detail).toUpperCase();
         if (t.includes("RACE DAY") || t.includes("1-MILE RACE") || day.title.includes("🏁")) return "race";
         if (day.title.toUpperCase().startsWith("REST")) return "rest";
+        // Strength-only / cross-training days (no run) read as rest-from-running
+        // so they don't mislabel as "Easy Run"; the strength + mobility blocks
+        // still render in their own sections.
+        if (/^(STRENGTH|BLOCK [AB]|YOGA)/i.test(day.title)) return "rest";
         if (
           /TRACK:|FARTLEK|TEMPO|HILL STRIDE|VO2|TT |TIME TRIAL|MILE-PACE|RACE-PACE|TUNE-UP|SPEED:|INTERVAL|SHARPENER/i.test(
             t,
