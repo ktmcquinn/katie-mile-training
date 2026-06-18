@@ -3234,6 +3234,14 @@
       }
 
       /* ---------- Modal ---------- */
+      /* Lock the page behind any open modal so scrolling doesn't leak to the
+         background. Paired with lockBodyScroll()/unlockBodyScroll() in app.js,
+         which save & restore the scroll position (needed for iOS Safari). */
+      body.modal-open {
+        position: fixed;
+        width: 100%;
+        overflow: hidden;
+      }
       .modal-bg {
         position: fixed;
         inset: 0;
@@ -3245,6 +3253,7 @@
         padding: 20px;
         padding-top: calc(52px + env(safe-area-inset-top, 0px) + 12px);
         overflow-y: auto;
+        overscroll-behavior: contain;
       }
       .modal-bg.show {
         display: flex;
@@ -3257,6 +3266,7 @@
         width: 100%;
         max-height: calc(100vh - 52px - env(safe-area-inset-top, 0px) - 32px);
         overflow-y: auto;
+        overscroll-behavior: contain;
         padding: 24px;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
       }

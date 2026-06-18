@@ -3547,6 +3547,7 @@
 
         m.innerHTML = html;
         document.getElementById("modalBg").classList.add("show");
+        lockBodyScroll();
 
         // Helper to refresh the master checkbox + progress + external UI
         function refreshMaster() {
@@ -3877,8 +3878,26 @@
         if (log.avgPower) parts.push(`${log.avgPower}W`);
         pill.textContent = parts.join(" · ") || "logged";
       }
+      // Lock background scrolling while a modal is open. Uses position:fixed +
+      // saved scroll position so it also works on iOS Safari (where overflow:
+      // hidden on body isn't enough), and restores the exact scroll spot on close.
+      function lockBodyScroll() {
+        if (document.body.classList.contains("modal-open")) return;
+        const y = window.scrollY || window.pageYOffset || 0;
+        document.body.dataset.scrollY = String(y);
+        document.body.style.top = `-${y}px`;
+        document.body.classList.add("modal-open");
+      }
+      function unlockBodyScroll() {
+        if (!document.body.classList.contains("modal-open")) return;
+        document.body.classList.remove("modal-open");
+        const y = parseInt(document.body.dataset.scrollY || "0", 10);
+        document.body.style.top = "";
+        window.scrollTo(0, y);
+      }
       function closeModal() {
         document.getElementById("modalBg").classList.remove("show");
+        unlockBodyScroll();
       }
       document.getElementById("modalBg").addEventListener("click", (e) => {
         if (e.target.id === "modalBg") closeModal();
