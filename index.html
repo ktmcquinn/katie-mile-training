@@ -1,22 +1,956 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>The Dresden Half</title>
-<meta http-equiv="refresh" content="0; url=Katie_Mile_Training_Calendar_Interactive.html">
-<link rel="canonical" href="Katie_Mile_Training_Calendar_Interactive.html">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" href="favicon.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<style>
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-         display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0;
-         background: #FAFBFC; color: #1F2937; }
-  a { color: #3B5C8C; }
-</style>
-</head>
-<body>
-<p>Loading training calendar… <a href="Katie_Mile_Training_Calendar_Interactive.html">tap here if not redirected</a>.</p>
-</body>
-</html>
+  <head>
+    <meta charset="utf-8" />
+    <title>The Dresden Half</title>
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"
+    />
+
+    <!-- PWA: web app manifest -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#EDF1F5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111518" media="(prefers-color-scheme: dark)" />
+    <meta
+      name="description"
+      content="Katie's half marathon training — workouts, weight, and progress."
+    />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+
+    <!-- iOS "Add to Home Screen" support -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Dresden Half" />
+
+    <!-- Supabase JS client (for cross-device cloud sync) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Training plan data — separate file so workouts can be edited without touching app code -->
+    <script src="plan.js"></script>
+    <script src="lib/training-math.js"></script>
+    <script src="lib/format.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <!-- Keyboard skip link — first focusable element, jumps past the bars -->
+    <a href="#mainContent" class="skip-link">Skip to main content</a>
+    <!-- SW update banner — shown when a new service worker is waiting -->
+    <div id="sw-update-banner" role="status" aria-live="polite">
+      <span>Update available — tap to get the latest version.</span>
+      <button onclick="swUpdateAndReload()">Reload</button>
+    </div>
+
+    <!-- Fixed top menu bar — pinned to the viewport, stays put on scroll.
+         Intentionally empty for now; later we can drop a title/logo/menu
+         button in here. -->
+    <header class="top-bar" id="topBar" role="banner" aria-label="App header">
+      <div class="top-bar-logo">
+        <span class="top-bar-logo-mark">K</span>
+        <span class="top-bar-title">Runlog</span>
+      </div>
+      <span class="top-bar-page" id="topBarPage">Home</span>
+      <div class="top-bar-actions">
+        <div class="top-bar-btn" id="topBarSyncBtn" title="Sync Strava" aria-label="Sync Strava" role="button" tabindex="0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+        </div>
+        <div class="top-bar-btn" id="topBarSettingsBtn" title="Settings" aria-label="Settings" role="button" tabindex="0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap" id="mainContent" role="main" tabindex="-1">
+
+      <!-- ========== TAB: TODAY ========== -->
+      <!-- brand-v2 class scopes the new brand preview styles below.
+           Other tabs remain on the original styling until we decide to
+           roll the new look out further. -->
+      <div class="tab-page active brand-v2" id="tab-today">
+      <div class="hero">
+        <button
+          class="theme-toggle"
+          id="themeToggle"
+          aria-label="Toggle dark mode"
+          title="Toggle light/dark mode"
+        >
+          🌙
+        </button>
+        <h1>The Dresden Half</h1>
+        <div class="sub">
+          Goal: 5:30-6:30 mile · Race: Saturday Sept 19, 2026 · Plan: Apr 27 -
+          Sept 19, 2026
+        </div>
+        <div id="countdown" class="countdown"></div>
+      </div>
+
+      <!-- Brand-v2: quick-stat tiles row. Three small tiles each showing
+           an icon-in-a-ring + big number + label. Populated by
+           renderBrandV2Stats() (called from renderToday). -->
+      <div class="v2-section-head">
+        <div class="v2-section-title">Today</div>
+        <div class="v2-section-link">at a glance</div>
+      </div>
+      <div class="v2-stat-row">
+        <div class="v2-stat" id="v2StatDistance">
+          <div class="v2-stat-icon v2-stat-icon-teal">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 14c0 0 1-4 5-4s5 3 8 3 4-1 4-1v3c0 1-1 2-2 2H4a1 1 0 0 1-1-1v-2z"/>
+              <path d="M7 14V9l3 2 2-4 2 5"/>
+            </svg>
+            <svg class="v2-ring" viewBox="0 0 44 44">
+              <circle class="ring-track" cx="22" cy="22" r="19"/>
+              <circle class="ring-fill teal" cx="22" cy="22" r="19" data-pct="0"/>
+            </svg>
+          </div>
+          <div class="v2-stat-num" id="v2StatDistanceNum">—</div>
+          <div class="v2-stat-lbl">today's miles</div>
+        </div>
+        <div class="v2-stat" id="v2StatCalories">
+          <div class="v2-stat-icon v2-stat-icon-amber">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8.5 14.5A4 4 0 0 0 12 21a4 4 0 0 0 3.5-6.5C13.5 12 12 10 12 8c-1.5 2-4 4-3.5 6.5z"/>
+              <path d="M12 21a8 8 0 0 1-8-8c0-3 1-6 4-9 1 3 3 4 5 4-1 4 3 5 3 9a8 8 0 0 1-4 4z"/>
+            </svg>
+            <svg class="v2-ring" viewBox="0 0 44 44">
+              <circle class="ring-track" cx="22" cy="22" r="19"/>
+              <circle class="ring-fill amber" cx="22" cy="22" r="19" data-pct="0"/>
+            </svg>
+          </div>
+          <div class="v2-stat-num" id="v2StatCaloriesNum">—</div>
+          <div class="v2-stat-lbl">kcal in</div>
+        </div>
+        <div class="v2-stat" id="v2StatDuration">
+          <div class="v2-stat-icon v2-stat-icon-teal">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M12 7v5l3 2"/>
+            </svg>
+            <svg class="v2-ring" viewBox="0 0 44 44">
+              <circle class="ring-track" cx="22" cy="22" r="19"/>
+              <circle class="ring-fill teal" cx="22" cy="22" r="19" data-pct="0"/>
+            </svg>
+          </div>
+          <div class="v2-stat-num" id="v2StatDurationNum">—</div>
+          <div class="v2-stat-lbl">activity</div>
+        </div>
+      </div>
+
+      <!-- Weekly recap (rendered Mon-Wed by renderRecapToday, dismissible) -->
+      <div id="weeklyRecapSlot"></div>
+
+      <!-- Readiness nudge (rendered by renderReadiness on quality/long days) -->
+      <div id="readinessSlot"></div>
+
+      <div class="v2-section-head">
+        <div class="v2-section-title">Workout</div>
+        <div class="v2-section-link">on deck</div>
+      </div>
+      <div class="today" id="todayCard">
+        <div class="head">
+          <div class="title" id="todayLabel">Today</div>
+          <div class="date" id="todayDate"></div>
+        </div>
+        <h2 id="todayTitle">—</h2>
+        <div class="detail" id="todayDetail">—</div>
+        <div class="badges" id="todayBadges"></div>
+      </div>
+
+      <div class="checkin-card" id="checkinCard">
+        <div class="checkin-head">
+          <h3>Morning check-in</h3>
+          <span class="checkin-date" id="checkinDate"></span>
+        </div>
+        <div class="checkin-grid">
+          <div class="checkin-field">
+            <label for="ciBodyBattery">Body Battery</label>
+            <input type="text" inputmode="numeric" id="ciBodyBattery" min="1" max="100" placeholder="—" inputmode="numeric">
+            <span class="hint">1–100 (Garmin)</span>
+          </div>
+          <div class="checkin-field">
+            <label for="ciRHR">Resting HR</label>
+            <input type="text" inputmode="numeric" id="ciRHR" min="30" max="120" placeholder="—" inputmode="numeric">
+            <span class="hint">bpm, on wake</span>
+          </div>
+          <div class="checkin-field">
+            <label for="ciEnergy">Energy</label>
+            <input type="text" inputmode="numeric" id="ciEnergy" min="1" max="10" placeholder="—" inputmode="numeric">
+            <span class="hint">1–10 feeling</span>
+          </div>
+          <div class="checkin-field">
+            <label for="ciCycle">Period</label>
+            <select id="ciCycle">
+              <option value="none">None</option>
+              <option value="spotting">Spotting</option>
+              <option value="light">Light</option>
+              <option value="medium">Medium</option>
+              <option value="heavy">Heavy</option>
+            </select>
+            <span class="hint">bleeding today</span>
+          </div>
+          <div class="checkin-field" id="ciWeightField">
+            <label for="ciWeight">Weight (lb)</label>
+            <input type="text" inputmode="decimal" id="ciWeight" min="50" max="500" step="0.1" placeholder="—" inputmode="decimal">
+            <span class="hint">Friday morning weigh-in</span>
+          </div>
+          <div class="checkin-field" id="ciBodyFatField">
+            <label for="ciBodyFat">Body fat %</label>
+            <input type="text" inputmode="decimal" id="ciBodyFat" min="5" max="60" step="0.1" placeholder="—" inputmode="decimal">
+            <span class="hint">optional, Fridays</span>
+          </div>
+          <div class="checkin-field" id="ciWeighInNote" style="display:none">
+            <span class="hint" id="ciWeighInNoteText" style="grid-column:1/-1"></span>
+          </div>
+        </div>
+        <div class="checkin-actions">
+          <button type="button" class="btn btn-primary" id="ciSave">Save check-in</button>
+          <span class="checkin-status" id="ciStatus"></span>
+        </div>
+      </div>
+
+      <div class="progress-card" id="progressCard">
+        <div class="pl">Training Progress</div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        <div class="progress-stat">
+          <b id="progressDone">0</b> /
+          <span id="progressTotal">0</span> workouts complete
+        </div>
+        <button
+          class="reset-btn"
+          id="resetProgress"
+          title="Clear all checked tasks"
+        >
+          Reset
+        </button>
+      </div>
+
+      <div class="this-week-card">
+        <div class="this-week-head">
+          <h3>This week's workouts</h3>
+          <div class="this-week-stat" id="thisWeekStat"></div>
+        </div>
+        <div class="days" id="thisWeekDays"></div>
+      </div>
+      </div><!-- end #tab-today -->
+
+      <!-- ========== TAB: FUEL ========== -->
+      <div class="tab-page" id="tab-fuel">
+      <h2 class="page-title">Fuel</h2>
+
+      <!-- Today's target -->
+      <div class="fuel-card" id="fuelTargetCard">
+        <div class="ftc-header">
+          <span class="ftc-label">TODAY'S TARGET</span>
+          <span class="ftc-meta" id="fuelTargetMeta">—</span>
+        </div>
+
+        <div class="ftc-hero">
+          <div class="ftc-remaining" id="ftcRemaining">—</div>
+          <div class="ftc-remaining-label">calories remaining</div>
+        </div>
+
+        <div class="ftc-bar-wrap">
+          <div class="ftc-bar-track">
+            <div class="ftc-bar-fill" id="ftcCalFill"></div>
+          </div>
+          <div class="ftc-bar-labels">
+            <span id="ftcConsumed">0 consumed</span>
+            <span id="ftcTarget">0 target</span>
+          </div>
+        </div>
+
+        <div class="ftc-macros">
+          <div class="ftc-macro">
+            <div class="ftc-macro-val" id="ftcProtein">—</div>
+            <div class="ftc-macro-lbl" id="ftcProteinLbl">protein left</div>
+            <div class="ftc-macro-bar-track"><div class="ftc-macro-bar-fill" id="ftcProteinBar"></div></div>
+          </div>
+          <div class="ftc-macro-divider"></div>
+          <div class="ftc-macro">
+            <div class="ftc-macro-val" id="ftcCarbs">—</div>
+            <div class="ftc-macro-lbl" id="ftcCarbsLbl">carbs left</div>
+            <div class="ftc-macro-bar-track"><div class="ftc-macro-bar-fill" id="ftcCarbsBar"></div></div>
+          </div>
+          <div class="ftc-macro-divider"></div>
+          <div class="ftc-macro">
+            <div class="ftc-macro-val" id="ftcFat">—</div>
+            <div class="ftc-macro-lbl" id="ftcFatLbl">fat left</div>
+            <div class="ftc-macro-bar-track"><div class="ftc-macro-bar-fill" id="ftcFatBar"></div></div>
+          </div>
+        </div>
+
+
+        <!-- Actual workout selector — shown when planned workout not checked off -->
+        <div class="ftc-actual" id="ftcActual" style="display:none">
+          <div class="ftc-actual-label">Workout not completed — what did you actually do?</div>
+          <div class="ftc-actual-pills" id="ftcActualPills">
+            <button class="ftc-pill" data-actual="nothing">Nothing</button>
+            <button class="ftc-pill" data-actual="walk">Walk / easy movement</button>
+            <button class="ftc-pill" data-actual="easy_run">Easy run</button>
+            <button class="ftc-pill" data-actual="bike">Bike / cross-train</button>
+            <button class="ftc-pill" data-actual="done">Did the planned workout</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add meal form -->
+      <div class="fuel-card">
+        <h3>Log a meal or snack</h3>
+        <div class="recent-foods" id="recentFoods" style="display:none"></div>
+
+        <!-- FatSecret food search: type to autocomplete, pick a result, pick a
+             serving size — the form below auto-fills with the nutrition data.
+             You can still edit any value before hitting Add, or fill the form
+             manually for custom recipes. -->
+        <!-- Photo scan: barcode (Open Food Facts) or nutrition label (vision AI) -->
+        <div class="scan-row">
+          <button type="button" class="btn scan-btn" id="scanFoodBtn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Scan barcode or label
+          </button>
+          <input type="file" id="scanFoodInput" accept="image/*" capture="environment" style="display:none">
+          <span class="scan-status" id="scanStatus"></span>
+        </div>
+
+        <!-- Scan portion picker: appears after a scan so the per-100g or
+             per-serving values can be scaled to what was actually eaten. -->
+        <div class="scan-portion" id="scanPortion" style="display:none">
+          <div class="sp-head">
+            <div class="sp-name"><b id="spName">—</b><span class="sp-basis" id="spBasis"></span></div>
+            <button type="button" class="fsp-cancel" id="spCancel" title="Cancel">×</button>
+          </div>
+          <div class="sp-controls">
+            <label class="fsp-field">
+              <span id="spAmountLbl">Amount (g/ml)</span>
+              <input type="text" inputmode="decimal" id="spAmount" value="100">
+            </label>
+          </div>
+          <div class="sp-preview" id="spPreview"></div>
+          <button type="button" class="btn btn-primary sp-apply" id="spApply">Use this — fill the form</button>
+        </div>
+
+        <div class="food-search">
+          <label class="food-search-lbl" for="foodSearchInput">Search saved scans &amp; USDA</label>
+          <div class="food-search-input-wrap">
+            <input
+              type="text"
+              id="foodSearchInput"
+              placeholder="Start typing — e.g. monster, goldfish, oatmeal"
+              autocomplete="off"
+              spellcheck="false">
+            <button type="button" class="food-search-clear" id="foodSearchClear" title="Clear" style="display:none">×</button>
+          </div>
+          <div class="food-search-results" id="foodSearchResults" style="display:none"></div>
+          <div class="food-search-status" id="foodSearchStatus"></div>
+          <!-- Serving-size picker — appears after a result is selected -->
+          <div class="food-serving-picker" id="foodServingPicker" style="display:none">
+            <div class="fsp-head">
+              <div class="fsp-name"><b id="fspFoodName">—</b><span id="fspBrand" class="fsp-brand"></span></div>
+              <button type="button" class="fsp-cancel" id="fspCancel" title="Cancel">×</button>
+            </div>
+            <div class="fsp-controls">
+              <label class="fsp-field">
+                <span>Serving</span>
+                <select id="fspServing"></select>
+              </label>
+              <label class="fsp-field">
+                <span>× Quantity</span>
+                <input type="text" inputmode="decimal" id="fspQty" min="0.25" step="0.25" value="1">
+              </label>
+            </div>
+            <div class="fsp-preview" id="fspPreview"></div>
+            <button type="button" class="btn btn-primary fsp-apply" id="fspApply">Use this — fill the form</button>
+          </div>
+          <div class="food-search-attribution">Powered by <a href="https://fdc.nal.usda.gov" target="_blank" rel="noopener">USDA FoodData Central</a></div>
+        </div>
+
+        <form class="fuel-form" id="fuelForm" autocomplete="off">
+          <div class="ff-field name-field">
+            <label>What you ate</label>
+            <input type="text" id="mealName" placeholder="e.g. oatmeal + banana + PB" required>
+          </div>
+          <div class="ff-field">
+            <label>Cal</label>
+            <input type="text" inputmode="numeric" id="mealCal" min="0" placeholder="350" required>
+          </div>
+          <div class="ff-field">
+            <label>Fat (g)</label>
+            <input type="text" inputmode="decimal" id="mealF" min="0" step="0.1" placeholder="—">
+          </div>
+          <div class="ff-field">
+            <label>Carbs (g)</label>
+            <input type="text" inputmode="decimal" id="mealC" min="0" step="0.1" placeholder="—">
+          </div>
+          <div class="ff-field">
+            <label>Protein (g)</label>
+            <input type="text" inputmode="decimal" id="mealP" min="0" step="0.1" placeholder="—">
+          </div>
+          <div class="ff-field">
+            <label>Sodium (mg)</label>
+            <input type="text" inputmode="numeric" id="mealNa" min="0" step="1" placeholder="—">
+          </div>
+          <div class="ff-field">
+            <label>Fiber (g)</label>
+            <input type="text" inputmode="decimal" id="mealFi" min="0" step="0.1" placeholder="—">
+          </div>
+          <button type="submit" class="btn btn-primary save-btn">Add</button>
+        </form>
+      </div>
+
+      <!-- Today's meals list -->
+      <div class="fuel-card">
+        <h3>Today's intake</h3>
+        <div class="fuel-meal-list" id="fuelMealList">
+          <div class="fuel-empty">No meals logged yet today.</div>
+        </div>
+      </div>
+
+      <!-- Energy availability -->
+      <div class="ea-card" id="eaCard">
+        <div class="ea-label">Energy availability (today)</div>
+        <div class="ea-value" id="eaValue">—</div>
+        <div class="ea-zone" id="eaZone">Log some food to see your EA</div>
+        <div class="ea-detail" id="eaDetail">
+          EA = (intake − exercise calories) / lean body mass (47.8 kg).
+          Optimal ≥ 45 · subclinical LEA 30–45 · clinical / RED-S risk &lt; 30.
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div class="fuel-card" id="fuelProgressCard">
+        <h3>Progress</h3>
+        <div class="fuel-progress-row">
+          <span class="lbl">Calories</span>
+          <div class="bar"><div class="bar-fill" id="fuelBarCal" style="width:0%"></div></div>
+          <span class="val" id="fuelValCal">0 / —</span>
+        </div>
+        <div class="fuel-progress-row">
+          <span class="lbl">Fat</span>
+          <div class="bar"><div class="bar-fill" id="fuelBarF" style="width:0%"></div></div>
+          <span class="val" id="fuelValF">0g / —</span>
+        </div>
+        <div class="fuel-progress-row">
+          <span class="lbl">Carbs</span>
+          <div class="bar"><div class="bar-fill" id="fuelBarC" style="width:0%"></div></div>
+          <span class="val" id="fuelValC">0g / —</span>
+        </div>
+        <div class="fuel-progress-row">
+          <span class="lbl">Protein</span>
+          <div class="bar"><div class="bar-fill" id="fuelBarP" style="width:0%"></div></div>
+          <span class="val" id="fuelValP">0g / —</span>
+        </div>
+        <div class="fuel-progress-row">
+          <span class="lbl">Sodium</span>
+          <div class="bar"><div class="bar-fill" id="fuelBarNa" style="width:0%"></div></div>
+          <span class="val" id="fuelValNa">0mg / —</span>
+        </div>
+        <div class="fuel-progress-row">
+          <span class="lbl">Fiber</span>
+          <div class="bar"><div class="bar-fill" id="fuelBarFi" style="width:0%"></div></div>
+          <span class="val" id="fuelValFi">0g / —</span>
+        </div>
+      </div>
+
+      </div><!-- end #tab-fuel -->
+
+      <!-- ========== TAB: PLAN ========== -->
+      <div class="tab-page" id="tab-plan">
+      <h2 class="page-title">Training Plan</h2>
+
+      <div class="phase-bar-card">
+        <div class="phase-bar" id="phaseBar"></div>
+      </div>
+
+      <div class="miles-card">
+        <h3>Weekly Mileage Progression (click a bar to jump to that week)</h3>
+        <div id="milesChart" class="miles-chart"></div>
+        <div id="milesAxis" class="bar-axis"></div>
+      </div>
+
+
+      <div class="controls">
+        <span style="flex: 1"></span>
+        <button
+          class="btn"
+          id="resetPlan"
+          title="Restore original workouts (undo all swaps)"
+        >
+          ↻ Reset plan
+        </button>
+        <button class="btn" id="expandAll">Expand all</button>
+        <button class="btn" id="collapseAll">Collapse all</button>
+      </div>
+      <div
+        style="
+          font-size: 11px;
+          color: var(--muted);
+          margin: -6px 0 12px;
+          padding: 0 4px;
+        "
+      >
+        Tip: drag a day onto another to swap workouts, or tap the ⋮⋮ handle on
+        two days in a row.
+      </div>
+
+      <div class="weeks" id="weeks"></div>
+
+      <details class="ref">
+        <summary class="ref-toggle">
+          <h3>Quick Reference</h3>
+          <span class="ref-toggle-icon">▼</span>
+        </summary>
+        <div class="ref-body">
+        <div class="ref-grid">
+          <details>
+            <summary>Pre-run routine (10 min)</summary>
+            <div class="body" id="ref_pre_run"></div>
+          </details>
+          <details>
+            <summary>Post-run routine (10 min)</summary>
+            <div class="body" id="ref_post_run"></div>
+          </details>
+          <details>
+            <summary>Pre-bike routine (5 min)</summary>
+            <div class="body" id="ref_pre_bike"></div>
+          </details>
+          <details>
+            <summary>Post-bike routine (8 min)</summary>
+            <div class="body" id="ref_post_bike"></div>
+          </details>
+          <details>
+            <summary>Daily mobility (5-10 min)</summary>
+            <div class="body" id="ref_mobility_daily"></div>
+          </details>
+          <details>
+            <summary>Desk-break protocol</summary>
+            <div class="body" id="ref_desk_breaks"></div>
+          </details>
+          <details>
+            <summary>Shin pain protocol</summary>
+            <div class="body" id="ref_shin_protocol"></div>
+          </details>
+          <details>
+            <summary>Strength A (full gym)</summary>
+            <div class="body" id="ref_strength_A"></div>
+          </details>
+          <details>
+            <summary>Strength B (home)</summary>
+            <div class="body" id="ref_strength_B"></div>
+          </details>
+          <details>
+            <summary>Strength LIGHT (taper)</summary>
+            <div class="body" id="ref_strength_L"></div>
+          </details>
+          <details>
+            <summary>Pace reference</summary>
+            <div class="body" id="ref_paces"></div>
+          </details>
+          <details>
+            <summary>Daily fueling cheat sheet</summary>
+            <div class="body" id="ref_fuel"></div>
+          </details>
+        </div>
+        </div><!-- end ref-body -->
+      </details><!-- end .ref -->
+      </div><!-- end #tab-plan -->
+
+      <!-- ========== TAB: MORE ========== -->
+      <div class="tab-page" id="tab-more">
+      <h2 class="page-title">Settings &amp; Data</h2>
+
+      <div class="data-card" id="dataCard">
+        <h3>Your Data</h3>
+        <div class="data-desc">
+          Download your training data as CSV (opens in Excel or Google Sheets)
+          or back up everything as a single JSON file you can restore later or
+          move to another device.
+        </div>
+        <div class="data-actions">
+          <button class="btn" id="exportWorkouts">Workout logs (CSV)</button>
+          <button class="btn" id="exportWeights">Weight log (CSV)</button>
+          <button class="btn" id="exportCompletions">
+            Completion log (CSV)
+          </button>
+          <button class="btn" id="backupAll">Full backup (JSON)</button>
+          <label class="file-btn"
+            >Restore from backup...
+            <input
+              type="file"
+              id="restoreFile"
+              accept=".json,application/json"
+              style="display: none"
+            />
+          </label>
+        </div>
+        <div class="data-status" id="dataStatus"></div>
+      </div>
+
+      <div class="cloud-card" id="cloudCard">
+        <div class="cloud-row">
+          <h3 style="margin: 0; flex: 1">Cloud Sync</h3>
+          <span class="cloud-status disconnected" id="cloudStatus"
+            ><span class="dot"></span
+            ><span id="cloudStatusText">Connecting...</span></span
+          >
+        </div>
+        <div
+          class="cloud-meta"
+          id="cloudLastSync"
+          style="margin-bottom: 10px"
+        ></div>
+
+        <!-- Sign-in / sign-up form: shown when not authenticated -->
+        <form
+          id="cloudAuthForm"
+          class="cloud-row config"
+          style="display: none"
+          autocomplete="on"
+        >
+          <div class="config-fields">
+            <div>
+              <label>Email</label>
+              <input
+                type="email"
+                id="cloudEmail"
+                placeholder="you@example.com"
+                autocomplete="email"
+                required
+              />
+            </div>
+            <div>
+              <label>Password</label>
+              <input
+                type="password"
+                id="cloudPassword"
+                placeholder="At least 6 characters"
+                autocomplete="current-password"
+                minlength="6"
+                required
+              />
+            </div>
+          </div>
+          <div class="cloud-row" style="margin-top: 4px">
+            <button type="submit" class="btn btn-primary" id="cloudSignIn">
+              Sign in
+            </button>
+            <button type="button" class="btn" id="cloudSignUp">
+              Create account
+            </button>
+            <button type="button" class="btn" id="cloudForgotPassword" style="font-size:12px">
+              Forgot password?
+            </button>
+            <span class="cloud-meta" id="cloudAuthMsg"></span>
+          </div>
+        </form>
+
+        <!-- Password recovery form: shown when arriving from a "reset password" email -->
+        <div id="cloudRecoveryForm" class="cloud-row config" style="display: none">
+          <div style="font-weight:600;color:var(--info-text);font-size:13px;padding:8px 12px;background:var(--log-bg);border:1px solid var(--log-border);border-radius:8px;margin-bottom:8px">
+            Password reset link confirmed. Set a new password below.
+          </div>
+          <div class="config-fields">
+            <div>
+              <label>New password</label>
+              <input
+                type="password"
+                id="newPassword"
+                placeholder="At least 6 characters"
+                autocomplete="new-password"
+                minlength="6"
+              />
+            </div>
+            <div>
+              <label>Confirm new password</label>
+              <input
+                type="password"
+                id="newPasswordConfirm"
+                placeholder="Re-type"
+                autocomplete="new-password"
+                minlength="6"
+              />
+            </div>
+          </div>
+          <div class="cloud-row" style="margin-top: 4px">
+            <button type="button" class="btn btn-primary" id="cloudSetPassword">
+              Set new password
+            </button>
+            <button type="button" class="btn" id="cloudCancelRecovery">
+              Cancel
+            </button>
+            <span class="cloud-meta" id="cloudRecoveryMsg"></span>
+          </div>
+        </div>
+
+        <!-- Signed-in controls -->
+        <div class="cloud-row" id="cloudSignedInRow" style="display: none">
+          <span class="cloud-meta" id="cloudUserLabel"></span>
+          <span style="flex: 1"></span>
+          <button type="button" class="btn" id="cloudPullNow">
+            Pull from cloud
+          </button>
+          <button type="button" class="btn" id="cloudPushNow">
+            Push to cloud
+          </button>
+          <button type="button" class="btn" id="cloudSignOut">Sign out</button>
+        </div>
+
+        <details>
+          <summary>First-time setup (one-time)</summary>
+          <ol class="step-list">
+            <li>
+              In your code repo, open
+              <code>index.html</code> and
+              find the <code>SUPABASE_URL</code> /
+              <code>SUPABASE_ANON_KEY</code> constants near the top of the
+              <code>&lt;script&gt;</code>. Paste in the values from your
+              Supabase project's <b>Settings → API</b> page. Commit + push.
+            </li>
+            <li>
+              In Supabase, open <b>SQL Editor → New query</b>, paste the
+              contents of <code>supabase-setup.sql</code>, and click Run.
+            </li>
+            <li>
+              In <b>Authentication → URL Configuration</b>, set Site URL and add
+              a Redirect URL pointing to your Vercel/Netlify site.
+            </li>
+            <li>
+              (Optional but recommended) In
+              <b>Authentication → Providers → Email</b>, you can disable
+              "Confirm email" so signup is instant — your call. Disabling speeds
+              you up; keeping it adds a confirmation-link step.
+            </li>
+            <li>
+              (Optional, after your account is created) In
+              <b>Authentication → Sign In / Up</b>, toggle off "Allow new users
+              to sign up" — that locks the project to just you.
+            </li>
+          </ol>
+        </details>
+      </div>
+
+      <div class="cloud-card" id="stravaCard" style="border-left-color:#FC4C02">
+        <div class="cloud-row">
+          <h3 style="margin:0;flex:1;color:#FC4C02">Strava Connection</h3>
+          <span class="cloud-status disconnected" id="stravaStatus"><span class="dot"></span><span id="stravaStatusText">Not connected</span></span>
+        </div>
+        <div class="cloud-meta" id="stravaLastSync" style="margin-bottom:10px"></div>
+
+        <div class="cloud-row" id="stravaConnectRow">
+          <button type="button" class="btn btn-primary" id="stravaConnectBtn">Connect Strava</button>
+          <span class="cloud-meta">You'll be sent to Strava to approve, then bounced back here.</span>
+        </div>
+
+        <div class="cloud-row" id="stravaConnectedRow" style="display:none">
+          <span class="cloud-meta" id="stravaUserLabel"></span>
+          <span style="flex:1"></span>
+          <button type="button" class="btn btn-primary" id="stravaPullBtn">Pull recent runs &amp; rides</button>
+          <button type="button" class="btn" id="stravaInboxBtn" style="display:none">Unassigned <span id="stravaInboxBadge" class="strava-inbox-badge">0</span></button>
+          <button type="button" class="btn" id="stravaDisconnectBtn">Disconnect</button>
+        </div>
+
+        <details>
+          <summary>Setup instructions (one-time)</summary>
+          <ol class="step-list">
+            <li>Go to <code>strava.com/settings/api</code> and create an API app. Use your Vercel domain (e.g. <code>katie-mile-training.vercel.app</code>) as the Authorization Callback Domain (no <code>https://</code>).</li>
+            <li>Copy your <b>Client ID</b> and <b>Client Secret</b>.</li>
+            <li>In your Vercel dashboard → <b>Settings → Environment Variables</b>, add <code>STRAVA_CLIENT_ID</code> and <code>STRAVA_CLIENT_SECRET</code> with those values. Apply to Production + Preview + Development.</li>
+            <li>Re-run <code>supabase-setup.sql</code> in Supabase to add the <code>strava_tokens</code> table.</li>
+            <li>Redeploy on Vercel so the new env vars take effect.</li>
+            <li>Sign in to your app (Cloud Sync), then click <b>Connect Strava</b> above.</li>
+          </ol>
+        </details>
+      </div>
+
+      </div><!-- end #tab-more -->
+
+      <!-- ========== TAB: TRENDS ========== -->
+      <div class="tab-page" id="tab-trends">
+      <h2 class="page-title">Trends &amp; Progress</h2>
+
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card p1">
+          <div class="stat-value" id="statTotalMiles">—</div>
+          <div class="stat-label">miles logged</div>
+        </div>
+        <div class="stat-card p2">
+          <div class="stat-value" id="statWorkouts">—</div>
+          <div class="stat-label">workouts</div>
+        </div>
+        <div class="stat-card p3">
+          <div class="stat-value" id="statCheckins">—</div>
+          <div class="stat-label">check-ins</div>
+        </div>
+        <div class="stat-card p5">
+          <div class="stat-value" id="statStreak">—</div>
+          <div class="stat-label">day streak</div>
+        </div>
+      </div>
+
+      <!-- Last-week recap (rendered by renderRecap) -->
+      <div class="recap-card" id="recapCard" style="display:none"></div>
+
+      <!-- Race predictor: VDOT projections, calibrated to your real results -->
+      <div class="pred-card" id="predCard">
+        <h3>Race Predictor</h3>
+        <div class="pred-meta" id="predMeta">Log a run or add a race / time-trial result to see projections.</div>
+        <div class="pred-grid" id="predGrid"></div>
+        <details class="tt-entry" id="ttEntry">
+          <summary>Race / time-trial results</summary>
+          <div class="tt-form">
+            <input type="text" inputmode="decimal" id="ttDistance" placeholder="Distance (mi)">
+            <input type="text" id="ttTime" placeholder="Time (22:45 or 1:45:00)">
+            <input type="date" id="ttDate">
+            <button class="btn" id="ttSave" type="button">Add</button>
+            <button class="btn" id="ttClear" type="button">Clear all</button>
+          </div>
+          <div class="tt-note" id="ttNote"></div>
+        </details>
+      </div>
+
+      <!-- Training paces computed from the same reference effort -->
+      <div class="pred-card" id="pacesCard" style="display:none">
+        <h3>Training Paces</h3>
+        <div class="pred-meta" id="pacesMeta"></div>
+        <div class="paces-rows" id="pacesRows"></div>
+      </div>
+
+      <div class="trend-grid">
+        <div class="trend-card">
+          <h3>Body Battery</h3>
+          <div class="trend-meta" id="bbMeta">No data yet</div>
+          <div id="bbChart" class="sparkline" role="img" aria-label="Body Battery trend chart — see summary above"></div>
+        </div>
+        <div class="trend-card">
+          <h3>Resting HR</h3>
+          <div class="trend-meta" id="rhrMeta">No data yet</div>
+          <div id="rhrChart" class="sparkline" role="img" aria-label="Resting heart rate trend chart — see summary above"></div>
+        </div>
+        <div class="trend-card">
+          <h3>Energy</h3>
+          <div class="trend-meta" id="energyMeta">No data yet</div>
+          <div id="energyChart" class="sparkline" role="img" aria-label="Energy trend chart — see summary above"></div>
+        </div>
+        <div class="trend-card">
+          <h3>Weight</h3>
+          <div class="trend-meta" id="weightSlMeta">No data yet</div>
+          <div id="weightSlChart" class="sparkline" role="img" aria-label="Weight trend chart — see summary above"></div>
+        </div>
+      </div>
+
+      <div class="period-card">
+        <h3>Period — last 60 days</h3>
+        <div class="period-meta" id="periodMeta">No bleeding logged yet — mark "Period" in your daily check-in to start tracking.</div>
+        <div class="period-strip" id="periodStrip"></div>
+        <div class="period-axis" id="periodAxis"></div>
+        <div class="period-legend">
+          <span><i style="background:var(--rest)"></i> None</span>
+          <span><i style="background:#FEE2E2;border-color:#FCA5A5"></i> Spotting</span>
+          <span><i style="background:#FCA5A5"></i> Light</span>
+          <span><i style="background:#EF4444"></i> Medium</span>
+          <span><i style="background:#991B1B"></i> Heavy</span>
+        </div>
+      </div>
+
+
+      </div><!-- end #tab-trends -->
+
+      <footer>Built for Katie · Mile race Sept 19, 2026</footer>
+    </div>
+
+    <!-- Bottom navigation tab bar -->
+    <!-- SVG icons use stroke="currentColor" + fill="none" so they're
+         monochrome and inherit the tab's active/inactive color (and dark
+         mode) automatically. 22x22 with stroke-width 1.75 — line-art
+         style, consistent visual weight across all five tabs. -->
+    <nav class="tab-bar" id="tabBar" role="tablist">
+      <button class="tab-btn active" data-tab="today" type="button" role="tab" aria-label="Home">
+        <span class="tab-icon" aria-hidden="true">
+          <!-- Checklist: lines with checkmarks — represents the daily check-offs view -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 6h12"/>
+            <path d="M9 12h12"/>
+            <path d="M9 18h12"/>
+            <path d="M3 6l1.6 1.6L7 4.6"/>
+            <path d="M3 12l1.6 1.6L7 10.6"/>
+            <path d="M3 18l1.6 1.6L7 16.6"/>
+          </svg>
+        </span>
+        <span class="tab-label">Home</span>
+      </button>
+      <button class="tab-btn" data-tab="fuel" type="button" role="tab" aria-label="Fuel">
+        <span class="tab-icon" aria-hidden="true">
+          <!-- Flame — represents fuel / energy -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2.5c1 4 4 6 4 9.5a4 4 0 0 1-8 0c0-2 1-3.2 2-4-.8-2 .2-3.8 2-5.5z"/>
+            <path d="M10 14.5a2 2 0 0 0 4 0c0-1-.5-1.5-1-2 0 .8-.6 1.2-1 1.5"/>
+          </svg>
+        </span>
+        <span class="tab-label">Fuel</span>
+      </button>
+      <button class="tab-btn" data-tab="plan" type="button" role="tab" aria-label="Plan">
+        <span class="tab-icon" aria-hidden="true">
+          <!-- Calendar with binding ringlets — full multi-week plan view -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="5" width="18" height="16" rx="2"/>
+            <path d="M3 10h18"/>
+            <path d="M8 3v4"/>
+            <path d="M16 3v4"/>
+          </svg>
+        </span>
+        <span class="tab-label">Plan</span>
+      </button>
+      <button class="tab-btn" data-tab="trends" type="button" role="tab" aria-label="Trends">
+        <span class="tab-icon" aria-hidden="true">
+          <!-- Line chart trending up — represents trends -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 17l6-6 4 4 8-8"/>
+            <path d="M14 7h7v7"/>
+          </svg>
+        </span>
+        <span class="tab-label">Trends</span>
+      </button>
+    </nav>
+
+    <div class="modal-bg" id="modalBg">
+      <div class="modal" id="modal"></div>
+    </div>
+
+    <!-- Settings drawer -->
+    <div class="settings-overlay" id="settingsOverlay">
+      <div class="settings-drawer" id="settingsDrawer">
+        <div class="settings-drawer-header">
+          <span class="settings-drawer-title">Settings</span>
+          <button class="settings-drawer-close" id="settingsDrawerClose" aria-label="Close settings">✕</button>
+        </div>
+        <div class="settings-drawer-body" id="settingsDrawerBody"></div>
+      </div>
+    </div>
+
+    <!-- Exercise tracker sub-modal -->
+    <div class="ex-modal-bg" id="exModalBg">
+      <div class="ex-modal" id="exModal"></div>
+    </div>
+
+    <!-- Workout log sub-modal -->
+    <div class="ex-modal-bg" id="logModalBg">
+      <div class="ex-modal" id="logModal"></div>
+    </div>
+
+    <!-- Pe

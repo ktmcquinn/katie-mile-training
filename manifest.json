@@ -2,7 +2,7 @@
   "name": "The Dresden Half",
   "short_name": "Dresden Half",
   "description": "Katie's half marathon training app — workouts, weight, and progress tracking.",
-  "start_url": "./Katie_Mile_Training_Calendar_Interactive.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",

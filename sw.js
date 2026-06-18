@@ -11,17 +11,19 @@
 //
 // CACHE_VERSION only needs bumping if you want to force-purge old caches
 // (e.g. after renaming/removing files), not on every content change.
-const CACHE_VERSION = "v5.0.0";
+const CACHE_VERSION = "v6.0.0";
 const CACHE_NAME = `mile-training-${CACHE_VERSION}`;
 
 // Files to pre-cache on install so the app can boot offline immediately.
 const PRECACHE_URLS = [
   "./",
+  "./index.html",
   "./Katie_Mile_Training_Calendar_Interactive.html",
   "./styles.css",
   "./app.js",
   "./plan.js",
   "./lib/training-math.js",
+  "./lib/format.js",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png",
@@ -80,7 +82,7 @@ self.addEventListener("fetch", (event) => {
           .then((res) => cachePut(req, res))
           .catch(() => {
             if (!cached && req.mode === "navigate") {
-              return caches.match("./Katie_Mile_Training_Calendar_Interactive.html");
+              return caches.match("./index.html");
             }
             return cached;
           });

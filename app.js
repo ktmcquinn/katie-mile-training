@@ -356,10 +356,7 @@
       ) {
         return parseISO(s).toLocaleDateString("en-US", opts);
       }
-      function todayISO() {
-        const t = new Date();
-        return t.toISOString().slice(0, 10);
-      }
+      // todayISO() now lives in lib/format.js (loaded first, shared scope).
       function todayClampedISO() {
         // For demo / before-plan-start, clamp to plan range
         const t = todayISO();
@@ -392,12 +389,7 @@
       // True when timestamp string `a` is strictly newer than `b`.
       // Uses Date.parse so ISO strings with different timezone notation
       // ("Z" from the client vs "+00:00" from Postgres) compare correctly.
-      function tsNewer(a, b) {
-        const ta = Date.parse(a), tb = Date.parse(b);
-        if (isNaN(ta)) return false;
-        if (isNaN(tb)) return true;
-        return ta > tb;
-      }
+      // tsNewer() now lives in lib/format.js (loaded first, shared scope).
 
       // ---------- Task completion storage (localStorage) ----------
       const STORAGE_KEY = "katie-mile-training-completed";
@@ -544,18 +536,7 @@
           return null;
         return totalSec / distanceMi; // seconds per mile
       }
-      function fmtPace(secPerMile) {
-        if (!secPerMile || !isFinite(secPerMile)) return null;
-        const m = Math.floor(secPerMile / 60);
-        const s = Math.round(secPerMile % 60);
-        return `${m}:${String(s).padStart(2, "0")}/mi`;
-      }
-      function fmtDuration(totalSec) {
-        if (!totalSec) return "";
-        const m = Math.floor(totalSec / 60);
-        const s = Math.round(totalSec % 60);
-        return `${m}:${String(s).padStart(2, "0")}`;
-      }
+      // fmtPace() and fmtDuration() now live in lib/format.js (shared scope).
 
       // Bike: speed (mph) helpers — distance(mi) / duration(sec) → mph
       function calcSpeed(distanceMi, totalSec) {
@@ -1085,18 +1066,7 @@
       }
 
       // Sum macros for a list of meals
-      function sumMacros(meals) {
-        const totals = { cal: 0, p: 0, c: 0, f: 0, fiber: 0, na: 0 };
-        for (const m of meals) {
-          totals.cal += parseFloat(m.cal) || 0;
-          totals.p += parseFloat(m.p) || 0;
-          totals.c += parseFloat(m.c) || 0;
-          totals.f += parseFloat(m.f) || 0;
-          totals.fiber += parseFloat(m.fiber) || 0;
-          totals.na += parseFloat(m.na) || 0;
-        }
-        return totals;
-      }
+      // sumMacros() now lives in lib/format.js (loaded first, shared scope).
 
       // ---------- Fuel rendering ----------
       const dayTypeLabel = {

@@ -1,4 +1,26 @@
-/* The Dresden Half — styles. Extracted from the main HTML file. */
+/* The Dresden Half — styles. Extracted from the main HTML file.
+   ============================================================================
+   CONTENTS  (search the marker text, e.g. "Toasts", to jump)
+   ----------------------------------------------------------------------------
+   Design tokens .......... :root (light theme) + [data-theme="dark"] overrides.
+                            Colors, surfaces, borders, shadows are all CSS vars
+                            (--ink, --bg, --card, --accent, --p1..--p4, …) so
+                            theming flows from one place. Prefer vars over
+                            hard-coded colors when adding rules.
+   Global / layout ........ SW update banner · Toasts · Tab pages + bottom bar
+   Today tab .............. Hero · Daily check-in · This week · Phase bar ·
+                            Today panel · Filters · Mileage chart
+   Plan tab ............... Week list · Day-row header · Day modal groups ·
+                            Exercise tracker buttons
+   Modals ................. Strava inbox · Exercise tracker · Workout log · Modal
+   Trends tab ............. Stat cards / sparklines · Predictor + paces ·
+                            Today pace hint · Readiness banner · Weekly recap
+   Fuel tab ............... Fuel cards · Food search · Scan (barcode/label)
+   Other .................. Weight tracker · Data export · Cloud sync ·
+                            Reference panel · brand-v2 theming
+   Accessibility .......... skip link · :focus-visible · prefers-reduced-motion
+                            (at the very end of this file)
+   ============================================================================ */
       :root {
         color-scheme: light;
         --ink: #111518;
