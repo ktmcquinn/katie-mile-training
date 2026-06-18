@@ -2798,10 +2798,10 @@
       // ---------- Categorize a day ----------
       function categorize(day) {
         const t = (day.title + " " + day.detail).toUpperCase();
-        if (t.includes("RACE DAY") || t.includes("1-MILE RACE")) return "race";
+        if (t.includes("RACE DAY") || t.includes("1-MILE RACE") || day.title.includes("🏁")) return "race";
         if (day.title.toUpperCase().startsWith("REST")) return "rest";
         if (
-          /TRACK:|FARTLEK|TEMPO|HILL STRIDE|VO2|TT |TIME TRIAL|MILE-PACE|RACE-PACE|TUNE-UP/i.test(
+          /TRACK:|FARTLEK|TEMPO|HILL STRIDE|VO2|TT |TIME TRIAL|MILE-PACE|RACE-PACE|TUNE-UP|SPEED:|INTERVAL|SHARPENER/i.test(
             t,
           )
         )
@@ -6594,6 +6594,8 @@
       // before this script and shares the global scope. See that file.
       const GOAL_MILE_SEC = 6 * 60;   // Sub-6:00 mile (Copenhagen B-race)
       const GOAL_HALF_SEC = 105 * 60; // Sub-1:45 half (Dresden A-race)
+      const GARMIN_VO2MAX = 48; // from your watch — shown as a cross-check only;
+                                // race-derived VDOT drives the actual projections.
       const TT_KEY = "katie-mile-tt-result";    // legacy single result (auto-migrated)
       const RESULTS_KEY = "katie-mile-results";  // list of real races / time trials
       const RESULTS_SEED_KEY = "katie-mile-results-seeded";
@@ -6801,6 +6803,7 @@
         m += calAny
           ? `Tiles marked ✓ are calibrated to a real result near that distance; ~ are estimated.`
           : `Add real results below — a mile and a longer effort — to calibrate (✓) instead of estimate (~).`;
+        if (fit) m += ` · Watch VO2max ≈ ${GARMIN_VO2MAX} (vs race-based VDOT ${fit.vdot.toFixed(0)} — watch estimates usually read a touch high).`;
         meta.innerHTML = m;
         renderPacesCard(proj);
       }
