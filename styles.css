@@ -984,6 +984,14 @@
         gap: 6px;
         padding: 0 12px 14px;
       }
+      /* When a week pill is expanded, give its day cards breathing room below
+         the week bar (the grid had no top padding, so cards butted right up
+         against it) plus a subtle divider. Scoped to .week so the Home tab's
+         "this week" card is unaffected. */
+      .week .days {
+        padding-top: 12px;
+        border-top: 1px solid var(--border);
+      }
       .day {
         border-radius: 8px;
         padding: 10px;
