@@ -41,8 +41,6 @@
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <!-- Keyboard skip link — first focusable element, jumps past the bars -->
-    <a href="#mainContent" class="skip-link">Skip to main content</a>
     <!-- SW update banner — shown when a new service worker is waiting -->
     <div id="sw-update-banner" role="status" aria-live="polite">
       <span>Update available — tap to get the latest version.</span>
@@ -75,7 +73,7 @@
       </div>
     </header>
 
-    <div class="wrap" id="mainContent" role="main" tabindex="-1">
+    <div class="wrap">
 
       <!-- ========== TAB: TODAY ========== -->
       <!-- brand-v2 class scopes the new brand preview styles below.
@@ -716,7 +714,7 @@
           <ol class="step-list">
             <li>
               In your code repo, open
-              <code>index.html</code> and
+              <code>Katie_Mile_Training_Calendar_Interactive.html</code> and
               find the <code>SUPABASE_URL</code> /
               <code>SUPABASE_ANON_KEY</code> constants near the top of the
               <code>&lt;script&gt;</code>. Paste in the values from your
@@ -835,22 +833,22 @@
         <div class="trend-card">
           <h3>Body Battery</h3>
           <div class="trend-meta" id="bbMeta">No data yet</div>
-          <div id="bbChart" class="sparkline" role="img" aria-label="Body Battery trend chart — see summary above"></div>
+          <div id="bbChart" class="sparkline"></div>
         </div>
         <div class="trend-card">
           <h3>Resting HR</h3>
           <div class="trend-meta" id="rhrMeta">No data yet</div>
-          <div id="rhrChart" class="sparkline" role="img" aria-label="Resting heart rate trend chart — see summary above"></div>
+          <div id="rhrChart" class="sparkline"></div>
         </div>
         <div class="trend-card">
           <h3>Energy</h3>
           <div class="trend-meta" id="energyMeta">No data yet</div>
-          <div id="energyChart" class="sparkline" role="img" aria-label="Energy trend chart — see summary above"></div>
+          <div id="energyChart" class="sparkline"></div>
         </div>
         <div class="trend-card">
           <h3>Weight</h3>
           <div class="trend-meta" id="weightSlMeta">No data yet</div>
-          <div id="weightSlChart" class="sparkline" role="img" aria-label="Weight trend chart — see summary above"></div>
+          <div id="weightSlChart" class="sparkline"></div>
         </div>
       </div>
 
@@ -953,4 +951,21 @@
       <div class="ex-modal" id="logModal"></div>
     </div>
 
-    <!-- Pe
+    <!-- Per-set log sub-modal (3rd tier — opens from a circular set button) -->
+    <div class="ex-modal-bg" id="setLogModalBg">
+      <div class="ex-modal" id="setLogModal"></div>
+    </div>
+
+    <!-- Strava skipped-activities inbox modal -->
+    <div class="ex-modal-bg" id="stravaInboxModalBg">
+      <div class="ex-modal" id="stravaInboxModal"></div>
+    </div>
+
+    <!-- "Move section to another day" picker modal -->
+    <div class="ex-modal-bg" id="moveSectionModalBg">
+      <div class="ex-modal" id="moveSectionModal"></div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
