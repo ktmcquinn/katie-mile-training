@@ -3425,9 +3425,9 @@
         const cat = categorize(day);
         const m = document.getElementById("modal");
         const counts = sectionCounts(day);
-        let html = `<button class="close" onclick="closeModal()">×</button>`;
+        let html = `<div class="modal-head"><button class="close" onclick="closeModal()">×</button>`;
         html += `<h2>${day.title}</h2>`;
-        html += `<div class="meta">${fmtDate(day.date, { weekday: "long", month: "long", day: "numeric", year: "numeric" })} · Week ${week.num} · Phase ${ph.num}: ${ph.name} · <b>${cat.toUpperCase()}</b> · <span class="section-progress" id="modalSectionProgress"><b>${counts.done}</b>/${counts.total} sections done</span></div>`;
+        html += `<div class="meta">${fmtDate(day.date, { weekday: "long", month: "long", day: "numeric", year: "numeric" })} · Week ${week.num} · Phase ${ph.num}: ${ph.name} · <b>${cat.toUpperCase()}</b> · <span class="section-progress" id="modalSectionProgress"><b>${counts.done}</b>/${counts.total} sections done</span></div></div>`;
 
         // Group routines by chronological phase
         const byPhase = { anytime: [], pre: [], core: [], post: [], after_hours: [] };

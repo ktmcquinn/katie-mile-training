@@ -3267,9 +3267,24 @@
         max-height: calc(100vh - 52px - env(safe-area-inset-top, 0px) - 32px);
         overflow-y: auto;
         overscroll-behavior: contain;
-        padding: 24px;
+        padding: 0 24px 24px;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
       }
+      /* Sticky top bar inside the day modal: title + close stay pinned while
+         the workout content scrolls underneath. Negative side margins let the
+         background + divider span the modal's full width; -top padding is moved
+         here from .modal so it sits flush at the top. */
+      .modal-head {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: var(--card);
+        margin: 0 -24px 14px;
+        padding: 20px 24px 12px;
+        border-bottom: 1px solid var(--border);
+      }
+      .modal-head h2 { margin: 0 0 6px; }
+      .modal-head .meta { margin-bottom: 0; }
       .modal h2 {
         margin: 0 0 8px;
       }
