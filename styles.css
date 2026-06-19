@@ -3283,8 +3283,7 @@
         padding: 20px 24px 12px;
         border-bottom: 1px solid var(--border);
       }
-      .modal-head h2 { margin: 0 0 6px; }
-      .modal-head .meta { margin-bottom: 0; }
+      .modal-head h2 { margin: 0; }
       .modal h2 {
         margin: 0 0 8px;
       }
