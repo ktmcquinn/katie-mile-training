@@ -46,6 +46,7 @@
         --hover-bg: #E4EBF0;
         --routine-bg: #E4EBF0;
         --strength-bg: rgba(90, 143, 168, 0.08);
+        --strength-day: #DBE9EF; /* strength-day card tint — distinct from full rest */
         --log-bg: rgba(90, 143, 168, 0.06);
         --log-border: rgba(90, 143, 168, 0.35);
         --pace-bg: rgba(107, 159, 212, 0.08);
@@ -83,6 +84,7 @@
         --hover-bg: #222830;
         --routine-bg: #111518;
         --strength-bg: rgba(168, 216, 234, 0.10);
+        --strength-day: #16242B; /* strength-day card tint — distinct from full rest */
         --log-bg: rgba(168, 216, 234, 0.07);
         --log-border: rgba(168, 216, 234, 0.28);
         --pace-bg: rgba(107, 159, 212, 0.10);
@@ -3231,6 +3233,12 @@
       /* Day category backgrounds */
       .day.cat-rest {
         background: var(--rest);
+      }
+      /* Strength days read as rest-from-running, but shouldn't look like a
+         full rest day — give them their own tint. Only a TRUE rest day (no
+         strength) keeps the darker --rest color. */
+      .day.cat-rest[data-strength="1"] {
+        background: var(--strength-day);
       }
 
       /* ---------- Modal ---------- */
