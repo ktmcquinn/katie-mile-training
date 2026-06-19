@@ -3247,11 +3247,12 @@
         inset: 0;
         background: var(--modal-overlay);
         display: none;
-        align-items: flex-start;
+        align-items: center;
         justify-content: center;
         z-index: 100;
-        padding: 20px;
-        padding-top: calc(52px + env(safe-area-inset-top, 0px) + 12px);
+        /* Equal top/bottom gutters (plus device safe-areas). The overlay sits
+           above the top bar (z 100 > 90), so no extra top clearance is needed. */
+        padding: calc(20px + env(safe-area-inset-top, 0px)) 20px calc(20px + env(safe-area-inset-bottom, 0px));
         overflow-y: auto;
         overscroll-behavior: contain;
       }
@@ -3264,7 +3265,10 @@
         border-radius: 14px;
         max-width: 700px;
         width: 100%;
-        max-height: calc(100vh - 52px - env(safe-area-inset-top, 0px) - 32px);
+        /* dvh = the *visible* viewport (accounts for mobile browser chrome), so
+           the box never runs off-screen. Caps to the padded area for equal
+           top/bottom gutters; taller content scrolls inside the modal. */
+        max-height: calc(100dvh - 40px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         overflow-y: auto;
         overscroll-behavior: contain;
         padding: 0 24px 24px;
