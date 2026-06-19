@@ -1078,63 +1078,6 @@
         race: "Race day",
       };
 
-      // ── Noom-style food color system ─────────────────────────
-      // Foods are classified green / yellow / orange by calorie density
-      // (calories per gram), Noom's core idea: low-density foods you can
-      // eat more freely (green), dense ones to keep an eye on (orange).
-      // When a serving weight is available we use true density; otherwise
-      // we fall back to a macro-composition heuristic.
-      function parseServingGrams(serving) {
-        if (!serving) return null;
-        let mult = 1;
-        const multM = String(serving).match(/^\s*([\d.]+)\s*[×x*]/);
-        if (multM) mult = parseFloat(multM[1]) || 1;
-        const gM = String(serving).match(/([\d.]+)\s*(g|ml)\b/i);
-        if (gM) { const g = parseFloat(gM[1]); return g > 0 ? g * mult : null; }
-        return null;
-      }
-      function foodColor(m) {
-        const cal = parseFloat(m && m.cal) || 0;
-        if (cal <= 0) return "green";
-        const grams = parseServingGrams(m.serving);
-        if (grams) {
-          const d = cal / grams; // cal per gram
-          if (d <= 1.0) return "green";
-          if (d <= 2.4) return "yellow";
-          return "orange";
-        }
-        // Macro fallback (no weight): fat-heavy → dense; lean+fiber → light
-        const f = parseFloat(m.f) || 0, p = parseFloat(m.p) || 0, fiber = parseFloat(m.fiber) || 0;
-        const fatRatio = (f * 9) / cal;
-        const protRatio = (p * 4) / cal;
-        if (fatRatio >= 0.45) return "orange";
-        if (fatRatio <= 0.25 && (fiber >= 2 || protRatio >= 0.25)) return "green";
-        return "yellow";
-      }
-      const FOOD_COLOR_LABEL = { green: "Green", yellow: "Yellow", orange: "Orange" };
-      // Sum today's calories by food color → drives the segmented budget bar.
-      function colorCalTotals(meals) {
-        const t = { green: 0, yellow: 0, orange: 0 };
-        for (const m of meals) t[foodColor(m)] += parseFloat(m.cal) || 0;
-        return t;
-      }
-      // Infer a Noom meal slot from when the food was logged.
-      function mealSlotFor(m) {
-        const ts = m && m.loggedAt ? new Date(m.loggedAt) : null;
-        if (!ts || isNaN(ts.getTime())) return "snack";
-        const h = ts.getHours();
-        if (h < 11) return "breakfast";
-        if (h < 15) return "lunch";
-        if (h >= 17 && h < 22) return "dinner";
-        return "snack";
-      }
-      const MEAL_SLOTS = [
-        { key: "breakfast", label: "Breakfast" },
-        { key: "lunch", label: "Lunch" },
-        { key: "dinner", label: "Dinner" },
-        { key: "snack", label: "Snack" },
-      ];
-
       function renderFuelTarget() {
         const target = buildTodayTarget();
         if (!target) return;
@@ -1167,23 +1110,9 @@
         const remLblEl = document.querySelector(".ftc-remaining-label");
         if (remLblEl) remLblEl.textContent = isOver ? "calories over target" : "calories remaining";
 
-        // Segmented budget bar — green / yellow / orange share of intake,
-        // each as a % of the calorie target (Noom-style color budget).
-        const colorCals = colorCalTotals(meals);
-        const denom = Math.max(target.targetCal, 1);
-        const segW = (v) => Math.max(0, Math.min(100, (v / denom) * 100));
-        const setSeg = (id, v) => { const el = document.getElementById(id); if (el) el.style.width = segW(v) + "%"; };
-        setSeg("ftcSegGreen",  colorCals.green);
-        setSeg("ftcSegYellow", colorCals.yellow);
-        setSeg("ftcSegOrange", colorCals.orange);
-        const track = document.getElementById("ftcCalTrack");
-        if (track) track.classList.toggle("over", isOver);
-        const setLeg = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = Math.round(v).toLocaleString(); };
-        setLeg("ftcLegGreen",  colorCals.green);
-        setLeg("ftcLegYellow", colorCals.yellow);
-        setLeg("ftcLegOrange", colorCals.orange);
-        const legend = document.getElementById("ftcColorLegend");
-        if (legend) legend.style.display = totals.cal > 0 ? "flex" : "none";
+        // Bar
+        const fill = document.getElementById("ftcCalFill");
+        if (fill) { fill.style.width = pct + "%"; fill.className = "ftc-bar-fill" + (isOver ? " over" : ""); }
         const cons = document.getElementById("ftcConsumed");
         const tgt  = document.getElementById("ftcTarget");
         if (cons) cons.textContent = Math.round(totals.cal).toLocaleString() + " consumed";
@@ -1304,47 +1233,29 @@
           listEl.innerHTML = `<div class="fuel-empty">No meals logged yet today.</div>`;
           return;
         }
-        // Group by Noom meal slot (inferred from log time)
-        const groups = {};
-        for (const m of meals) (groups[mealSlotFor(m)] ||= []).push(m);
-
-        const rowHtml = (m) => {
+        let html = "";
+        for (const m of meals) {
           const stats = [];
           if (m.p) stats.push(`${m.p}P`);
           if (m.c) stats.push(`${m.c}C`);
           if (m.f) stats.push(`${m.f}F`);
           if (m.fiber) stats.push(`${m.fiber} fiber`);
           if (m.na) stats.push(`${Math.round(m.na)}mg Na`);
+          // Build a "Brand · serving" subtitle for foods looked up via FatSecret
           const subBits = [];
           if (m.brand) subBits.push(m.brand);
           if (m.serving) subBits.push(m.serving);
           const subtitle = subBits.length
             ? `<div class="ms" style="opacity:.75">${subBits.join(" · ").replace(/</g, "&lt;")}</div>`
             : "";
-          const color = foodColor(m);
-          return `<div class="fuel-meal-row">
-            <i class="fc-dot ${color}" title="${FOOD_COLOR_LABEL[color]} food"></i>
-            <div class="fmr-body">
+          html += `<div class="fuel-meal-row">
+            <div>
               <div class="mn">${(m.name || "(unnamed)").replace(/</g, "&lt;")}</div>
               ${subtitle}
               ${stats.length ? `<div class="ms">${stats.join(" · ")}</div>` : ""}
             </div>
             <div class="mc">${m.cal} cal</div>
             <button type="button" data-del-id="${m.id}" title="Delete">×</button>
-          </div>`;
-        };
-
-        let html = "";
-        for (const slot of MEAL_SLOTS) {
-          const items = groups[slot.key];
-          if (!items || !items.length) continue;
-          const subtotal = items.reduce((s, m) => s + (parseFloat(m.cal) || 0), 0);
-          html += `<div class="fuel-meal-group">
-            <div class="fmg-head">
-              <span class="fmg-title">${slot.label}</span>
-              <span class="fmg-sub">${Math.round(subtotal).toLocaleString()} cal</span>
-            </div>
-            ${items.map(rowHtml).join("")}
           </div>`;
         }
         listEl.innerHTML = html;
@@ -1377,18 +1288,6 @@
         setBar("fuelBarF", "fuelValF", totals.f, target.targetF, "g");
         setBar("fuelBarFi", "fuelValFi", totals.fiber, target.targetFi, "g");
         setBar("fuelBarNa", "fuelValNa", totals.na, target.targetNa, "mg", true);
-
-        // Calorie color breakdown (share of what was actually eaten)
-        const cc = colorCalTotals(meals);
-        const eaten = cc.green + cc.yellow + cc.orange;
-        const breakEl = document.getElementById("faColorBreak");
-        if (breakEl) breakEl.style.display = eaten > 0 ? "block" : "none";
-        const share = (v) => (eaten > 0 ? (v / eaten) * 100 : 0);
-        const setW = (id, v) => { const el = document.getElementById(id); if (el) el.style.width = share(v) + "%"; };
-        const setPct = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = Math.round(share(v)) + "%"; };
-        setW("faCbGreen", cc.green);   setPct("faCbGreenPct", cc.green);
-        setW("faCbYellow", cc.yellow); setPct("faCbYellowPct", cc.yellow);
-        setW("faCbOrange", cc.orange); setPct("faCbOrangePct", cc.orange);
       }
 
       function renderFuelEA(target) {
@@ -1882,15 +1781,10 @@
                         : (f.source === "barcode" ? "barcode" : "label scan");
               const per = f.basis === "per_100g" ? "per 100 g/ml"
                         : (f.serving ? safe(f.serving) : "per serving");
-              const color = foodColor({ cal: f.cal, f: f.fat_g, p: f.protein_g, fiber: f.fiber_g,
-                                        serving: f.basis === "per_100g" ? "100 g" : f.serving });
               return `
               <div class="food-result saved" data-saved-idx="${i}">
-                <i class="fc-dot ${color}" title="${FOOD_COLOR_LABEL[color]} food"></i>
-                <div class="fr-body">
-                  <div class="fr-name">${safe(f.name)}${f.brand ? `<span class="fr-brand">${safe(f.brand)}</span>` : ""}</div>
-                  <div class="fr-desc">${Math.round(f.cal || 0)} cal · ${per} · ${tag}</div>
-                </div>
+                <div class="fr-name">${safe(f.name)}${f.brand ? `<span class="fr-brand">${safe(f.brand)}</span>` : ""}</div>
+                <div class="fr-desc">${Math.round(f.cal || 0)} cal · ${per} · ${tag}</div>
               </div>`;
             }).join("");
           }

@@ -265,12 +265,19 @@
         </div>
 
         <div class="ftc-bar-wrap">
-          <div class="ftc-bar-track">
-            <div class="ftc-bar-fill" id="ftcCalFill"></div>
+          <div class="ftc-bar-track" id="ftcCalTrack">
+            <div class="ftc-seg green"  id="ftcSegGreen"></div>
+            <div class="ftc-seg yellow" id="ftcSegYellow"></div>
+            <div class="ftc-seg orange" id="ftcSegOrange"></div>
           </div>
           <div class="ftc-bar-labels">
             <span id="ftcConsumed">0 consumed</span>
             <span id="ftcTarget">0 target</span>
+          </div>
+          <div class="ftc-color-legend" id="ftcColorLegend">
+            <span class="fcl-item"><i class="fc-dot green"></i><span id="ftcLegGreen">0</span> cal green</span>
+            <span class="fcl-item"><i class="fc-dot yellow"></i><span id="ftcLegYellow">0</span> yellow</span>
+            <span class="fcl-item"><i class="fc-dot orange"></i><span id="ftcLegOrange">0</span> orange</span>
           </div>
         </div>
 
@@ -431,9 +438,25 @@
         </div>
       </div>
 
-      <!-- Progress -->
+      <!-- Full analysis -->
       <div class="fuel-card" id="fuelProgressCard">
-        <h3>Progress</h3>
+        <h3>Full analysis</h3>
+
+        <!-- Calorie color breakdown (Noom-style) -->
+        <div class="fa-colorbreak" id="faColorBreak">
+          <div class="fa-cb-title">Where today's calories came from</div>
+          <div class="fa-cb-bar" id="faCbBar">
+            <div class="fa-cb-seg green"  id="faCbGreen"></div>
+            <div class="fa-cb-seg yellow" id="faCbYellow"></div>
+            <div class="fa-cb-seg orange" id="faCbOrange"></div>
+          </div>
+          <div class="fa-cb-legend">
+            <span class="fcl-item"><i class="fc-dot green"></i>Green <b id="faCbGreenPct">0%</b></span>
+            <span class="fcl-item"><i class="fc-dot yellow"></i>Yellow <b id="faCbYellowPct">0%</b></span>
+            <span class="fcl-item"><i class="fc-dot orange"></i>Orange <b id="faCbOrangePct">0%</b></span>
+          </div>
+        </div>
+
         <div class="fuel-progress-row">
           <span class="lbl">Calories</span>
           <div class="bar"><div class="bar-fill" id="fuelBarCal" style="width:0%"></div></div>
