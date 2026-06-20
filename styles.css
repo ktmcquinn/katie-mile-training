@@ -4149,3 +4149,36 @@ body.fuel-log-open { overflow: hidden; }
 .recent-row-cal { flex: 0 0 auto; font-size: 13px; color: var(--muted); }
 .food-result.mine { border-left: 3px solid var(--accent); }
 
+/* Buffer between the search input and the scan button */
+.food-search .food-search-input-wrap { margin-bottom: 14px; }
+.food-search .scan-row { margin-top: 0; margin-bottom: 14px; }
+.recent-empty { color: var(--muted); font-size: 13px; padding: 14px 2px; line-height: 1.5; }
+
+/* Serving-size popup (choose how much of a recent food to log) */
+.serve-popup {
+  position: fixed; inset: 0; z-index: 320; background: var(--modal-overlay);
+  display: flex; align-items: center; justify-content: center; padding: 22px;
+}
+.serve-card {
+  width: 100%; max-width: 360px; background: var(--card); border-radius: 16px;
+  padding: 18px; box-shadow: var(--shadow-pop);
+}
+.serve-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.serve-name { font-size: 18px; font-weight: 700; color: var(--ink); }
+.serve-close { background: none; border: 0; font-size: 22px; line-height: 1; color: var(--muted); cursor: pointer; padding: 0 4px; }
+.serve-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.serve-field {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin: 16px 0; font-size: 15px; font-weight: 600; color: var(--ink);
+}
+.serve-field input {
+  width: 90px; text-align: center; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg); color: var(--ink); font-size: 16px; font-weight: 700; padding: 9px;
+}
+.serve-preview {
+  background: var(--routine-bg); border-radius: 10px; padding: 11px 12px;
+  font-size: 13px; color: var(--muted); text-align: center; margin-bottom: 16px;
+}
+.serve-preview b { color: var(--ink); }
+.serve-add { width: 100%; padding: 13px; border-radius: 999px; font-size: 16px; }
+

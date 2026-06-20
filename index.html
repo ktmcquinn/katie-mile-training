@@ -427,6 +427,23 @@
             </div>
 
             <div class="recent-foods" id="recentFoods" style="display:none"></div>
+
+            <!-- Serving-size popup: choose how much of a recent food to log -->
+            <div class="serve-popup" id="recentServe" style="display:none">
+              <div class="serve-card">
+                <div class="serve-head">
+                  <div class="serve-name" id="rsName">—</div>
+                  <button type="button" class="serve-close" id="rsClose" aria-label="Close">×</button>
+                </div>
+                <div class="serve-sub" id="rsSub"></div>
+                <label class="serve-field">
+                  <span>Servings</span>
+                  <input type="text" inputmode="decimal" id="rsQty" value="1">
+                </label>
+                <div class="serve-preview" id="rsPreview"></div>
+                <button type="button" class="btn btn-primary serve-add" id="rsAdd">Add</button>
+              </div>
+            </div>
             <div class="food-search-attribution">Powered by <a href="https://fdc.nal.usda.gov" target="_blank" rel="noopener">USDA FoodData Central</a></div>
 
             <form class="fuel-form" id="fuelForm" autocomplete="off">

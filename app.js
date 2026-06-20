@@ -1269,26 +1269,87 @@
         showToast(`Added ${item.name} to ${FUEL_SLOT_LABEL[FUEL_FLOW.slot] || "log"}.`);
       }
 
-      // Search foods you've already logged (your intake history) — used to
-      // prioritize "your foods" at the top of search results.
-      function searchMyIntake(q, limit = 8) {
-        const needle = (q || "").toLowerCase().trim();
-        if (!needle) return [];
-        return recentUniqueFoods(60).filter((m) =>
-          (m.name || "").toLowerCase().includes(needle) ||
-          (m.brand || "").toLowerCase().includes(needle)
-        ).slice(0, limit);
+      // ---- Serving-size popup for a previously-eaten food ----
+      let RS_ITEM = null;
+      function openRecentServe(item) {
+        if (!item) return;
+        RS_ITEM = item;
+        const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+        set("rsName", item.name || "Food");
+        const subBits = [];
+        if (item.brand) subBits.push(item.brand);
+        if (item.serving) subBits.push(item.serving);
+        set("rsSub", subBits.join(" · "));
+        const qty = document.getElementById("rsQty");
+        if (qty) { qty.value = "1"; qty.oninput = renderRsPreview; }
+        const close = document.getElementById("rsClose"); if (close) close.onclick = closeRecentServe;
+        const add = document.getElementById("rsAdd"); if (add) add.onclick = addRecentServe;
+        renderRsPreview();
+        const pop = document.getElementById("recentServe");
+        if (pop) pop.style.display = "";
+      }
+      function closeRecentServe() {
+        const pop = document.getElementById("recentServe");
+        if (pop) pop.style.display = "none";
+        RS_ITEM = null;
+      }
+      function rsScale() {
+        const q = parseFloat((document.getElementById("rsQty") || {}).value);
+        return q > 0 ? q : null;
+      }
+      function renderRsPreview() {
+        const el = document.getElementById("rsPreview");
+        if (!el) return;
+        const k = rsScale();
+        if (!RS_ITEM || k == null) { el.textContent = "—"; return; }
+        const n = (v, d = 0) => v == null ? "—" : (d ? (v * k).toFixed(d) : Math.round(v * k));
+        el.innerHTML = `<b>${n(RS_ITEM.cal)}</b> cal · ${n(RS_ITEM.p, 1)}g P · ${n(RS_ITEM.c, 1)}g C · ${n(RS_ITEM.f, 1)}g F`;
+      }
+      function addRecentServe() {
+        const k = rsScale();
+        if (!RS_ITEM || k == null) return;
+        const it = RS_ITEM;
+        const sc = (v) => v == null ? null : +(v * k).toFixed(1);
+        const meal = {
+          id: (crypto.randomUUID ? crypto.randomUUID() : Date.now() + "-" + Math.random().toString(36).slice(2)),
+          name: k === 1 ? it.name : `${k} × ${it.name}`,
+          cal: Math.round((it.cal || 0) * k),
+          p: sc(it.p), c: sc(it.c), f: sc(it.f), fiber: sc(it.fiber),
+          na: it.na != null ? Math.round(it.na * k) : null,
+          foodId: it.foodId || null, brand: it.brand || null, serving: it.serving || null,
+          source: it.source || (it.foodId ? "usda" : "manual"),
+          loggedAt: new Date().toISOString(),
+        };
+        closeRecentServe();
+        if (FUEL_FLOW.pickTarget === "ingredient" && FUEL_FLOW.draft) {
+          FUEL_FLOW.draft.ingredients.push(meal);
+          FUEL_FLOW.pickTarget = "log";
+          openBuilder(FUEL_FLOW.draft);
+          return;
+        }
+        meal.slot = FUEL_FLOW.slot || slotForMeal(meal);
+        addMeal(todayISO(), meal);
+        renderFuel();
+        showToast(`Added ${it.name} to ${FUEL_SLOT_LABEL[FUEL_FLOW.slot] || "log"}.`);
       }
 
-      // "Recently consumed" list shown by default in the logging overlay.
-      function renderRecentChips() {
+      // "Recently consumed" list (up to 100) — filters live as you type in the
+      // search box; tapping a row opens the serving-size popup.
+      function renderRecentChips(filter) {
         const el = document.getElementById("recentFoods");
         if (!el) return;
-        const items = recentUniqueFoods(8);
-        if (!items.length) { el.style.display = "none"; el.innerHTML = ""; return; }
-        el.style.display = "";
+        const q = (filter == null ? "" : String(filter)).toLowerCase().trim();
+        let items = recentUniqueFoods(100);
+        if (q) items = items.filter((m) =>
+          (m.name || "").toLowerCase().includes(q) || (m.brand || "").toLowerCase().includes(q));
         const esc = (s) => String(s || "").replace(/</g, "&lt;");
-        let html = `<div class="recent-label">Recently consumed</div><div class="recent-list">`;
+        el.style.display = "";
+        if (!items.length) {
+          el.innerHTML = `<div class="recent-label">${q ? "Your foods" : "Recently consumed"}</div>` +
+            `<div class="recent-empty">${q ? "Nothing you've eaten matches “" + esc(filter) + "”. Use Scan barcode to add a new food." : "Foods you log will show up here."}</div>`;
+          return;
+        }
+        let html = `<div class="recent-label">${q ? "Your foods" : "Recently consumed"}</div><div class="recent-list">`;
         for (let i = 0; i < items.length; i++) {
           const m = items[i];
           const sub = m.brand ? `<span class="recent-sub">${esc(m.brand)}</span>` : "";
@@ -1300,7 +1361,7 @@
         html += `</div>`;
         el.innerHTML = html;
         el.querySelectorAll(".recent-row").forEach((btn) => {
-          btn.addEventListener("click", () => commitRecentFood(items[parseInt(btn.dataset.idx, 10)]));
+          btn.addEventListener("click", () => openRecentServe(items[parseInt(btn.dataset.idx, 10)]));
         });
       }
 
@@ -2056,49 +2117,18 @@
           currentFoodDetail = null;
         }
 
-        // ---- Search box: debounced query → results dropdown ----
-        // Hides the default "recently consumed" list while a query is active.
+        // ---- Search box: live-filters the recently-eaten list below ----
         input.addEventListener("input", (e) => {
           const q = e.target.value.trim();
           clearBtn.style.display = q ? "" : "none";
-          clearTimeout(foodSearchDebounceId);
-          if (q.length < 2) {
-            clearResults();
-            setStatus("");
-            renderRecentChips();
-            return;
-          }
-          const recentEl = document.getElementById("recentFoods");
-          if (recentEl) recentEl.style.display = "none";
-          // Your own logged foods + saved picks are local — show instantly while
-          // the USDA network search runs in the background.
-          renderResults([], searchSavedFoods(q), searchMyIntake(q));
-          setStatus("Searching…");
-          foodSearchDebounceId = setTimeout(async () => {
-            const myReq = ++foodSearchInFlight;
-            try {
-              const results = await foodSearchApi(q);
-              if (myReq !== foodSearchInFlight) return;
-              const mine = searchMyIntake(q), saved = searchSavedFoods(q);
-              renderResults(results, saved, mine);
-              setStatus((results.length || saved.length || mine.length) ? "" : "No matches.");
-            } catch (err) {
-              if (myReq !== foodSearchInFlight) return;
-              const mine = searchMyIntake(q), saved = searchSavedFoods(q);
-              renderResults([], saved, mine);
-              setStatus((saved.length || mine.length) ? "Showing your foods (USDA search failed)."
-                                     : "Search failed: " + (err.message || err), !(saved.length || mine.length));
-            }
-          }, 300);
+          renderRecentChips(q);
         });
 
         clearBtn.addEventListener("click", () => {
           input.value = "";
           clearBtn.style.display = "none";
-          clearResults();
-          setStatus("");
           closePicker();
-          renderRecentChips();
+          renderRecentChips("");
           input.focus();
         });
 
