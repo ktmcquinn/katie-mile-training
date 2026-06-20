@@ -265,19 +265,12 @@
         </div>
 
         <div class="ftc-bar-wrap">
-          <div class="ftc-bar-track" id="ftcCalTrack">
-            <div class="ftc-seg green"  id="ftcSegGreen"></div>
-            <div class="ftc-seg yellow" id="ftcSegYellow"></div>
-            <div class="ftc-seg orange" id="ftcSegOrange"></div>
+          <div class="ftc-bar-track">
+            <div class="ftc-bar-fill" id="ftcCalFill"></div>
           </div>
           <div class="ftc-bar-labels">
             <span id="ftcConsumed">0 consumed</span>
             <span id="ftcTarget">0 target</span>
-          </div>
-          <div class="ftc-color-legend" id="ftcColorLegend">
-            <span class="fcl-item"><i class="fc-dot green"></i><span id="ftcLegGreen">0</span> cal green</span>
-            <span class="fcl-item"><i class="fc-dot yellow"></i><span id="ftcLegYellow">0</span> yellow</span>
-            <span class="fcl-item"><i class="fc-dot orange"></i><span id="ftcLegOrange">0</span> orange</span>
           </div>
         </div>
 
@@ -315,116 +308,10 @@
         </div>
       </div>
 
-      <!-- Add meal form -->
-      <div class="fuel-card">
-        <h3>Log a meal or snack</h3>
-        <div class="recent-foods" id="recentFoods" style="display:none"></div>
-
-        <!-- FatSecret food search: type to autocomplete, pick a result, pick a
-             serving size — the form below auto-fills with the nutrition data.
-             You can still edit any value before hitting Add, or fill the form
-             manually for custom recipes. -->
-        <!-- Photo scan: barcode (Open Food Facts) or nutrition label (vision AI) -->
-        <div class="scan-row">
-          <button type="button" class="btn scan-btn" id="scanFoodBtn">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            Scan barcode or label
-          </button>
-          <input type="file" id="scanFoodInput" accept="image/*" capture="environment" style="display:none">
-          <span class="scan-status" id="scanStatus"></span>
-        </div>
-
-        <!-- Scan portion picker: appears after a scan so the per-100g or
-             per-serving values can be scaled to what was actually eaten. -->
-        <div class="scan-portion" id="scanPortion" style="display:none">
-          <div class="sp-head">
-            <div class="sp-name"><b id="spName">—</b><span class="sp-basis" id="spBasis"></span></div>
-            <button type="button" class="fsp-cancel" id="spCancel" title="Cancel">×</button>
-          </div>
-          <div class="sp-controls">
-            <label class="fsp-field">
-              <span id="spAmountLbl">Amount (g/ml)</span>
-              <input type="text" inputmode="decimal" id="spAmount" value="100">
-            </label>
-          </div>
-          <div class="sp-preview" id="spPreview"></div>
-          <button type="button" class="btn btn-primary sp-apply" id="spApply">Use this — fill the form</button>
-        </div>
-
-        <div class="food-search">
-          <label class="food-search-lbl" for="foodSearchInput">Search saved scans &amp; USDA</label>
-          <div class="food-search-input-wrap">
-            <input
-              type="text"
-              id="foodSearchInput"
-              placeholder="Start typing — e.g. monster, goldfish, oatmeal"
-              autocomplete="off"
-              spellcheck="false">
-            <button type="button" class="food-search-clear" id="foodSearchClear" title="Clear" style="display:none">×</button>
-          </div>
-          <div class="food-search-results" id="foodSearchResults" style="display:none"></div>
-          <div class="food-search-status" id="foodSearchStatus"></div>
-          <!-- Serving-size picker — appears after a result is selected -->
-          <div class="food-serving-picker" id="foodServingPicker" style="display:none">
-            <div class="fsp-head">
-              <div class="fsp-name"><b id="fspFoodName">—</b><span id="fspBrand" class="fsp-brand"></span></div>
-              <button type="button" class="fsp-cancel" id="fspCancel" title="Cancel">×</button>
-            </div>
-            <div class="fsp-controls">
-              <label class="fsp-field">
-                <span>Serving</span>
-                <select id="fspServing"></select>
-              </label>
-              <label class="fsp-field">
-                <span>× Quantity</span>
-                <input type="text" inputmode="decimal" id="fspQty" min="0.25" step="0.25" value="1">
-              </label>
-            </div>
-            <div class="fsp-preview" id="fspPreview"></div>
-            <button type="button" class="btn btn-primary fsp-apply" id="fspApply">Use this — fill the form</button>
-          </div>
-          <div class="food-search-attribution">Powered by <a href="https://fdc.nal.usda.gov" target="_blank" rel="noopener">USDA FoodData Central</a></div>
-        </div>
-
-        <form class="fuel-form" id="fuelForm" autocomplete="off">
-          <div class="ff-field name-field">
-            <label>What you ate</label>
-            <input type="text" id="mealName" placeholder="e.g. oatmeal + banana + PB" required>
-          </div>
-          <div class="ff-field">
-            <label>Cal</label>
-            <input type="text" inputmode="numeric" id="mealCal" min="0" placeholder="350" required>
-          </div>
-          <div class="ff-field">
-            <label>Fat (g)</label>
-            <input type="text" inputmode="decimal" id="mealF" min="0" step="0.1" placeholder="—">
-          </div>
-          <div class="ff-field">
-            <label>Carbs (g)</label>
-            <input type="text" inputmode="decimal" id="mealC" min="0" step="0.1" placeholder="—">
-          </div>
-          <div class="ff-field">
-            <label>Protein (g)</label>
-            <input type="text" inputmode="decimal" id="mealP" min="0" step="0.1" placeholder="—">
-          </div>
-          <div class="ff-field">
-            <label>Sodium (mg)</label>
-            <input type="text" inputmode="numeric" id="mealNa" min="0" step="1" placeholder="—">
-          </div>
-          <div class="ff-field">
-            <label>Fiber (g)</label>
-            <input type="text" inputmode="decimal" id="mealFi" min="0" step="0.1" placeholder="—">
-          </div>
-          <button type="submit" class="btn btn-primary save-btn">Add</button>
-        </form>
-      </div>
-
-      <!-- Today's meals list -->
-      <div class="fuel-card">
-        <h3>Today's intake</h3>
-        <div class="fuel-meal-list" id="fuelMealList">
-          <div class="fuel-empty">No meals logged yet today.</div>
-        </div>
+      <!-- Log meals — tap a slot to add food (Noom-style) -->
+      <div class="fuel-card fuel-log-card">
+        <h3>Log meals</h3>
+        <div class="meal-slots" id="mealSlots"></div>
       </div>
 
       <!-- Energy availability -->
@@ -438,25 +325,9 @@
         </div>
       </div>
 
-      <!-- Full analysis -->
+      <!-- Progress -->
       <div class="fuel-card" id="fuelProgressCard">
-        <h3>Full analysis</h3>
-
-        <!-- Calorie color breakdown (Noom-style) -->
-        <div class="fa-colorbreak" id="faColorBreak">
-          <div class="fa-cb-title">Where today's calories came from</div>
-          <div class="fa-cb-bar" id="faCbBar">
-            <div class="fa-cb-seg green"  id="faCbGreen"></div>
-            <div class="fa-cb-seg yellow" id="faCbYellow"></div>
-            <div class="fa-cb-seg orange" id="faCbOrange"></div>
-          </div>
-          <div class="fa-cb-legend">
-            <span class="fcl-item"><i class="fc-dot green"></i>Green <b id="faCbGreenPct">0%</b></span>
-            <span class="fcl-item"><i class="fc-dot yellow"></i>Yellow <b id="faCbYellowPct">0%</b></span>
-            <span class="fcl-item"><i class="fc-dot orange"></i>Orange <b id="faCbOrangePct">0%</b></span>
-          </div>
-        </div>
-
+        <h3>Progress</h3>
         <div class="fuel-progress-row">
           <span class="lbl">Calories</span>
           <div class="bar"><div class="bar-fill" id="fuelBarCal" style="width:0%"></div></div>
@@ -486,6 +357,148 @@
           <span class="lbl">Fiber</span>
           <div class="bar"><div class="bar-fill" id="fuelBarFi" style="width:0%"></div></div>
           <span class="val" id="fuelValFi">0g / —</span>
+        </div>
+      </div>
+
+      <!-- ===================== Food logging overlay ===================== -->
+      <div class="fuel-log-overlay" id="fuelLogOverlay" style="display:none" role="dialog" aria-modal="true" aria-label="Log food">
+        <div class="flo-header">
+          <button type="button" class="flo-back" id="floBack" aria-label="Back">&#8249;</button>
+          <span class="flo-title" id="floTitle">Breakfast</span>
+          <button type="button" class="flo-done" id="floDone">Done</button>
+        </div>
+
+        <div class="flo-tabs" id="floTabs">
+          <button type="button" class="flo-tab active" id="floTabSearch" data-view="search">Search</button>
+          <button type="button" class="flo-tab" id="floTabMeals" data-view="meals">My meals</button>
+        </div>
+
+        <div class="flo-body">
+          <!-- ===== SEARCH VIEW ===== -->
+          <div class="flo-view" id="floViewSearch">
+            <div class="flo-ing-banner" id="floIngBanner" style="display:none"></div>
+
+            <div class="recent-foods" id="recentFoods" style="display:none"></div>
+
+            <div class="food-search">
+              <div class="food-search-input-wrap">
+                <input
+                  type="text"
+                  id="foodSearchInput"
+                  placeholder="Search for your food"
+                  autocomplete="off"
+                  spellcheck="false">
+                <button type="button" class="food-search-clear" id="foodSearchClear" title="Clear" style="display:none">×</button>
+              </div>
+
+              <div class="scan-row">
+                <button type="button" class="btn scan-btn" id="scanFoodBtn">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5v14M7 5v14M11 5v14M15 5v14M19 5v14"/></svg>
+                  Scan barcode
+                </button>
+                <input type="file" id="scanFoodInput" accept="image/*" capture="environment" style="display:none">
+                <span class="scan-status" id="scanStatus"></span>
+              </div>
+
+              <div class="food-search-results" id="foodSearchResults" style="display:none"></div>
+              <div class="food-search-status" id="foodSearchStatus"></div>
+
+              <div class="scan-portion" id="scanPortion" style="display:none">
+                <div class="sp-head">
+                  <div class="sp-name"><b id="spName">—</b><span class="sp-basis" id="spBasis"></span></div>
+                  <button type="button" class="fsp-cancel" id="spCancel" title="Cancel">×</button>
+                </div>
+                <div class="sp-controls">
+                  <label class="fsp-field">
+                    <span id="spAmountLbl">Amount (g/ml)</span>
+                    <input type="text" inputmode="decimal" id="spAmount" value="100">
+                  </label>
+                </div>
+                <div class="sp-preview" id="spPreview"></div>
+                <button type="button" class="btn btn-primary sp-apply" id="spApply">Use this — fill the form</button>
+              </div>
+
+              <div class="food-serving-picker" id="foodServingPicker" style="display:none">
+                <div class="fsp-head">
+                  <div class="fsp-name"><b id="fspFoodName">—</b><span id="fspBrand" class="fsp-brand"></span></div>
+                  <button type="button" class="fsp-cancel" id="fspCancel" title="Cancel">×</button>
+                </div>
+                <div class="fsp-controls">
+                  <label class="fsp-field">
+                    <span>Serving</span>
+                    <select id="fspServing"></select>
+                  </label>
+                  <label class="fsp-field">
+                    <span>× Quantity</span>
+                    <input type="text" inputmode="decimal" id="fspQty" min="0.25" step="0.25" value="1">
+                  </label>
+                </div>
+                <div class="fsp-preview" id="fspPreview"></div>
+                <button type="button" class="btn btn-primary fsp-apply" id="fspApply">Use this — fill the form</button>
+              </div>
+
+              <div class="food-search-attribution">Powered by <a href="https://fdc.nal.usda.gov" target="_blank" rel="noopener">USDA FoodData Central</a></div>
+            </div>
+
+            <form class="fuel-form" id="fuelForm" autocomplete="off">
+              <div class="ff-field name-field">
+                <label>What you ate</label>
+                <input type="text" id="mealName" placeholder="e.g. oatmeal + banana + PB" required>
+              </div>
+              <div class="ff-field">
+                <label>Cal</label>
+                <input type="text" inputmode="numeric" id="mealCal" min="0" placeholder="350" required>
+              </div>
+              <div class="ff-field">
+                <label>Fat (g)</label>
+                <input type="text" inputmode="decimal" id="mealF" min="0" step="0.1" placeholder="—">
+              </div>
+              <div class="ff-field">
+                <label>Carbs (g)</label>
+                <input type="text" inputmode="decimal" id="mealC" min="0" step="0.1" placeholder="—">
+              </div>
+              <div class="ff-field">
+                <label>Protein (g)</label>
+                <input type="text" inputmode="decimal" id="mealP" min="0" step="0.1" placeholder="—">
+              </div>
+              <div class="ff-field">
+                <label>Sodium (mg)</label>
+                <input type="text" inputmode="numeric" id="mealNa" min="0" step="1" placeholder="—">
+              </div>
+              <div class="ff-field">
+                <label>Fiber (g)</label>
+                <input type="text" inputmode="decimal" id="mealFi" min="0" step="0.1" placeholder="—">
+              </div>
+              <button type="submit" class="btn btn-primary save-btn" id="fuelFormSubmit">Add</button>
+            </form>
+          </div>
+
+          <!-- ===== MY MEALS VIEW ===== -->
+          <div class="flo-view" id="floViewMeals" style="display:none">
+            <div class="my-meals-head"><h2 class="mm-title">My meals</h2></div>
+            <div class="my-meals-list" id="myMealsList"></div>
+            <button type="button" class="btn btn-primary mm-add" id="floAddMeal">Add a new meal</button>
+          </div>
+
+          <!-- ===== MEAL BUILDER VIEW ===== -->
+          <div class="flo-view" id="floViewBuilder" style="display:none">
+            <input type="text" class="mb-name" id="mbName" placeholder="Add meal name" autocomplete="off">
+            <div class="mb-section-title">Ingredients</div>
+            <div class="mb-ingredients" id="mbIngredients"></div>
+            <button type="button" class="mb-add-ing" id="mbAddIng">
+              <span class="mb-add-plus">＋</span> Add Ingredient
+            </button>
+            <div class="mb-section-title">Servings</div>
+            <div class="mb-servings-row">
+              <span class="mb-srv-lbl">Total Servings</span>
+              <span class="mb-cps" id="mbCalPerServing">0 CAL / SERVING</span>
+              <input type="text" inputmode="decimal" id="mbServings" value="1">
+            </div>
+            <div class="mb-actions">
+              <button type="button" class="btn mb-cancel" id="mbCancel">Cancel</button>
+              <button type="button" class="btn btn-primary mb-save" id="mbSave">Save meal</button>
+            </div>
+          </div>
         </div>
       </div>
 

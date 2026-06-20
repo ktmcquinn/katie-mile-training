@@ -63,11 +63,6 @@
         --shadow-pop: 0 4px 16px rgba(17, 21, 24, 0.12);
         --bf-note-bg: rgba(90, 143, 168, 0.08);
         --info-text: #3D6E87;
-
-        /* Noom-style food color system */
-        --food-green: #5CB88A;
-        --food-yellow: #E2B23C;
-        --food-orange: #E08A4B;
       }
 
       [data-theme="dark"] {
@@ -106,11 +101,6 @@
         --shadow-pop: 0 4px 18px rgba(0, 0, 0, 0.70);
         --bf-note-bg: rgba(168, 216, 234, 0.07);
         --info-text: #A8D8EA;
-
-        /* Noom-style food color system (slightly brighter for dark bg) */
-        --food-green: #5FC795;
-        --food-yellow: #E8C45A;
-        --food-orange: #EC9A5C;
       }
 
       * {
@@ -2244,51 +2234,26 @@
       }
       .ftc-bar-wrap { margin-bottom: 16px; }
       .ftc-bar-track {
-        height: 10px;
+        height: 8px;
         background: var(--hover-bg);
         border-radius: 999px;
         overflow: hidden;
         margin-bottom: 6px;
-        display: flex;
-        align-items: stretch;
       }
-      .ftc-seg {
+      .ftc-bar-fill {
         height: 100%;
-        width: 0;
+        background: var(--accent);
+        border-radius: 999px;
         transition: width 0.4s ease;
+        max-width: 100%;
       }
-      .ftc-seg.green  { background: var(--food-green); }
-      .ftc-seg.yellow { background: var(--food-yellow); }
-      .ftc-seg.orange { background: var(--food-orange); }
-      .ftc-bar-track.over { box-shadow: inset 0 0 0 1.5px #E26972; }
+      .ftc-bar-fill.over { background: #E26972; }
       .ftc-bar-labels {
         display: flex;
         justify-content: space-between;
         font-size: 11px;
         color: var(--muted);
       }
-      .ftc-color-legend {
-        display: flex;
-        gap: 14px;
-        margin-top: 8px;
-        font-size: 11px;
-        color: var(--muted);
-      }
-      .fcl-item { display: inline-flex; align-items: center; gap: 5px; }
-      .fcl-item b { color: var(--ink); font-weight: 700; }
-
-      /* Food color dot (shared) */
-      .fc-dot {
-        flex: 0 0 auto;
-        width: 9px;
-        height: 9px;
-        border-radius: 50%;
-        display: inline-block;
-        background: var(--food-green);
-      }
-      .fc-dot.green  { background: var(--food-green); }
-      .fc-dot.yellow { background: var(--food-yellow); }
-      .fc-dot.orange { background: var(--food-orange); }
       .ftc-macros {
         display: flex;
         align-items: center;
@@ -2645,14 +2610,6 @@
         background: color-mix(in srgb, var(--pace-bg) 45%, transparent);
       }
       .food-result.saved:hover { background: var(--pace-bg); }
-      /* Saved results carry a food-color dot, so lay them out as a row. */
-      .food-result.saved {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-      }
-      .food-result.saved .fc-dot { margin-top: 5px; }
-      .food-result.saved .fr-body { min-width: 0; }
       .food-search-attribution {
         margin-top: 8px;
         font-size: 10px;
@@ -2748,34 +2705,16 @@
       }
 
       .fuel-meal-list { margin-top: 8px; }
-      /* Noom-style meal grouping (Breakfast / Lunch / Dinner / Snack) */
-      .fuel-meal-group { margin-bottom: 14px; }
-      .fuel-meal-group:last-child { margin-bottom: 0; }
-      .fmg-head {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        padding: 0 4px 6px;
-      }
-      .fmg-title {
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        color: var(--ink);
-      }
-      .fmg-sub { font-size: 12px; font-weight: 600; color: var(--muted); }
       .fuel-meal-row {
         display: grid;
-        grid-template-columns: auto 1fr auto auto;
+        grid-template-columns: 1fr auto auto;
         gap: 10px;
         align-items: center;
         padding: 10px 12px;
         background: var(--routine-bg);
-        border-radius: 10px;
+        border-radius: 8px;
         margin-bottom: 6px;
       }
-      .fuel-meal-row .fmr-body { min-width: 0; }
       .fuel-meal-row .mn { font-weight: 600; font-size: 14px; color: var(--ink); }
       .fuel-meal-row .ms {
         font-size: 11px; color: var(--muted); margin-top: 2px;
@@ -2793,42 +2732,6 @@
         text-align: center; color: var(--muted); font-size: 13px;
         padding: 18px 0; font-style: italic;
       }
-
-      /* Full-analysis calorie color breakdown */
-      .fa-colorbreak {
-        padding: 12px;
-        background: var(--routine-bg);
-        border-radius: 10px;
-        margin-bottom: 14px;
-      }
-      .fa-cb-title {
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-        margin-bottom: 8px;
-      }
-      .fa-cb-bar {
-        height: 14px;
-        display: flex;
-        border-radius: 999px;
-        overflow: hidden;
-        background: var(--hover-bg);
-      }
-      .fa-cb-seg { width: 0; transition: width 0.4s ease; }
-      .fa-cb-seg.green  { background: var(--food-green); }
-      .fa-cb-seg.yellow { background: var(--food-yellow); }
-      .fa-cb-seg.orange { background: var(--food-orange); }
-      .fa-cb-legend {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 14px;
-        margin-top: 10px;
-        font-size: 12px;
-        color: var(--muted);
-      }
-      .fa-cb-legend b { color: var(--ink); font-weight: 700; margin-left: 2px; }
 
       .fuel-progress-row {
         display: grid;
@@ -4104,3 +4007,129 @@ textarea:focus-visible,
     scroll-behavior: auto !important;
   }
 }
+
+/* ===================== Noom-style fuel logging flow ===================== */
+.fuel-log-card .meal-slots { margin-top: 4px; }
+.meal-slot { border-bottom: 1px solid var(--border); cursor: pointer; }
+.meal-slot:last-child { border-bottom: none; }
+.ms-row { display: flex; align-items: center; gap: 12px; padding: 12px 2px; }
+.ms-icon {
+  flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 19px; background: var(--hover-bg);
+}
+.ms-icon-breakfast       { background: rgba(90, 143, 168, 0.16); }
+.ms-icon-morning_snack   { background: rgba(212, 88, 110, 0.15); }
+.ms-icon-lunch           { background: rgba(92, 184, 138, 0.18); }
+.ms-icon-afternoon_snack { background: rgba(212, 160, 80, 0.18); }
+.ms-icon-dinner          { background: rgba(155, 127, 202, 0.18); }
+.ms-icon-evening_snack   { background: rgba(150, 120, 100, 0.18); }
+.ms-label { flex: 1; font-size: 16px; font-weight: 600; color: var(--ink); }
+.ms-sub { font-size: 12px; font-weight: 600; color: var(--muted); }
+.ms-add {
+  flex: 0 0 auto; width: 34px; height: 34px; border-radius: 9px;
+  border: 1px solid var(--border); background: var(--hover-bg); color: var(--ink);
+  font-size: 20px; line-height: 1; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.ms-add:hover { border-color: var(--accent); color: var(--accent); }
+.ms-items { padding: 0 2px 10px 50px; display: flex; flex-direction: column; gap: 4px; }
+.ms-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.ms-item-name { flex: 1; color: var(--ink); }
+.ms-item-cal { color: var(--muted); font-weight: 600; }
+.ms-item-del {
+  background: none; border: 0; cursor: pointer; color: var(--muted);
+  font-size: 15px; padding: 2px 4px; border-radius: 4px;
+}
+.ms-item-del:hover { background: var(--error-bg); color: #B85450; }
+
+body.fuel-log-open { overflow: hidden; }
+.fuel-log-overlay {
+  position: fixed; inset: 0; z-index: 300; background: var(--bg);
+  display: flex; flex-direction: column; overscroll-behavior: contain;
+}
+.flo-header {
+  flex: 0 0 auto; display: grid; grid-template-columns: 44px 1fr auto; align-items: center;
+  padding: max(env(safe-area-inset-top), 10px) 12px 10px;
+  background: var(--card); border-bottom: 1px solid var(--border);
+}
+.flo-back {
+  background: none; border: 0; cursor: pointer; font-size: 28px; line-height: 1;
+  color: var(--ink); width: 44px; height: 40px; text-align: left; padding: 0 6px;
+}
+.flo-title { text-align: center; font-size: 17px; font-weight: 700; color: var(--ink); }
+.flo-done {
+  justify-self: end; border: 0; border-radius: 999px; background: var(--accent);
+  color: #fff; font-size: 14px; font-weight: 600; padding: 8px 18px; cursor: pointer;
+}
+.flo-tabs { flex: 0 0 auto; display: flex; background: var(--card); border-bottom: 1px solid var(--border); }
+.flo-tab {
+  flex: 1; background: none; border: 0; border-bottom: 2px solid transparent;
+  padding: 12px 0; font-size: 15px; font-weight: 600; color: var(--muted); cursor: pointer;
+}
+.flo-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.flo-body {
+  flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 14px; padding-bottom: 40px;
+}
+.flo-ing-banner {
+  background: var(--modal-info-bg); border: 1px solid var(--modal-info-border);
+  color: var(--info-text); border-radius: 10px; padding: 9px 12px;
+  font-size: 13px; font-weight: 600; margin-bottom: 12px;
+}
+
+.my-meals-head { margin-bottom: 12px; }
+.mm-title { margin: 0; font-size: 22px; font-weight: 800; color: var(--ink); }
+.my-meals-list { display: flex; flex-direction: column; gap: 12px; }
+.mm-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 14px 16px; cursor: pointer; box-shadow: var(--shadow-soft);
+}
+.mm-card:hover { border-color: var(--accent); }
+.mm-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.mm-card-name { font-size: 18px; font-weight: 700; color: var(--ink); }
+.mm-card-del {
+  background: none; border: 0; cursor: pointer; color: var(--muted);
+  font-size: 18px; padding: 0 4px; line-height: 1;
+}
+.mm-card-del:hover { color: #B85450; }
+.mm-card-ings { margin-top: 6px; font-size: 13px; color: var(--muted); line-height: 1.4; }
+.mm-card-meta { margin-top: 8px; font-size: 12px; font-weight: 600; color: var(--accent); }
+.mm-empty { text-align: center; color: var(--muted); font-size: 14px; padding: 28px 16px; font-style: italic; }
+.mm-add { width: 100%; margin-top: 18px; padding: 14px; font-size: 16px; border-radius: 999px; }
+
+.mb-name {
+  width: 100%; border: 0; border-bottom: 2px solid var(--border); background: transparent;
+  font-size: 22px; font-weight: 700; color: var(--ink); padding: 6px 2px 10px; margin-bottom: 18px;
+}
+.mb-name:focus { outline: none; border-bottom-color: var(--accent); }
+.mb-section-title { font-size: 20px; font-weight: 800; color: var(--ink); margin: 6px 0 10px; }
+.mb-ingredients { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.mb-ing-row {
+  display: flex; align-items: center; gap: 10px; background: var(--routine-bg);
+  border-radius: 10px; padding: 11px 14px;
+}
+.mb-ing-name { flex: 1; font-size: 14px; font-weight: 600; color: var(--ink); }
+.mb-ing-cal { font-size: 13px; color: var(--muted); font-weight: 600; }
+.mb-ing-del { background: none; border: 0; cursor: pointer; color: var(--muted); font-size: 16px; padding: 0 4px; line-height: 1; }
+.mb-ing-del:hover { color: #B85450; }
+.mb-ing-empty { color: var(--muted); font-size: 13px; font-style: italic; padding: 6px 2px; }
+.mb-add-ing {
+  width: 100%; border: 0; border-radius: 10px; background: var(--accent); color: #fff;
+  font-size: 16px; font-weight: 600; padding: 15px; cursor: pointer;
+  display: flex; align-items: center; gap: 10px; margin-bottom: 22px;
+}
+.mb-add-plus { font-size: 20px; line-height: 1; }
+.mb-servings-row {
+  display: flex; align-items: center; gap: 10px; background: var(--card);
+  border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;
+}
+.mb-srv-lbl { flex: 1; font-size: 16px; font-weight: 600; color: var(--ink); }
+.mb-cps { font-size: 11px; font-weight: 700; letter-spacing: 0.4px; color: var(--muted); }
+.mb-servings-row input {
+  width: 56px; text-align: center; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg); color: var(--ink); font-size: 15px; font-weight: 700; padding: 7px 4px;
+}
+.mb-actions { display: flex; gap: 10px; margin-top: 22px; }
+.mb-actions .btn { flex: 1; padding: 13px; border-radius: 999px; font-size: 15px; }
+.mb-cancel { background: var(--hover-bg); color: var(--ink); border: 1px solid var(--border); }
+

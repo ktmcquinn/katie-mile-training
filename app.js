@@ -853,8 +853,6 @@
         3: { rest: 1700, easy: 1800, bike: 1800, quality: 1950, long: 2150, race: 2200 },
         4: { rest: 1750, easy: 1850, bike: 1850, quality: 2000, long: 2200, race: 2200 },
         5: { rest: 1650, easy: 1750, bike: 1750, quality: 1850, long: 1950, race: 2100 },
-        6: { rest: 1750, easy: 1850, bike: 1850, quality: 2000, long: 2250, race: 2300 },
-        7: { rest: 1650, easy: 1750, bike: 1750, quality: 1900, long: 2000, race: 2200 },
       };
 
       // EA zones (kcal/kg LBM)
@@ -1048,6 +1046,59 @@
       // form itself only carries the editable nutrition numbers.
       let PENDING_FOOD_PICK = null;
 
+      // ---------- Noom-style meal slots + logging flow ----------
+      const FUEL_SLOTS = [
+        { key: "breakfast",       label: "Breakfast",       icon: "☕" },
+        { key: "morning_snack",   label: "Morning Snack",   icon: "🍉" },
+        { key: "lunch",           label: "Lunch",           icon: "🥗" },
+        { key: "afternoon_snack", label: "Afternoon Snack", icon: "🥨" },
+        { key: "dinner",          label: "Dinner",          icon: "🍲" },
+        { key: "evening_snack",   label: "Evening Snack",   icon: "🍿" },
+      ];
+      const FUEL_SLOT_LABEL = Object.fromEntries(FUEL_SLOTS.map((s) => [s.key, s.label]));
+      function slotForMeal(m) {
+        if (m && m.slot && FUEL_SLOT_LABEL[m.slot]) return m.slot;
+        const ts = m && m.loggedAt ? new Date(m.loggedAt) : null;
+        const h = (ts && !isNaN(ts.getTime())) ? ts.getHours() + ts.getMinutes() / 60 : 12;
+        if (h < 10) return "breakfast";
+        if (h < 11.5) return "morning_snack";
+        if (h < 14.5) return "lunch";
+        if (h < 17) return "afternoon_snack";
+        if (h < 20.5) return "dinner";
+        return "evening_snack";
+      }
+
+      let FUEL_FLOW = { slot: "breakfast", view: "search", pickTarget: "log", draft: null };
+
+      // ---------- Saved composite meals ("My meals") ----------
+      const MY_MEALS_KEY = "katie-mile-my-meals";
+      function loadMyMeals() {
+        try { const r = localStorage.getItem(MY_MEALS_KEY); return r ? JSON.parse(r) : []; }
+        catch (e) { return []; }
+      }
+      function persistMyMeals() {
+        try { localStorage.setItem(MY_MEALS_KEY, JSON.stringify(MY_MEALS)); } catch (e) {}
+        if (typeof scheduleSync === "function") scheduleSync();
+      }
+      let MY_MEALS = loadMyMeals();
+      function mealTotals(meal) {
+        const t = { cal: 0, p: 0, c: 0, f: 0, fiber: 0, na: 0 };
+        for (const ing of (meal && meal.ingredients) || []) {
+          t.cal += parseFloat(ing.cal) || 0;
+          t.p += parseFloat(ing.p) || 0;
+          t.c += parseFloat(ing.c) || 0;
+          t.f += parseFloat(ing.f) || 0;
+          t.fiber += parseFloat(ing.fiber) || 0;
+          t.na += parseFloat(ing.na) || 0;
+        }
+        return t;
+      }
+      function mealPerServing(meal) {
+        const t = mealTotals(meal);
+        const n = Math.max(parseFloat(meal && meal.totalServings) || 1, 0.0001);
+        return { cal: t.cal / n, p: t.p / n, c: t.c / n, f: t.f / n, fiber: t.fiber / n, na: t.na / n };
+      }
+
       function todaysMeals() {
         const date = todayISO();
         return MEALS[date] || [];
@@ -1079,63 +1130,6 @@
         long: "Long run",
         race: "Race day",
       };
-
-      // ── Noom-style food color system ─────────────────────────
-      // Foods are classified green / yellow / orange by calorie density
-      // (calories per gram), Noom's core idea: low-density foods you can
-      // eat more freely (green), dense ones to keep an eye on (orange).
-      // When a serving weight is available we use true density; otherwise
-      // we fall back to a macro-composition heuristic.
-      function parseServingGrams(serving) {
-        if (!serving) return null;
-        let mult = 1;
-        const multM = String(serving).match(/^\s*([\d.]+)\s*[×x*]/);
-        if (multM) mult = parseFloat(multM[1]) || 1;
-        const gM = String(serving).match(/([\d.]+)\s*(g|ml)\b/i);
-        if (gM) { const g = parseFloat(gM[1]); return g > 0 ? g * mult : null; }
-        return null;
-      }
-      function foodColor(m) {
-        const cal = parseFloat(m && m.cal) || 0;
-        if (cal <= 0) return "green";
-        const grams = parseServingGrams(m.serving);
-        if (grams) {
-          const d = cal / grams; // cal per gram
-          if (d <= 1.0) return "green";
-          if (d <= 2.4) return "yellow";
-          return "orange";
-        }
-        // Macro fallback (no weight): fat-heavy → dense; lean+fiber → light
-        const f = parseFloat(m.f) || 0, p = parseFloat(m.p) || 0, fiber = parseFloat(m.fiber) || 0;
-        const fatRatio = (f * 9) / cal;
-        const protRatio = (p * 4) / cal;
-        if (fatRatio >= 0.45) return "orange";
-        if (fatRatio <= 0.25 && (fiber >= 2 || protRatio >= 0.25)) return "green";
-        return "yellow";
-      }
-      const FOOD_COLOR_LABEL = { green: "Green", yellow: "Yellow", orange: "Orange" };
-      // Sum today's calories by food color → drives the segmented budget bar.
-      function colorCalTotals(meals) {
-        const t = { green: 0, yellow: 0, orange: 0 };
-        for (const m of meals) t[foodColor(m)] += parseFloat(m.cal) || 0;
-        return t;
-      }
-      // Infer a Noom meal slot from when the food was logged.
-      function mealSlotFor(m) {
-        const ts = m && m.loggedAt ? new Date(m.loggedAt) : null;
-        if (!ts || isNaN(ts.getTime())) return "snack";
-        const h = ts.getHours();
-        if (h < 11) return "breakfast";
-        if (h < 15) return "lunch";
-        if (h >= 17 && h < 22) return "dinner";
-        return "snack";
-      }
-      const MEAL_SLOTS = [
-        { key: "breakfast", label: "Breakfast" },
-        { key: "lunch", label: "Lunch" },
-        { key: "dinner", label: "Dinner" },
-        { key: "snack", label: "Snack" },
-      ];
 
       function renderFuelTarget() {
         const target = buildTodayTarget();
@@ -1169,23 +1163,9 @@
         const remLblEl = document.querySelector(".ftc-remaining-label");
         if (remLblEl) remLblEl.textContent = isOver ? "calories over target" : "calories remaining";
 
-        // Segmented budget bar — green / yellow / orange share of intake,
-        // each as a % of the calorie target (Noom-style color budget).
-        const colorCals = colorCalTotals(meals);
-        const denom = Math.max(target.targetCal, 1);
-        const segW = (v) => Math.max(0, Math.min(100, (v / denom) * 100));
-        const setSeg = (id, v) => { const el = document.getElementById(id); if (el) el.style.width = segW(v) + "%"; };
-        setSeg("ftcSegGreen",  colorCals.green);
-        setSeg("ftcSegYellow", colorCals.yellow);
-        setSeg("ftcSegOrange", colorCals.orange);
-        const track = document.getElementById("ftcCalTrack");
-        if (track) track.classList.toggle("over", isOver);
-        const setLeg = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = Math.round(v).toLocaleString(); };
-        setLeg("ftcLegGreen",  colorCals.green);
-        setLeg("ftcLegYellow", colorCals.yellow);
-        setLeg("ftcLegOrange", colorCals.orange);
-        const legend = document.getElementById("ftcColorLegend");
-        if (legend) legend.style.display = totals.cal > 0 ? "flex" : "none";
+        // Bar
+        const fill = document.getElementById("ftcCalFill");
+        if (fill) { fill.style.width = pct + "%"; fill.className = "ftc-bar-fill" + (isOver ? " over" : ""); }
         const cons = document.getElementById("ftcConsumed");
         const tgt  = document.getElementById("ftcTarget");
         if (cons) cons.textContent = Math.round(totals.cal).toLocaleString() + " consumed";
@@ -1291,9 +1271,16 @@
               source: item.source || (item.foodId ? "usda" : "manual"),
               loggedAt: new Date().toISOString(),
             };
+            if (FUEL_FLOW.pickTarget === "ingredient" && FUEL_FLOW.draft) {
+              FUEL_FLOW.draft.ingredients.push(meal);
+              FUEL_FLOW.pickTarget = "log";
+              openBuilder(FUEL_FLOW.draft);
+              return;
+            }
+            meal.slot = FUEL_FLOW.slot || slotForMeal(meal);
             addMeal(todayISO(), meal);
             renderFuel();
-            showToast(`Logged ${item.name} (${item.cal} cal).`);
+            showToast(`Added ${item.name} to ${FUEL_SLOT_LABEL[FUEL_FLOW.slot] || "log"}.`);
           });
         });
       }
@@ -1306,47 +1293,29 @@
           listEl.innerHTML = `<div class="fuel-empty">No meals logged yet today.</div>`;
           return;
         }
-        // Group by Noom meal slot (inferred from log time)
-        const groups = {};
-        for (const m of meals) (groups[mealSlotFor(m)] ||= []).push(m);
-
-        const rowHtml = (m) => {
+        let html = "";
+        for (const m of meals) {
           const stats = [];
           if (m.p) stats.push(`${m.p}P`);
           if (m.c) stats.push(`${m.c}C`);
           if (m.f) stats.push(`${m.f}F`);
           if (m.fiber) stats.push(`${m.fiber} fiber`);
           if (m.na) stats.push(`${Math.round(m.na)}mg Na`);
+          // Build a "Brand · serving" subtitle for foods looked up via FatSecret
           const subBits = [];
           if (m.brand) subBits.push(m.brand);
           if (m.serving) subBits.push(m.serving);
           const subtitle = subBits.length
             ? `<div class="ms" style="opacity:.75">${subBits.join(" · ").replace(/</g, "&lt;")}</div>`
             : "";
-          const color = foodColor(m);
-          return `<div class="fuel-meal-row">
-            <i class="fc-dot ${color}" title="${FOOD_COLOR_LABEL[color]} food"></i>
-            <div class="fmr-body">
+          html += `<div class="fuel-meal-row">
+            <div>
               <div class="mn">${(m.name || "(unnamed)").replace(/</g, "&lt;")}</div>
               ${subtitle}
               ${stats.length ? `<div class="ms">${stats.join(" · ")}</div>` : ""}
             </div>
             <div class="mc">${m.cal} cal</div>
             <button type="button" data-del-id="${m.id}" title="Delete">×</button>
-          </div>`;
-        };
-
-        let html = "";
-        for (const slot of MEAL_SLOTS) {
-          const items = groups[slot.key];
-          if (!items || !items.length) continue;
-          const subtotal = items.reduce((s, m) => s + (parseFloat(m.cal) || 0), 0);
-          html += `<div class="fuel-meal-group">
-            <div class="fmg-head">
-              <span class="fmg-title">${slot.label}</span>
-              <span class="fmg-sub">${Math.round(subtotal).toLocaleString()} cal</span>
-            </div>
-            ${items.map(rowHtml).join("")}
           </div>`;
         }
         listEl.innerHTML = html;
@@ -1379,18 +1348,6 @@
         setBar("fuelBarF", "fuelValF", totals.f, target.targetF, "g");
         setBar("fuelBarFi", "fuelValFi", totals.fiber, target.targetFi, "g");
         setBar("fuelBarNa", "fuelValNa", totals.na, target.targetNa, "mg", true);
-
-        // Calorie color breakdown (share of what was actually eaten)
-        const cc = colorCalTotals(meals);
-        const eaten = cc.green + cc.yellow + cc.orange;
-        const breakEl = document.getElementById("faColorBreak");
-        if (breakEl) breakEl.style.display = eaten > 0 ? "block" : "none";
-        const share = (v) => (eaten > 0 ? (v / eaten) * 100 : 0);
-        const setW = (id, v) => { const el = document.getElementById(id); if (el) el.style.width = share(v) + "%"; };
-        const setPct = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = Math.round(share(v)) + "%"; };
-        setW("faCbGreen", cc.green);   setPct("faCbGreenPct", cc.green);
-        setW("faCbYellow", cc.yellow); setPct("faCbYellowPct", cc.yellow);
-        setW("faCbOrange", cc.orange); setPct("faCbOrangePct", cc.orange);
       }
 
       function renderFuelEA(target) {
@@ -1442,11 +1399,232 @@
         detailEl.innerHTML = `Intake: <b>${Math.round(totals.cal)}</b> cal · Exercise: <b>${exCal}</b> cal · Net: <b>${Math.round(totals.cal - exCal)}</b> / 47.8 kg LBM. ${zone.desc}`;
       }
 
+      // ---------- Meal-slot list (the "Log meals" card) ----------
+      function renderFuelSlots() {
+        const host = document.getElementById("mealSlots");
+        if (!host) return;
+        const meals = todaysMeals();
+        const bySlot = {};
+        for (const m of meals) (bySlot[slotForMeal(m)] ||= []).push(m);
+        const esc = (s) => String(s || "").replace(/</g, "&lt;");
+        let html = "";
+        for (const slot of FUEL_SLOTS) {
+          const items = bySlot[slot.key] || [];
+          const sub = items.reduce((s, m) => s + (parseFloat(m.cal) || 0), 0);
+          html += `<div class="meal-slot" data-slot="${slot.key}">
+            <div class="ms-row">
+              <span class="ms-icon ms-icon-${slot.key}">${slot.icon}</span>
+              <span class="ms-label">${slot.label}</span>
+              ${items.length ? `<span class="ms-sub">${Math.round(sub).toLocaleString()} cal</span>` : ""}
+              <button type="button" class="ms-add" data-slot-add="${slot.key}" aria-label="Add to ${slot.label}">+</button>
+            </div>
+            ${items.length ? `<div class="ms-items">` + items.map((m) => `
+              <div class="ms-item">
+                <span class="ms-item-name">${esc(m.name || "(unnamed)")}</span>
+                <span class="ms-item-cal">${Math.round(parseFloat(m.cal) || 0)} cal</span>
+                <button type="button" class="ms-item-del" data-del-id="${m.id}" aria-label="Delete">×</button>
+              </div>`).join("") + `</div>` : ""}
+          </div>`;
+        }
+        host.innerHTML = html;
+        host.querySelectorAll("[data-slot-add]").forEach((b) =>
+          b.addEventListener("click", (e) => { e.stopPropagation(); openFuelLog(b.dataset.slotAdd); }));
+        host.querySelectorAll(".ms-item-del").forEach((b) =>
+          b.addEventListener("click", (e) => { e.stopPropagation(); deleteMeal(todayISO(), b.dataset.delId); renderFuel(); }));
+        host.querySelectorAll(".meal-slot").forEach((row) =>
+          row.addEventListener("click", () => openFuelLog(row.dataset.slot)));
+      }
+
+      // ---------- Logging overlay control ----------
+      function setFloView(view) {
+        FUEL_FLOW.view = view;
+        const map = { search: "floViewSearch", meals: "floViewMeals", builder: "floViewBuilder" };
+        for (const v in map) { const el = document.getElementById(map[v]); if (el) el.style.display = (v === view) ? "" : "none"; }
+        const tabs = document.getElementById("floTabs");
+        if (tabs) tabs.style.display = (view === "builder") ? "none" : "";
+        const ts = document.getElementById("floTabSearch");
+        const tm = document.getElementById("floTabMeals");
+        if (ts) ts.classList.toggle("active", view === "search");
+        if (tm) tm.classList.toggle("active", view === "meals");
+      }
+      function updateIngBanner() {
+        const b = document.getElementById("floIngBanner");
+        if (!b) return;
+        if (FUEL_FLOW.pickTarget === "ingredient" && FUEL_FLOW.draft) {
+          b.style.display = "";
+          b.textContent = `Adding ingredient to "${FUEL_FLOW.draft.name || "new meal"}"`;
+        } else { b.style.display = "none"; }
+      }
+      function resetSearchPanel() {
+        ["mealName", "mealCal", "mealP", "mealC", "mealF", "mealFi", "mealNa", "foodSearchInput"].forEach((id) => {
+          const el = document.getElementById(id); if (el) el.value = "";
+        });
+        ["foodSearchResults", "foodServingPicker", "scanPortion"].forEach((id) => {
+          const el = document.getElementById(id); if (el) el.style.display = "none";
+        });
+        const clr = document.getElementById("foodSearchClear"); if (clr) clr.style.display = "none";
+        const st = document.getElementById("foodSearchStatus"); if (st) st.textContent = "";
+        PENDING_FOOD_PICK = null;
+        updateIngBanner();
+      }
+      function openFuelLog(slotKey) {
+        const ov = document.getElementById("fuelLogOverlay");
+        if (!ov) return;
+        FUEL_FLOW.slot = slotKey || "breakfast";
+        FUEL_FLOW.pickTarget = "log";
+        FUEL_FLOW.draft = null;
+        const title = document.getElementById("floTitle");
+        if (title) title.textContent = FUEL_SLOT_LABEL[FUEL_FLOW.slot] || "Log food";
+        setFloView("search");
+        resetSearchPanel();
+        renderRecentChips();
+        renderMyMeals();
+        ov.style.display = "";
+        ov.scrollTop = 0;
+        document.body.classList.add("fuel-log-open");
+      }
+      function closeFuelLog() {
+        const ov = document.getElementById("fuelLogOverlay");
+        if (ov) ov.style.display = "none";
+        document.body.classList.remove("fuel-log-open");
+        FUEL_FLOW.pickTarget = "log";
+        FUEL_FLOW.draft = null;
+        renderFuel();
+      }
+
+      // ---------- My meals (saved composite meals) ----------
+      function renderMyMeals() {
+        const host = document.getElementById("myMealsList");
+        if (!host) return;
+        const esc = (s) => String(s || "").replace(/</g, "&lt;");
+        if (!MY_MEALS.length) {
+          host.innerHTML = `<div class="mm-empty">No saved meals yet. Build one below to log it in a single tap.</div>`;
+          return;
+        }
+        host.innerHTML = MY_MEALS.map((meal, i) => {
+          const ings = (meal.ingredients || []).map((x) => x.name).filter(Boolean).join(", ");
+          const ps = mealPerServing(meal);
+          const n = meal.totalServings || 1;
+          return `<div class="mm-card" data-meal-idx="${i}">
+            <div class="mm-card-head">
+              <div class="mm-card-name">${esc(meal.name || "Untitled meal")}</div>
+              <button type="button" class="mm-card-del" data-meal-del="${i}" aria-label="Delete meal">×</button>
+            </div>
+            <div class="mm-card-ings">${esc(ings) || "No ingredients"}</div>
+            <div class="mm-card-meta">${Math.round(ps.cal)} cal / serving · ${n} serving${n == 1 ? "" : "s"}</div>
+          </div>`;
+        }).join("");
+        host.querySelectorAll(".mm-card").forEach((c) =>
+          c.addEventListener("click", () => logSavedMeal(parseInt(c.dataset.mealIdx, 10))));
+        host.querySelectorAll(".mm-card-del").forEach((b) =>
+          b.addEventListener("click", (e) => {
+            e.stopPropagation();
+            MY_MEALS.splice(parseInt(b.dataset.mealDel, 10), 1);
+            persistMyMeals();
+            renderMyMeals();
+          }));
+      }
+      function logSavedMeal(idx) {
+        const meal = MY_MEALS[idx];
+        if (!meal) return;
+        const ps = mealPerServing(meal);
+        const m = {
+          id: (crypto.randomUUID ? crypto.randomUUID() : Date.now() + "-" + Math.random().toString(36).slice(2)),
+          name: meal.name || "Meal",
+          cal: Math.round(ps.cal),
+          p: ps.p ? +ps.p.toFixed(1) : null,
+          c: ps.c ? +ps.c.toFixed(1) : null,
+          f: ps.f ? +ps.f.toFixed(1) : null,
+          fiber: ps.fiber ? +ps.fiber.toFixed(1) : null,
+          na: ps.na ? Math.round(ps.na) : null,
+          slot: FUEL_FLOW.slot,
+          source: "mymeal",
+          mealRef: meal.id || null,
+          serving: "1 serving",
+          loggedAt: new Date().toISOString(),
+        };
+        addMeal(todayISO(), m);
+        renderFuel();
+        showToast(`Added ${meal.name || "meal"} to ${FUEL_SLOT_LABEL[FUEL_FLOW.slot]}.`);
+      }
+
+      // ---------- Meal builder ----------
+      function openBuilder(meal) {
+        FUEL_FLOW.draft = meal || {
+          id: (crypto.randomUUID ? crypto.randomUUID() : Date.now() + "-" + Math.random().toString(36).slice(2)),
+          name: "", ingredients: [], totalServings: 1,
+        };
+        FUEL_FLOW.pickTarget = "log";
+        const nameEl = document.getElementById("mbName");
+        const srvEl = document.getElementById("mbServings");
+        if (nameEl) nameEl.value = FUEL_FLOW.draft.name || "";
+        if (srvEl) srvEl.value = FUEL_FLOW.draft.totalServings || 1;
+        renderBuilder();
+        setFloView("builder");
+      }
+      function renderBuilder() {
+        const d = FUEL_FLOW.draft;
+        if (!d) return;
+        const esc = (s) => String(s || "").replace(/</g, "&lt;");
+        const host = document.getElementById("mbIngredients");
+        if (host) {
+          if (!d.ingredients.length) {
+            host.innerHTML = `<div class="mb-ing-empty">No ingredients yet — tap “Add Ingredient”.</div>`;
+          } else {
+            host.innerHTML = d.ingredients.map((ing, i) => `
+              <div class="mb-ing-row">
+                <span class="mb-ing-name">${esc(ing.name || "Ingredient")}</span>
+                <span class="mb-ing-cal">${Math.round(parseFloat(ing.cal) || 0)} cal</span>
+                <button type="button" class="mb-ing-del" data-ing-del="${i}" aria-label="Remove">×</button>
+              </div>`).join("");
+            host.querySelectorAll(".mb-ing-del").forEach((b) =>
+              b.addEventListener("click", () => { d.ingredients.splice(parseInt(b.dataset.ingDel, 10), 1); renderBuilder(); }));
+          }
+        }
+        const srvEl = document.getElementById("mbServings");
+        const n = Math.max(parseFloat(srvEl && srvEl.value) || 1, 0.0001);
+        const t = mealTotals(d);
+        const cps = document.getElementById("mbCalPerServing");
+        if (cps) cps.textContent = `${Math.round(t.cal / n)} CAL / SERVING`;
+      }
+      function startAddIngredient() {
+        const d = FUEL_FLOW.draft;
+        if (d) {
+          const nameEl = document.getElementById("mbName");
+          const srvEl = document.getElementById("mbServings");
+          if (nameEl) d.name = nameEl.value.trim();
+          if (srvEl) d.totalServings = parseFloat(srvEl.value) || 1;
+        }
+        FUEL_FLOW.pickTarget = "ingredient";
+        resetSearchPanel();
+        renderRecentChips();
+        setFloView("search");
+        updateIngBanner();
+      }
+      function saveBuilder() {
+        const d = FUEL_FLOW.draft;
+        if (!d) return;
+        const nameEl = document.getElementById("mbName");
+        const srvEl = document.getElementById("mbServings");
+        d.name = (nameEl && nameEl.value || "").trim();
+        d.totalServings = Math.max(parseFloat(srvEl && srvEl.value) || 1, 0.0001);
+        if (!d.name) { showToast("Give your meal a name first.", "error"); return; }
+        if (!d.ingredients.length) { showToast("Add at least one ingredient.", "error"); return; }
+        const existing = MY_MEALS.findIndex((m) => m.id === d.id);
+        if (existing >= 0) MY_MEALS[existing] = d; else MY_MEALS.push(d);
+        persistMyMeals();
+        const saved = d.name;
+        FUEL_FLOW.draft = null;
+        FUEL_FLOW.pickTarget = "log";
+        renderMyMeals();
+        setFloView("meals");
+        showToast(`Saved “${saved}”.`);
+      }
+
       function renderFuel() {
         const target = renderFuelTarget();
         if (!target) return;
-        renderRecentChips();
-        renderFuelMeals();
+        renderFuelSlots();
         renderFuelProgress(target);
         renderFuelEA(target);
       }
@@ -1479,13 +1657,28 @@
             source: pending.source || (pending.foodId ? "usda" : "manual"),
             loggedAt: new Date().toISOString(),
           };
+          const clearForm = () => {
+            ["mealName", "mealCal", "mealP", "mealC", "mealF", "mealFi", "mealNa"].forEach((id) => {
+              const el = document.getElementById(id); if (el) el.value = "";
+            });
+            PENDING_FOOD_PICK = null;
+          };
+          if (FUEL_FLOW.pickTarget === "ingredient" && FUEL_FLOW.draft) {
+            FUEL_FLOW.draft.ingredients.push(meal);
+            clearForm();
+            FUEL_FLOW.pickTarget = "log";
+            openBuilder(FUEL_FLOW.draft);
+            return;
+          }
+          meal.slot = FUEL_FLOW.slot || slotForMeal(meal);
           addMeal(todayISO(), meal);
-          // Clear inputs (including the new sodium field) + pending pick
-          ["mealName", "mealCal", "mealP", "mealC", "mealF", "mealFi", "mealNa"].forEach((id) => {
-            document.getElementById(id).value = "";
-          });
-          PENDING_FOOD_PICK = null;
+          clearForm();
           renderFuel();
+          const ov = document.getElementById("fuelLogOverlay");
+          if (ov && ov.style.display !== "none") {
+            resetSearchPanel();
+            showToast(`Added to ${FUEL_SLOT_LABEL[FUEL_FLOW.slot] || "log"}.`);
+          }
         });
         // Luteal toggle
         const lutealCb = document.getElementById("lutealCheck");
@@ -1501,6 +1694,28 @@
         // Camera scan (barcode / nutrition label) wiring
         initFoodScan();
         initScanPortion();
+
+        // ----- Logging overlay wiring -----
+        const onClick = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener("click", fn); };
+        onClick("floBack", () => {
+          if (FUEL_FLOW.pickTarget === "ingredient" && FUEL_FLOW.draft) {
+            FUEL_FLOW.pickTarget = "log";
+            openBuilder(FUEL_FLOW.draft);
+            return;
+          }
+          if (FUEL_FLOW.view === "builder") { FUEL_FLOW.draft = null; setFloView("meals"); return; }
+          closeFuelLog();
+        });
+        onClick("floDone", closeFuelLog);
+        onClick("floTabSearch", () => { FUEL_FLOW.pickTarget = "log"; updateIngBanner(); setFloView("search"); });
+        onClick("floTabMeals", () => setFloView("meals"));
+        onClick("floAddMeal", () => openBuilder(null));
+        onClick("mbAddIng", startAddIngredient);
+        onClick("mbCancel", () => { FUEL_FLOW.draft = null; FUEL_FLOW.pickTarget = "log"; setFloView("meals"); });
+        onClick("mbSave", saveBuilder);
+        const mbServings = document.getElementById("mbServings");
+        if (mbServings) mbServings.addEventListener("input", renderBuilder);
+
         renderFuel();
       }
 
@@ -1884,15 +2099,10 @@
                         : (f.source === "barcode" ? "barcode" : "label scan");
               const per = f.basis === "per_100g" ? "per 100 g/ml"
                         : (f.serving ? safe(f.serving) : "per serving");
-              const color = foodColor({ cal: f.cal, f: f.fat_g, p: f.protein_g, fiber: f.fiber_g,
-                                        serving: f.basis === "per_100g" ? "100 g" : f.serving });
               return `
               <div class="food-result saved" data-saved-idx="${i}">
-                <i class="fc-dot ${color}" title="${FOOD_COLOR_LABEL[color]} food"></i>
-                <div class="fr-body">
-                  <div class="fr-name">${safe(f.name)}${f.brand ? `<span class="fr-brand">${safe(f.brand)}</span>` : ""}</div>
-                  <div class="fr-desc">${Math.round(f.cal || 0)} cal · ${per} · ${tag}</div>
-                </div>
+                <div class="fr-name">${safe(f.name)}${f.brand ? `<span class="fr-brand">${safe(f.brand)}</span>` : ""}</div>
+                <div class="fr-desc">${Math.round(f.cal || 0)} cal · ${per} · ${tag}</div>
               </div>`;
             }).join("");
           }
@@ -3018,29 +3228,27 @@
 
       // ---------- Hero countdown ----------
       function renderCountdown() {
-        const aRace = parseISO(DATA.meta.race_date);       // Dresden Oct 25
-        const bRace = parseISO(DATA.meta.b_race_date);     // Copenhagen Sep 19
+        const race = parseISO(DATA.meta.race_date);
         const now = new Date();
-        const daysA = Math.max(0, Math.ceil((aRace - now) / 86400000));
-        const daysB = Math.max(0, Math.ceil((bRace - now) / 86400000));
-        const bDone = todayISO() > DATA.meta.b_race_date;
-
+        const days = Math.max(0, Math.ceil((race - now) / 86400000));
         const todayD = todayClampedISO();
-        let weekIdx = 0;
+        let weekIdx = 0,
+          dayIdx = 0;
         for (let i = 0; i < DATA.weeks.length; i++) {
           const w = DATA.weeks[i];
           if (todayD >= w.start_date && todayD <= w.end_date) {
             weekIdx = i;
+            for (let d = 0; d < w.days.length; d++)
+              if (w.days[d].date === todayD) {
+                dayIdx = d;
+                break;
+              }
             break;
           }
         }
         const cd = document.getElementById("countdown");
-        const bBox = bDone
-          ? `<div class="cd-box"><div class="v">🎉</div><div class="l">Copenhagen done</div></div>`
-          : `<div class="cd-box"><div class="v">${daysB}</div><div class="l">days · Copenhagen</div></div>`;
         cd.innerHTML = `
-    ${bBox}
-    <div class="cd-box"><div class="v">${daysA}</div><div class="l">days · Dresden</div></div>
+    <div class="cd-box"><div class="v">${days}</div><div class="l">days to race</div></div>
     <div class="cd-box"><div class="v">W${weekIdx + 1}</div><div class="l">current week</div></div>
     <div class="cd-box"><div class="v">${DATA.weeks[weekIdx].mileage}</div><div class="l">miles this week</div></div>
     <div class="cd-box"><div class="v">P${DATA.weeks[weekIdx].phase}</div><div class="l">phase</div></div>
