@@ -533,7 +533,7 @@ const DATA = {
       "num": 6,
       "phase": 2,
       "mileage": 22,
-      "theme": "Steady build. Hills again. Add 5 lb to lifts if last week felt strong.",
+      "theme": "First quality session. Intro fartlek — controlled effort, not all-out. Add 5 lb to lifts if last week felt strong.",
       "days": [
         {
           "date": "2026-06-01",
@@ -559,8 +559,8 @@ const DATA = {
         {
           "date": "2026-06-03",
           "day_name": "Wed",
-          "title": "Hill strides",
-          "detail": "5 mi: 1 mi WU; 6x30s hill strides (longer this week); 2.5 mi CD.",
+          "title": "Intro Fartlek",
+          "detail": "5 mi: 1 mi WU; 8x(45s ON @ comfortably hard / 90s easy jog); 1.5 mi CD. First quality session — ON segments should feel controlled, not all-out. Focus on smooth turnover.",
           "routines": [
             "pre_run",
             "post_run"
@@ -619,7 +619,7 @@ const DATA = {
       "num": 7,
       "phase": 2,
       "mileage": 24,
-      "theme": "Introduce fartlek. First taste of varied pace running.",
+      "theme": "Build fartlek. More volume on the ON segments — still controlled.",
       "days": [
         {
           "date": "2026-06-08",
