@@ -853,6 +853,8 @@
         3: { rest: 1700, easy: 1800, bike: 1800, quality: 1950, long: 2150, race: 2200 },
         4: { rest: 1750, easy: 1850, bike: 1850, quality: 2000, long: 2200, race: 2200 },
         5: { rest: 1650, easy: 1750, bike: 1750, quality: 1850, long: 1950, race: 2100 },
+        6: { rest: 1750, easy: 1850, bike: 1850, quality: 2000, long: 2250, race: 2300 },
+        7: { rest: 1650, easy: 1750, bike: 1750, quality: 1900, long: 2000, race: 2200 },
       };
 
       // EA zones (kcal/kg LBM)
@@ -3016,27 +3018,29 @@
 
       // ---------- Hero countdown ----------
       function renderCountdown() {
-        const race = parseISO(DATA.meta.race_date);
+        const aRace = parseISO(DATA.meta.race_date);       // Dresden Oct 25
+        const bRace = parseISO(DATA.meta.b_race_date);     // Copenhagen Sep 19
         const now = new Date();
-        const days = Math.max(0, Math.ceil((race - now) / 86400000));
+        const daysA = Math.max(0, Math.ceil((aRace - now) / 86400000));
+        const daysB = Math.max(0, Math.ceil((bRace - now) / 86400000));
+        const bDone = todayISO() > DATA.meta.b_race_date;
+
         const todayD = todayClampedISO();
-        let weekIdx = 0,
-          dayIdx = 0;
+        let weekIdx = 0;
         for (let i = 0; i < DATA.weeks.length; i++) {
           const w = DATA.weeks[i];
           if (todayD >= w.start_date && todayD <= w.end_date) {
             weekIdx = i;
-            for (let d = 0; d < w.days.length; d++)
-              if (w.days[d].date === todayD) {
-                dayIdx = d;
-                break;
-              }
             break;
           }
         }
         const cd = document.getElementById("countdown");
+        const bBox = bDone
+          ? `<div class="cd-box"><div class="v">🎉</div><div class="l">Copenhagen done</div></div>`
+          : `<div class="cd-box"><div class="v">${daysB}</div><div class="l">days · Copenhagen</div></div>`;
         cd.innerHTML = `
-    <div class="cd-box"><div class="v">${days}</div><div class="l">days to race</div></div>
+    ${bBox}
+    <div class="cd-box"><div class="v">${daysA}</div><div class="l">days · Dresden</div></div>
     <div class="cd-box"><div class="v">W${weekIdx + 1}</div><div class="l">current week</div></div>
     <div class="cd-box"><div class="v">${DATA.weeks[weekIdx].mileage}</div><div class="l">miles this week</div></div>
     <div class="cd-box"><div class="v">P${DATA.weeks[weekIdx].phase}</div><div class="l">phase</div></div>
