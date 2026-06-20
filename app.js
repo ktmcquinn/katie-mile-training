@@ -1626,7 +1626,6 @@
         if (!target) return;
         renderFuelSlots();
         renderFuelProgress(target);
-        renderFuelEA(target);
       }
 
       function initFuel() {
