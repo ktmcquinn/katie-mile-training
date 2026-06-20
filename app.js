@@ -1242,46 +1242,65 @@
           .slice(0, limit);
       }
 
+      // Build a meal from a previously-consumed food and log it (or add it as
+      // an ingredient when building a meal), routing by the active flow target.
+      function commitRecentFood(item) {
+        if (!item) return;
+        const meal = {
+          id: (crypto.randomUUID ? crypto.randomUUID() : Date.now() + "-" + Math.random().toString(36).slice(2)),
+          name: item.name,
+          cal: item.cal,
+          p: item.p, c: item.c, f: item.f, fiber: item.fiber, na: item.na,
+          foodId: item.foodId || null,
+          brand: item.brand || null,
+          serving: item.serving || null,
+          source: item.source || (item.foodId ? "usda" : "manual"),
+          loggedAt: new Date().toISOString(),
+        };
+        if (FUEL_FLOW.pickTarget === "ingredient" && FUEL_FLOW.draft) {
+          FUEL_FLOW.draft.ingredients.push(meal);
+          FUEL_FLOW.pickTarget = "log";
+          openBuilder(FUEL_FLOW.draft);
+          return;
+        }
+        meal.slot = FUEL_FLOW.slot || slotForMeal(meal);
+        addMeal(todayISO(), meal);
+        renderFuel();
+        showToast(`Added ${item.name} to ${FUEL_SLOT_LABEL[FUEL_FLOW.slot] || "log"}.`);
+      }
+
+      // Search foods you've already logged (your intake history) — used to
+      // prioritize "your foods" at the top of search results.
+      function searchMyIntake(q, limit = 8) {
+        const needle = (q || "").toLowerCase().trim();
+        if (!needle) return [];
+        return recentUniqueFoods(60).filter((m) =>
+          (m.name || "").toLowerCase().includes(needle) ||
+          (m.brand || "").toLowerCase().includes(needle)
+        ).slice(0, limit);
+      }
+
+      // "Recently consumed" list shown by default in the logging overlay.
       function renderRecentChips() {
         const el = document.getElementById("recentFoods");
         if (!el) return;
-        const items = recentUniqueFoods(6);
-        if (!items.length) { el.style.display = "none"; return; }
+        const items = recentUniqueFoods(8);
+        if (!items.length) { el.style.display = "none"; el.innerHTML = ""; return; }
         el.style.display = "";
-        let html = `<div class="recent-label">Recent — tap to log again</div><div class="recent-chips">`;
+        const esc = (s) => String(s || "").replace(/</g, "&lt;");
+        let html = `<div class="recent-label">Recently consumed</div><div class="recent-list">`;
         for (let i = 0; i < items.length; i++) {
           const m = items[i];
-          const safeName = (m.name || "(unnamed)").replace(/</g, "&lt;");
-          html += `<button type="button" class="recent-chip" data-idx="${i}" title="${safeName} — ${m.cal} cal"><span class="chip-name">${safeName}</span><span class="chip-cal">${m.cal} cal</span></button>`;
+          const sub = m.brand ? `<span class="recent-sub">${esc(m.brand)}</span>` : "";
+          html += `<button type="button" class="recent-row" data-idx="${i}">
+            <span class="recent-row-name">${esc(m.name || "(unnamed)")}${sub}</span>
+            <span class="recent-row-cal">${Math.round(m.cal || 0)} cal</span>
+          </button>`;
         }
         html += `</div>`;
         el.innerHTML = html;
-        el.querySelectorAll(".recent-chip").forEach((btn) => {
-          btn.addEventListener("click", () => {
-            const item = items[parseInt(btn.dataset.idx, 10)];
-            if (!item) return;
-            const meal = {
-              id: (crypto.randomUUID ? crypto.randomUUID() : Date.now() + "-" + Math.random().toString(36).slice(2)),
-              name: item.name,
-              cal: item.cal,
-              p: item.p, c: item.c, f: item.f, fiber: item.fiber, na: item.na,
-              foodId: item.foodId || null,
-              brand: item.brand || null,
-              serving: item.serving || null,
-              source: item.source || (item.foodId ? "usda" : "manual"),
-              loggedAt: new Date().toISOString(),
-            };
-            if (FUEL_FLOW.pickTarget === "ingredient" && FUEL_FLOW.draft) {
-              FUEL_FLOW.draft.ingredients.push(meal);
-              FUEL_FLOW.pickTarget = "log";
-              openBuilder(FUEL_FLOW.draft);
-              return;
-            }
-            meal.slot = FUEL_FLOW.slot || slotForMeal(meal);
-            addMeal(todayISO(), meal);
-            renderFuel();
-            showToast(`Added ${item.name} to ${FUEL_SLOT_LABEL[FUEL_FLOW.slot] || "log"}.`);
-          });
+        el.querySelectorAll(".recent-row").forEach((btn) => {
+          btn.addEventListener("click", () => commitRecentFood(items[parseInt(btn.dataset.idx, 10)]));
         });
       }
 
@@ -2038,6 +2057,7 @@
         }
 
         // ---- Search box: debounced query → results dropdown ----
+        // Hides the default "recently consumed" list while a query is active.
         input.addEventListener("input", (e) => {
           const q = e.target.value.trim();
           clearBtn.style.display = q ? "" : "none";
@@ -2045,29 +2065,29 @@
           if (q.length < 2) {
             clearResults();
             setStatus("");
+            renderRecentChips();
             return;
           }
-          // Saved scans/USDA picks are local — show them instantly while the
-          // USDA network search runs in the background.
-          const savedNow = searchSavedFoods(q);
-          renderResults([], savedNow);
+          const recentEl = document.getElementById("recentFoods");
+          if (recentEl) recentEl.style.display = "none";
+          // Your own logged foods + saved picks are local — show instantly while
+          // the USDA network search runs in the background.
+          renderResults([], searchSavedFoods(q), searchMyIntake(q));
           setStatus("Searching…");
           foodSearchDebounceId = setTimeout(async () => {
             const myReq = ++foodSearchInFlight;
             try {
               const results = await foodSearchApi(q);
-              // Bail if a newer request finished before us
               if (myReq !== foodSearchInFlight) return;
-              const saved = searchSavedFoods(q);
-              renderResults(results, saved);
-              setStatus((results.length || saved.length) ? "" : "No matches.");
+              const mine = searchMyIntake(q), saved = searchSavedFoods(q);
+              renderResults(results, saved, mine);
+              setStatus((results.length || saved.length || mine.length) ? "" : "No matches.");
             } catch (err) {
               if (myReq !== foodSearchInFlight) return;
-              // Network search failed, but saved matches may still be useful.
-              const saved = searchSavedFoods(q);
-              renderResults([], saved);
-              setStatus(saved.length ? "Showing saved foods (USDA search failed)."
-                                     : "Search failed: " + (err.message || err), !saved.length);
+              const mine = searchMyIntake(q), saved = searchSavedFoods(q);
+              renderResults([], saved, mine);
+              setStatus((saved.length || mine.length) ? "Showing your foods (USDA search failed)."
+                                     : "Search failed: " + (err.message || err), !(saved.length || mine.length));
             }
           }, 300);
         });
@@ -2078,12 +2098,16 @@
           clearResults();
           setStatus("");
           closePicker();
+          renderRecentChips();
           input.focus();
         });
 
         // ---- Results dropdown: saved scans on top, USDA matches below ----
-        function renderResults(results, saved = []) {
-          if (!results.length && !saved.length) {
+        function renderResults(results, saved = [], mine = []) {
+          // Drop saved picks already present in your intake list (de-dupe by name).
+          const mineNames = new Set(mine.map((m) => (m.name || "").toLowerCase().trim()));
+          const savedF = saved.filter((f) => !mineNames.has((f.name || "").toLowerCase().trim()));
+          if (!results.length && !savedF.length && !mine.length) {
             resultsEl.style.display = "none";
             resultsEl.innerHTML = "";
             return;
@@ -2091,9 +2115,17 @@
           resultsEl.style.display = "";
           const safe = (s) => String(s || "").replace(/</g, "&lt;");
           let html = "";
-          if (saved.length) {
-            html += `<div class="fr-section-lbl">★ Saved — tap to log again</div>`;
-            html += saved.map((f, i) => {
+          if (mine.length) {
+            html += `<div class="fr-section-lbl">Your foods — tap to log</div>`;
+            html += mine.map((m, i) => `
+              <div class="food-result mine" data-mine-idx="${i}">
+                <div class="fr-name">${safe(m.name)}${m.brand ? `<span class="fr-brand">${safe(m.brand)}</span>` : ""}</div>
+                <div class="fr-desc">${Math.round(m.cal || 0)} cal${m.serving ? ` · ${safe(m.serving)}` : ""}</div>
+              </div>`).join("");
+          }
+          if (savedF.length) {
+            html += `<div class="fr-section-lbl">★ Saved scans</div>`;
+            html += savedF.map((f, i) => {
               const tag = f.source === "usda" ? "USDA"
                         : (f.source === "barcode" ? "barcode" : "label scan");
               const per = f.basis === "per_100g" ? "per 100 g/ml"
@@ -2106,7 +2138,7 @@
             }).join("");
           }
           if (results.length) {
-            if (saved.length) html += `<div class="fr-section-lbl">USDA database</div>`;
+            if (mine.length || savedF.length) html += `<div class="fr-section-lbl">USDA database</div>`;
             html += results.map((r) => `
               <div class="food-result" data-id="${safe(r.food_id)}">
                 <div class="fr-name">${safe(r.name)}${r.brand ? `<span class="fr-brand">${safe(r.brand)}</span>` : ""}</div>
@@ -2115,10 +2147,14 @@
             `).join("");
           }
           resultsEl.innerHTML = html;
+          // Your foods → log directly (one tap).
+          resultsEl.querySelectorAll(".food-result.mine").forEach((row) => {
+            row.addEventListener("click", () => { clearResults(); commitRecentFood(mine[parseInt(row.dataset.mineIdx, 10)]); });
+          });
           // Saved item → reopen the normal portion picker with its base values.
           resultsEl.querySelectorAll(".food-result.saved").forEach((row) => {
             row.addEventListener("click", () => {
-              const f = saved[parseInt(row.dataset.savedIdx, 10)];
+              const f = savedF[parseInt(row.dataset.savedIdx, 10)];
               if (!f) return;
               clearResults();
               showScanPortion({
@@ -2130,7 +2166,7 @@
             });
           });
           // USDA item → existing lookup → serving picker.
-          resultsEl.querySelectorAll(".food-result:not(.saved)").forEach((row) => {
+          resultsEl.querySelectorAll(".food-result:not(.saved):not(.mine)").forEach((row) => {
             row.addEventListener("click", () => onPickResult(row.dataset.id));
           });
         }

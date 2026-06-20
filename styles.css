@@ -4133,3 +4133,19 @@ body.fuel-log-open { overflow: hidden; }
 .mb-actions .btn { flex: 1; padding: 13px; border-radius: 999px; font-size: 15px; }
 .mb-cancel { background: var(--hover-bg); color: var(--ink); border: 1px solid var(--border); }
 
+/* Recently-consumed list + "your foods" search rows (logging overlay) */
+.recent-foods { margin-top: 6px; }
+.recent-list { display: flex; flex-direction: column; }
+.recent-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  width: 100%; text-align: left; background: none; border: 0;
+  border-bottom: 1px solid var(--border); padding: 12px 2px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.recent-row:last-child { border-bottom: none; }
+.recent-row:hover { background: var(--hover-bg); }
+.recent-row-name { font-size: 14px; font-weight: 600; color: var(--ink); }
+.recent-row .recent-sub { display: block; font-size: 11px; font-weight: 400; color: var(--muted); margin-top: 2px; }
+.recent-row-cal { flex: 0 0 auto; font-size: 13px; color: var(--muted); }
+.food-result.mine { border-left: 3px solid var(--accent); }
+
