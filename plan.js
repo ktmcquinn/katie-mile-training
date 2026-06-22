@@ -825,10 +825,9 @@ const DATA = {
         {
           "date": "2026-06-24",
           "day_name": "Wed",
-          "title": "Strides / light fartlek",
-          "detail": "5:00 WU · 8×20s relaxed strides OR 6×(1:00 hard / 2:00 easy) · controlled, not hard · 5:00 CD",
+          "title": "Easy + strides",
+          "detail": "4 mi easy @ 9:45-10:30, then 4×20s relaxed strides (smooth and quick, full walk-back - not a workout). ~4 mi.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -849,10 +848,9 @@ const DATA = {
         {
           "date": "2026-06-26",
           "day_name": "Fri",
-          "title": "Light tempo / fartlek",
-          "detail": "5:00 WU · 12-15:00 steady @ ~8:20-8:30/mi (comfortably hard) · 5:00 CD",
+          "title": "Easy run",
+          "detail": "4 mi easy @ 9:45-10:30, conversational. Keep it relaxed and aerobic during the base block - nothing hard. ~4 mi.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
