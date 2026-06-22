@@ -553,7 +553,9 @@
         let total = 0;
         for (const date in LOGS) {
           const log = LOGS[date];
-          if (log && log.distance) total += parseFloat(log.distance) || 0;
+          if (!log || !log.distance) continue;
+          if (log.avgSpeedMph != null || log.avgSpeedLabel || log.avgPower) continue; // skip rides
+          total += parseFloat(log.distance) || 0;
         }
         return total;
       }
@@ -3573,8 +3575,9 @@
         for (const d of week.days) {
           const log = LOGS[d.date];
           if (!log || !log.distance) continue;
-          const cat = categorize(d);
-          if (cat === "bike" || cat === "rest") continue;
+          // Skip rides: a bike log carries avg speed/power and no run pace, so
+          // a ride done on a run-planned day must not count toward run mileage.
+          if (log.avgSpeedMph != null || log.avgSpeedLabel || log.avgPower) continue;
           total += parseFloat(log.distance) || 0;
         }
         return total;
