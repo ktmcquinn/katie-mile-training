@@ -4182,3 +4182,18 @@ body.fuel-log-open { overflow: hidden; }
 .serve-preview b { color: var(--ink); }
 .serve-add { width: 100%; padding: 13px; border-radius: 999px; font-size: 16px; }
 
+/* "Swap whole day" button in the day-detail modal */
+.modal-swap-day-btn {
+  width: 100%;
+  margin-top: 10px;
+  background: var(--hover-bg);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.modal-swap-day-btn:hover { border-color: var(--accent); color: var(--accent); }
+

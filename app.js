@@ -3065,6 +3065,62 @@
           }
         });
       })();
+
+      // Whole-day swap picker: pick a target day and trade BOTH days' entire
+      // workouts (cardio + strength + routines) via swapDays(). Reuses the
+      // move-section modal shell + styling.
+      function openSwapDayPicker(sourceDate) {
+        const src = findDay(sourceDate);
+        if (!src) return;
+        const allDays = [];
+        for (const w of DATA.weeks) for (const d of w.days) allDays.push(d);
+        allDays.sort((a, b) => a.date.localeCompare(b.date));
+        const srcIdx = allDays.findIndex(d => d.date === sourceDate);
+        const lo = Math.max(0, srcIdx - 14);
+        const hi = Math.min(allDays.length, srcIdx + 15);
+        const candidates = allDays.slice(lo, hi).filter(d => d.date !== sourceDate);
+        const todayStr = todayISO();
+        const srcLabel = fmtDate(sourceDate, { weekday: "long", month: "short", day: "numeric" });
+        const safe = (s) => String(s || "").replace(/</g, "&lt;");
+
+        let body = `<button class="close" onclick="closeMoveSectionPicker()" style="position:absolute;top:14px;right:14px;background:none;border:0;font-size:24px;cursor:pointer;color:var(--muted);line-height:1">×</button>`;
+        body += `<h2>Swap whole day</h2>`;
+        body += `<div class="ex-meta">Swapping <b>${srcLabel}</b> &mdash; ${safe(src.title)}</div>`;
+        body += `<div class="ex-desc" style="margin-bottom:8px">Pick a day to trade with. Both days' entire workouts (run, strength, routines) swap places. Your completion checks and logs stay with their own dates.</div>`;
+        body += `<div class="move-target-list" id="moveTargetList">`;
+        if (!candidates.length) {
+          body += `<div class="ex-meta">No other days in range.</div>`;
+        } else {
+          for (const d of candidates) {
+            const dateLbl = fmtDate(d.date, { weekday: "short", month: "short", day: "numeric" });
+            const isToday = d.date === todayStr;
+            const badge = isToday ? `<span class="mt-badge">Today</span>` : "";
+            body += `<button type="button" class="move-target-row${isToday ? " is-today" : ""}" data-target-date="${d.date}">
+              <span class="mt-date">${dateLbl}</span>
+              <span class="mt-title">${safe(d.title)}</span>
+              ${badge}
+            </button>`;
+          }
+        }
+        body += `</div>`;
+
+        const root = document.getElementById("moveSectionModal");
+        root.innerHTML = body;
+        root.style.position = "relative";
+        document.getElementById("moveSectionModalBg").classList.add("show");
+
+        root.querySelectorAll(".move-target-row").forEach((row) => {
+          row.addEventListener("click", () => {
+            const targetDate = row.dataset.targetDate;
+            swapDays(sourceDate, targetDate);
+            closeMoveSectionPicker();
+            if (typeof closeModal === "function") closeModal();
+            const tgtLbl = fmtDate(targetDate, { weekday: "long", month: "short", day: "numeric" });
+            showToast(`Swapped ${srcLabel} with ${tgtLbl}.`);
+          });
+        });
+      }
+
       function resetPlan() {
         if (
           !confirm(
@@ -3934,6 +3990,9 @@
             <span class="lbl" id="modalCheckLbl">${allDone ? "Workout complete - all sections done" : "Mark all sections complete"}</span>
           </label>`;
 
+        // Swap this whole day's workouts with another day
+        html += `<button type="button" class="btn modal-swap-day-btn" id="modalSwapDay">⇄ Swap whole day with another day</button>`;
+
         m.innerHTML = html;
         document.getElementById("modalBg").classList.add("show");
         lockBodyScroll();
@@ -4036,6 +4095,10 @@
             }
           });
         });
+
+        // Whole-day swap: trade this entire day's workouts with another day.
+        const swapDayBtn = document.getElementById("modalSwapDay");
+        if (swapDayBtn) swapDayBtn.addEventListener("click", () => openSwapDayPicker(day.date));
 
         // Wire master checkbox — toggle EVERY child + every group
         const mcb = document.getElementById("modalCheck");
