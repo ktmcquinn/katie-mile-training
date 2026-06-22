@@ -797,7 +797,7 @@ const DATA = {
     {
       "num": 9,
       "phase": 3,
-      "mileage": 22,
+      "mileage": 19,
       "theme": "Aerobic lead-in",
       "days": [
         {
@@ -836,14 +836,13 @@ const DATA = {
         {
           "date": "2026-06-25",
           "day_name": "Thu",
-          "title": "Recovery run",
-          "detail": "Easy 30-35 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Peloton + Strength B",
+          "detail": "Peloton 40-45 min Power Zone Endurance (Z2), easy aerobic spin (no impact), then Strength B (home).",
           "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
+            "pre_bike",
+            "post_bike"
           ],
-          "strength": null
+          "strength": "STRENGTH B (Home, ~35 min): Bulgarian split squat 3x8/leg @ 25-30 lb DBs; DB Romanian deadlift 3x10 @ 30 lb; DB bench press 3x10; single-arm DB row 3x10/side; banded clamshell 3x15/side; banded monster walk 2x15 steps; copenhagen plank 3x20s/side; toe raises 2x20."
         },
         {
           "date": "2026-06-26",
@@ -885,7 +884,7 @@ const DATA = {
     {
       "num": 10,
       "phase": 3,
-      "mileage": 22,
+      "mileage": 19,
       "theme": "Base wk1 (pre-block): easy aerobic miles + a little stride work. The goal is to arrive at the 14-week plan healthy and strong - not to train hard yet.",
       "days": [
         {
@@ -923,11 +922,11 @@ const DATA = {
         {
           "date": "2026-07-02",
           "day_name": "Thu",
-          "title": "Recovery run + Strength B",
-          "detail": "3 mi easy @ 9:45-10:30, then Strength B (home).",
+          "title": "Peloton + Strength B",
+          "detail": "Peloton 40-45 min Power Zone Endurance (Z2), easy aerobic spin (no impact), then Strength B (home).",
           "routines": [
-            "pre_run",
-            "post_run"
+            "pre_bike",
+            "post_bike"
           ],
           "strength": "STRENGTH B (Home, ~35 min): Bulgarian split squat 3x8/leg @ 25-30 lb DBs; DB Romanian deadlift 3x10 @ 30 lb; DB bench press 3x10; single-arm DB row 3x10/side; banded clamshell 3x15/side; banded monster walk 2x15 steps; copenhagen plank 3x20s/side; toe raises 2x20."
         },
@@ -972,7 +971,7 @@ const DATA = {
     {
       "num": 11,
       "phase": 3,
-      "mileage": 24,
+      "mileage": 21,
       "theme": "Base wk2: a touch more volume, same easy effort. Strides keep the legs springy without any real quality work.",
       "days": [
         {
@@ -1010,11 +1009,11 @@ const DATA = {
         {
           "date": "2026-07-09",
           "day_name": "Thu",
-          "title": "Recovery run + Strength B",
-          "detail": "3 mi easy @ 9:45-10:30, then Strength B (home).",
+          "title": "Peloton + Strength B",
+          "detail": "Peloton 40-45 min Power Zone Endurance (Z2), easy aerobic spin (no impact), then Strength B (home).",
           "routines": [
-            "pre_run",
-            "post_run"
+            "pre_bike",
+            "post_bike"
           ],
           "strength": "STRENGTH B (Home, ~35 min): Bulgarian split squat 3x8/leg @ 25-30 lb DBs; DB Romanian deadlift 3x10 @ 30 lb; DB bench press 3x10; single-arm DB row 3x10/side; banded clamshell 3x15/side; banded monster walk 2x15 steps; copenhagen plank 3x20s/side; toe raises 2x20."
         },
@@ -1059,7 +1058,7 @@ const DATA = {
     {
       "num": 12,
       "phase": 3,
-      "mileage": 24,
+      "mileage": 20,
       "theme": "Base wk3: last easy week before the block. A few relaxed strides, nothing structured. Show up fresh - the quality starts next week.",
       "days": [
         {
@@ -1097,11 +1096,11 @@ const DATA = {
         {
           "date": "2026-07-16",
           "day_name": "Thu",
-          "title": "Recovery run + Strength B",
-          "detail": "4 mi easy @ 9:45-10:30, then Strength B (home).",
+          "title": "Peloton + Strength B",
+          "detail": "Peloton 40-45 min Power Zone Endurance (Z2), easy aerobic spin (no impact), then Strength B (home).",
           "routines": [
-            "pre_run",
-            "post_run"
+            "pre_bike",
+            "post_bike"
           ],
           "strength": "STRENGTH B (Home, ~35 min): Bulgarian split squat 3x8/leg @ 25-30 lb DBs; DB Romanian deadlift 3x10 @ 30 lb; DB bench press 3x10; single-arm DB row 3x10/side; banded clamshell 3x15/side; banded monster walk 2x15 steps; copenhagen plank 3x20s/side; toe raises 2x20."
         },
