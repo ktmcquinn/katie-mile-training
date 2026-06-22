@@ -853,6 +853,8 @@
         3: { rest: 1700, easy: 1800, bike: 1800, quality: 1950, long: 2150, race: 2200 },
         4: { rest: 1750, easy: 1850, bike: 1850, quality: 2000, long: 2200, race: 2200 },
         5: { rest: 1650, easy: 1750, bike: 1750, quality: 1850, long: 1950, race: 2100 },
+        6: { rest: 1750, easy: 1850, bike: 1850, quality: 2000, long: 2200, race: 2200 },
+        7: { rest: 1700, easy: 1800, bike: 1800, quality: 1900, long: 2050, race: 2200 },
       };
 
       // EA zones (kcal/kg LBM)
@@ -919,7 +921,8 @@
         };
         const cat = (!workoutDone && actual) ? (actualCatMap[actual] || plannedCat) : plannedCat;
 
-        const baseCal = (PHASE_CAL_RANGES[phase] && PHASE_CAL_RANGES[phase][cat]) || PHASE_CAL_RANGES[phase].easy;
+        const pcr = PHASE_CAL_RANGES[phase] || PHASE_CAL_RANGES[5];
+        const baseCal = pcr[cat] || pcr.easy;
         const luteal = !!FUEL_PREFS.luteal;
         const targetCal = baseCal + (luteal ? LUTEAL_BUMP : 0);
         const targetP = 150;

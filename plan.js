@@ -1,7 +1,10 @@
-// Training plan data — edit this file to update workouts without touching app code.
+// Training plan data - edit this file to update workouts without touching app code.
 // Loaded via <script src="plan.js"> before the main app script.
-// NRC dual-race plan: Mon recovery · Tue rest/cross · Wed+Fri quality · Thu recovery · Sat heavy lift · Sun long.
-// Days on/before 2026-06-18 are the original completed workouts (untouched).
+// NRC-based dual-race plan: 3-week base/strength block (wk10-12) then the Nike Run
+// Club 14-week half-marathon plan (wk13-26), scaled up to ~35 mpw peak off a 20+ mi base.
+// Weekly layout: Mon recovery - Tue rest - Wed+Fri NRC speed - Thu recovery+Strength B - Sat Strength A+bike - Sun long.
+// Mile B-race Sep 19 is run as a hard tune-up (no real taper). Half A-race Oct 25.
+// Weeks 1-9 (through 2026-06-28) are the original/completed workouts, untouched.
 
 const DATA = {
   "meta": {
@@ -37,35 +40,35 @@ const DATA = {
       "name": "Half-Marathon Base Build",
       "weeks": "8-12",
       "color": "#6B9FD4",
-      "goal": "Return from injury conservatively. Build from ~20 to ~29 mpw, establish daily hip protocol, introduce easy strides. No hard track work yet. 5K time trial after Week 12 to recalibrate zones."
+      "goal": "Weeks 8-9 done. Weeks 10-12: a dedicated base + strength block before the NRC plan — hold ~22-24 mpw easy with strides/light fartlek and two strength days, arriving at the NRC build with a 20+ mi/wk base."
     },
     {
       "num": 4,
       "name": "Speed Development (Mile Prep)",
       "weeks": "13-17",
       "color": "#D4A050",
-      "goal": "Introduce track work and build mile-specific speed. Lactate tolerance and 400m rep capacity. Mileage 28-33 mpw. Thursday becomes a second quality day."
+      "goal": "Nike Run Club 14-week half plan begins (scaled up off your base). Two NRC speed sessions/week — intervals, fartlek, hills, tempo — plus progression long runs. Build 25 -> 30 mpw."
     },
     {
       "num": 5,
       "name": "Mile Peak & Taper",
       "weeks": "18-21",
       "color": "#9B7FCA",
-      "goal": "Sharpen for the mile B-race. Cut volume, trust the fitness. Race Sep 19 — sub-6:00 mile in Copenhagen."
+      "goal": "Peak the aerobic build toward ~35 mpw with NRC's faster mixed-pace work. Race the Copenhagen 1-mile (Sep 19) as a hard tune-up — no real taper, keep half volume."
     },
     {
       "num": 6,
       "name": "Half Marathon Build",
       "weeks": "22-24",
       "color": "#3B7D72",
-      "goal": "Capitalize on mile speed. Shift to longer tempos and half-pace efforts. Mileage rebuilds to 30-31 mpw across three full weeks before taper."
+      "goal": "Half-specific peak: longest runs of the plan (to ~13 mi) and race-pace tempos, ~33-35 mpw, then volume eases."
     },
     {
       "num": 7,
       "name": "Half Marathon Taper",
       "weeks": "25-26",
       "color": "#B85450",
-      "goal": "Trust the work. Goal of taper: arrive fresh and sharp, not cram more fitness. Race Oct 25 — sub-1:45 in Dresden."
+      "goal": "Taper. Cut volume, keep legs sharp with short race-pace touches. Race Oct 25 — sub-1:45 in Dresden."
     }
   ],
   "pace_ref": {
@@ -884,16 +887,15 @@ const DATA = {
     {
       "num": 10,
       "phase": 3,
-      "mileage": 23,
-      "theme": "Aerobic lead-in",
+      "mileage": 22,
+      "theme": "Base block wk1: rebuild aerobic volume + strength. Easy effort, strides keep legs honest.",
       "days": [
         {
           "date": "2026-06-29",
           "day_name": "Mon",
           "title": "Recovery run",
-          "detail": "Easy 30-35 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "detail": "3 mi easy @ 9:45-10:30/mi, conversational. Ease into the base block.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -902,20 +904,19 @@ const DATA = {
         {
           "date": "2026-06-30",
           "day_name": "Tue",
-          "title": "Rest / cross-train",
-          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "title": "REST",
+          "detail": "Full rest + daily mobility. 15-min walk or easy spin if restless.",
           "routines": [
-            "hip_protocol"
+            "mobility_daily"
           ],
           "strength": null
         },
         {
           "date": "2026-07-01",
           "day_name": "Wed",
-          "title": "Strides / light fartlek",
-          "detail": "5:00 WU · 8×20s relaxed strides OR 6×(1:00 hard / 2:00 easy) · controlled, not hard · 5:00 CD",
+          "title": "Easy + strides",
+          "detail": "4 mi easy + 6x20s relaxed strides at the end (fast but smooth, full walk-back). ~4 mi.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -924,22 +925,20 @@ const DATA = {
         {
           "date": "2026-07-02",
           "day_name": "Thu",
-          "title": "Recovery run",
-          "detail": "Easy 30-35 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Recovery run + Strength B",
+          "detail": "3 mi easy @ 9:45-10:30, then Strength B (home).",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
-          "strength": null
+          "strength": "STRENGTH B (Home, ~35 min): Bulgarian split squat 3x8/leg @ 25-30 lb DBs; DB Romanian deadlift 3x10 @ 30 lb; DB bench press 3x10; single-arm DB row 3x10/side; banded clamshell 3x15/side; banded monster walk 2x15 steps; copenhagen plank 3x20s/side; toe raises 2x20."
         },
         {
           "date": "2026-07-03",
           "day_name": "Fri",
-          "title": "Light tempo / fartlek",
-          "detail": "5:00 WU · 12-15:00 steady @ ~8:20-8:30/mi (comfortably hard) · 5:00 CD",
+          "title": "Recovery run",
+          "detail": "4 mi easy @ 9:45-10:30/mi, conversational. Keep it gentle.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -948,18 +947,19 @@ const DATA = {
         {
           "date": "2026-07-04",
           "day_name": "Sat",
-          "title": "Strength — heavy lift",
-          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
+          "title": "Strength A + bike",
+          "detail": "Strength A (full gym) + 30 min easy Z2 Peloton spin. No run today.",
           "routines": [
-            "hip_protocol"
+            "pre_bike",
+            "post_bike"
           ],
-          "strength": "BLOCK B (60-75 min, Saturday gym): Trap bar deadlift 4x5 (heavy); Single-leg box step-up 3x10/leg (moderate DBs, controlled descent); Goblet squat 3x10 (tempo: 3 sec down, 1 sec up); Single-leg RDL 3x8/leg (right-side balance focus); Pallof press 3x12/side (anti-rotation); Glute-ham raise OR band pull-through 3x10."
+          "strength": "STRENGTH A (Full Gym, ~50 min): Back squat 3x5-8 (work up); Romanian deadlift 3x6-8; bench press 3x6-8; pull-up or lat pulldown 3x6-10; Pallof press 3x10/side; side plank 3x30s/side. Rest 90-120s between sets."
         },
         {
           "date": "2026-07-05",
           "day_name": "Sun",
-          "title": "Long run 9 mi",
-          "detail": "9 mi as a progression: ease in ~9:15/mi, finish ~8:15/mi.",
+          "title": "LONG RUN",
+          "detail": "8 mi as a progression run: start easy (9:45-10:15), drift to ~9:30 by halfway, close the last 2-3 mi at HM effort (8:15-8:45). Dial in race-day fueling and hydration.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -975,15 +975,14 @@ const DATA = {
       "num": 11,
       "phase": 3,
       "mileage": 24,
-      "theme": "Aerobic lead-in",
+      "theme": "Base block wk2: nudge volume. Strength stays heavy — this is your build-strength window.",
       "days": [
         {
           "date": "2026-07-06",
           "day_name": "Mon",
           "title": "Recovery run",
-          "detail": "Easy 30-35 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "detail": "4 mi easy @ 9:45-10:30/mi, conversational.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -992,20 +991,19 @@ const DATA = {
         {
           "date": "2026-07-07",
           "day_name": "Tue",
-          "title": "Rest / cross-train",
-          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "title": "REST",
+          "detail": "Full rest + daily mobility. 15-min walk or easy spin if restless.",
           "routines": [
-            "hip_protocol"
+            "mobility_daily"
           ],
           "strength": null
         },
         {
           "date": "2026-07-08",
           "day_name": "Wed",
-          "title": "Strides / light fartlek",
-          "detail": "5:00 WU · 8×20s relaxed strides OR 6×(1:00 hard / 2:00 easy) · controlled, not hard · 5:00 CD",
+          "title": "Easy + strides",
+          "detail": "5 mi easy + 6x20s strides. ~5 mi.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -1014,22 +1012,20 @@ const DATA = {
         {
           "date": "2026-07-09",
           "day_name": "Thu",
-          "title": "Recovery run",
-          "detail": "Easy 30-35 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Recovery run + Strength B",
+          "detail": "3 mi easy @ 9:45-10:30, then Strength B (home).",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
-          "strength": null
+          "strength": "STRENGTH B (Home, ~35 min): Bulgarian split squat 3x8/leg @ 25-30 lb DBs; DB Romanian deadlift 3x10 @ 30 lb; DB bench press 3x10; single-arm DB row 3x10/side; banded clamshell 3x15/side; banded monster walk 2x15 steps; copenhagen plank 3x20s/side; toe raises 2x20."
         },
         {
           "date": "2026-07-10",
           "day_name": "Fri",
-          "title": "Light tempo / fartlek",
-          "detail": "5:00 WU · 12-15:00 steady @ ~8:20-8:30/mi (comfortably hard) · 5:00 CD",
+          "title": "Recovery run",
+          "detail": "4 mi easy @ 9:45-10:30/mi, conversational.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -1038,18 +1034,19 @@ const DATA = {
         {
           "date": "2026-07-11",
           "day_name": "Sat",
-          "title": "Strength — heavy lift",
-          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
+          "title": "Strength A + bike",
+          "detail": "Strength A (full gym) + 30 min easy Z2 Peloton spin. No run today.",
           "routines": [
-            "hip_protocol"
+            "pre_bike",
+            "post_bike"
           ],
-          "strength": "BLOCK A (60-75 min, Saturday gym): Barbell Romanian Deadlift 4x6 (heavy, hip hinge); Bulgarian split squat 3x8/leg (right leg as REAR to load right glute); Barbell hip thrust 4x8 (drive through right heel); Nordic hamstring curl 3x6 (slow eccentric); Lateral band walk 3x15/side (heavy band); Copenhagen adductor hold 3x8/side (3-sec holds)."
+          "strength": "STRENGTH A (Full Gym, ~50 min): Back squat 3x5-8 (work up); Romanian deadlift 3x6-8; bench press 3x6-8; pull-up or lat pulldown 3x6-10; Pallof press 3x10/side; side plank 3x30s/side. Rest 90-120s between sets."
         },
         {
           "date": "2026-07-12",
           "day_name": "Sun",
-          "title": "Long run 9 mi",
-          "detail": "9 mi as a progression: ease in ~9:15/mi, finish ~8:15/mi.",
+          "title": "LONG RUN",
+          "detail": "8 mi as a progression run: start easy (9:45-10:15), drift to ~9:30 by halfway, close the last 2-3 mi at HM effort (8:15-8:45). Dial in race-day fueling and hydration.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1064,16 +1061,15 @@ const DATA = {
     {
       "num": 12,
       "phase": 3,
-      "mileage": 22,
-      "theme": "Aerobic lead-in (cutback)",
+      "mileage": 24,
+      "theme": "Base block wk3: hold volume, add a light fartlek to wake up turnover before the NRC plan.",
       "days": [
         {
           "date": "2026-07-13",
           "day_name": "Mon",
           "title": "Recovery run",
-          "detail": "Easy 30-35 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "detail": "4 mi easy @ 9:45-10:30/mi, conversational.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -1082,20 +1078,19 @@ const DATA = {
         {
           "date": "2026-07-14",
           "day_name": "Tue",
-          "title": "Rest / cross-train",
-          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "title": "REST",
+          "detail": "Full rest + daily mobility. 15-min walk or easy spin if restless.",
           "routines": [
-            "hip_protocol"
+            "mobility_daily"
           ],
           "strength": null
         },
         {
           "date": "2026-07-15",
           "day_name": "Wed",
-          "title": "Strides / light fartlek",
-          "detail": "5:00 WU · 8×20s relaxed strides OR 6×(1:00 hard / 2:00 easy) · controlled, not hard · 5:00 CD",
+          "title": "Easy + light fartlek",
+          "detail": "5 mi: after 1.5 mi warmup, 8x(0:30 quick / 1:30 easy), then easy home. Stay relaxed. ~5 mi.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -1104,22 +1099,20 @@ const DATA = {
         {
           "date": "2026-07-16",
           "day_name": "Thu",
-          "title": "Recovery run",
-          "detail": "Easy 30-35 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Recovery run + Strength B",
+          "detail": "4 mi easy @ 9:45-10:30, then Strength B (home).",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
-          "strength": null
+          "strength": "STRENGTH B (Home, ~35 min): Bulgarian split squat 3x8/leg @ 25-30 lb DBs; DB Romanian deadlift 3x10 @ 30 lb; DB bench press 3x10; single-arm DB row 3x10/side; banded clamshell 3x15/side; banded monster walk 2x15 steps; copenhagen plank 3x20s/side; toe raises 2x20."
         },
         {
           "date": "2026-07-17",
           "day_name": "Fri",
-          "title": "Light tempo / fartlek",
-          "detail": "5:00 WU · 12-15:00 steady @ ~8:20-8:30/mi (comfortably hard) · 5:00 CD",
+          "title": "Recovery run",
+          "detail": "3 mi easy @ 9:45-10:30/mi, conversational.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -1128,18 +1121,19 @@ const DATA = {
         {
           "date": "2026-07-18",
           "day_name": "Sat",
-          "title": "Strength — reduced load",
-          "detail": "Cutback week — drop loads ~30-40%, focus on form.",
+          "title": "Strength A + bike",
+          "detail": "Strength A (full gym) + 30 min easy Z2 Peloton spin. No run today.",
           "routines": [
-            "hip_protocol"
+            "pre_bike",
+            "post_bike"
           ],
-          "strength": "BLOCK B — 60% load (recovery week): Same exercises as full Block B, drop weights 30-40%. Trap bar deadlift 4x5; Single-leg box step-up 3x10/leg; Goblet squat 3x10 (tempo); Single-leg RDL 3x8/leg; Pallof press 3x12/side; GHR or band pull-through 3x10."
+          "strength": "STRENGTH A (Full Gym, ~50 min): Back squat 3x5-8 (work up); Romanian deadlift 3x6-8; bench press 3x6-8; pull-up or lat pulldown 3x6-10; Pallof press 3x10/side; side plank 3x30s/side. Rest 90-120s between sets."
         },
         {
           "date": "2026-07-19",
           "day_name": "Sun",
-          "title": "Long run 8 mi",
-          "detail": "8 mi as a progression: ease in ~9:15/mi, finish ~8:15/mi.",
+          "title": "LONG RUN",
+          "detail": "8 mi as a progression run: start easy (9:45-10:15), drift to ~9:30 by halfway, close the last 2-3 mi at HM effort (8:15-8:45). Dial in race-day fueling and hydration.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1154,16 +1148,15 @@ const DATA = {
     {
       "num": 13,
       "phase": 4,
-      "mileage": 24,
-      "theme": "NRC base + strength-speed",
+      "mileage": 25,
+      "theme": "NRC begins (14 to go). Two speed days a week, progression long runs — at a 20+ mi base, everything starts bigger than NRC's stock numbers.",
       "days": [
         {
           "date": "2026-07-20",
           "day_name": "Mon",
           "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "detail": "4 mi easy @ 9:45-10:30/mi, conversational.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -1172,18 +1165,18 @@ const DATA = {
         {
           "date": "2026-07-21",
           "day_name": "Tue",
-          "title": "Rest / cross-train",
-          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "title": "REST",
+          "detail": "Full rest + daily mobility. 15-min walk or easy spin if restless.",
           "routines": [
-            "hip_protocol"
+            "mobility_daily"
           ],
           "strength": null
         },
         {
           "date": "2026-07-22",
           "day_name": "Wed",
-          "title": "Speed: First Speed Run (intervals)",
-          "detail": "5:00 WU · 8×1:00 @5K pace (~7:05/mi) · 1:00 jog between · 5:00 CD",
+          "title": "Speed: 8x1:00 @5K",
+          "detail": "8x1:00 @5K pace (7:00-7:15), 1:00 easy jog between. WU 1.5 mi + drills; CD 1 mi. ~5 mi. Smooth turnover, not a sprint. PLYO before intervals (~5 min): pogo hops 2x20s, single-leg pogos 2x10/leg, A-skip 2x20m, broad jumps 2x5.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1194,20 +1187,19 @@ const DATA = {
         {
           "date": "2026-07-23",
           "day_name": "Thu",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Recovery run + Strength B",
+          "detail": "3 mi easy @ 9:45-10:30, then Strength B (home).",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
-          "strength": null
+          "strength": "STRENGTH B (Home, ~35 min): Bulgarian split squat 3x8/leg @ 25-30 lb DBs; DB Romanian deadlift 3x10 @ 30 lb; DB bench press 3x10; single-arm DB row 3x10/side; banded clamshell 3x15/side; banded monster walk 2x15 steps; copenhagen plank 3x20s/side; toe raises 2x20."
         },
         {
           "date": "2026-07-24",
           "day_name": "Fri",
-          "title": "Speed: One Hard Two Easy (fartlek)",
-          "detail": "5:00 WU · 21:00 alternating 1:00 hard / 2:00 easy · 5:00 CD",
+          "title": "Speed: fartlek 21:00",
+          "detail": "21:00 fartlek — alternate 1:00 hard / 2:00 easy, continuous. WU 1 mi; CD 1 mi. ~5 mi. Play with effort.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1218,18 +1210,19 @@ const DATA = {
         {
           "date": "2026-07-25",
           "day_name": "Sat",
-          "title": "Strength — heavy lift",
-          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
+          "title": "Strength A + bike",
+          "detail": "Strength A (full gym) + 30 min easy Z2 Peloton spin. No run today.",
           "routines": [
-            "hip_protocol"
+            "pre_bike",
+            "post_bike"
           ],
-          "strength": "BLOCK A (60-75 min, Saturday gym): Barbell Romanian Deadlift 4x6 (heavy, hip hinge); Bulgarian split squat 3x8/leg (right leg as REAR to load right glute); Barbell hip thrust 4x8 (drive through right heel); Nordic hamstring curl 3x6 (slow eccentric); Lateral band walk 3x15/side (heavy band); Copenhagen adductor hold 3x8/side (3-sec holds)."
+          "strength": "STRENGTH A (Full Gym, ~50 min): Back squat 3x5-8 (work up); Romanian deadlift 3x6-8; bench press 3x6-8; pull-up or lat pulldown 3x6-10; Pallof press 3x10/side; side plank 3x30s/side. Rest 90-120s between sets."
         },
         {
           "date": "2026-07-26",
           "day_name": "Sun",
-          "title": "Long run 8 mi",
-          "detail": "8 mi as a progression: ease in ~9:15/mi, finish ~8:15/mi.",
+          "title": "LONG RUN",
+          "detail": "8 mi as a progression run: start easy (9:45-10:15), drift to ~9:30 by halfway, close the last 2-3 mi at HM effort (8:15-8:45). Dial in race-day fueling and hydration.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1244,16 +1237,15 @@ const DATA = {
     {
       "num": 14,
       "phase": 4,
-      "mileage": 26,
-      "theme": "NRC base + strength-speed",
+      "mileage": 27,
+      "theme": "13 to go. Pyramid intervals + 5K reps. Long run stretches to 9.",
       "days": [
         {
           "date": "2026-07-27",
           "day_name": "Mon",
           "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "detail": "4 mi easy @ 9:45-10:30/mi, conversational.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -1262,18 +1254,18 @@ const DATA = {
         {
           "date": "2026-07-28",
           "day_name": "Tue",
-          "title": "Rest / cross-train",
-          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "title": "REST",
+          "detail": "Full rest + daily mobility. 15-min walk or easy spin if restless.",
           "routines": [
-            "hip_protocol"
+            "mobility_daily"
           ],
           "strength": null
         },
         {
           "date": "2026-07-29",
           "day_name": "Wed",
-          "title": "Speed: No Time Go Time (intervals)",
-          "detail": "5:00 WU · 1:00 mile / 2:00 5K / 3:00 10K / 2:00 5K / 1:00 mile · 1:00 jog between · 5:00 CD",
+          "title": "Speed: pyramid",
+          "detail": "1:00 @mile(6:00) / 2:00 @5K / 3:00 @10K(7:30-45) / 2:00 @5K / 1:00 @mile, 1:00 easy between. WU 1.5 + drills; CD 1 mi. ~6 mi. PLYO before intervals (~5 min): pogo hops 2x20s, single-leg pogos 2x10/leg, A-skip 2x20m, broad jumps 2x5.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1284,20 +1276,19 @@ const DATA = {
         {
           "date": "2026-07-30",
           "day_name": "Thu",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Recovery run + Strength B",
+          "detail": "3 mi easy @ 9:45-10:30, then Strength B (home).",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
-          "strength": null
+          "strength": "STRENGTH B (Home, ~35 min): Bulgarian split squat 3x8/leg @ 25-30 lb DBs; DB Romanian deadlift 3x10 @ 30 lb; DB bench press 3x10; single-arm DB row 3x10/side; banded clamshell 3x15/side; banded monster walk 2x15 steps; copenhagen plank 3x20s/side; toe raises 2x20."
         },
         {
           "date": "2026-07-31",
           "day_name": "Fri",
-          "title": "Speed: Run Strong. Repeat.",
-          "detail": "5:00 WU · [4×1:30 @5K + 1×1:30 @mile] ×2 · 45s after 5K reps, 1:00 after mile rep",
+          "title": "Speed: 5K + mile reps",
+          "detail": "2 rounds of [4x1:30 @5K (45s jog) + 1x1:30 @mile (1:00 jog)]. WU 1 mi; CD 1 mi. ~5 mi.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1308,18 +1299,19 @@ const DATA = {
         {
           "date": "2026-08-01",
           "day_name": "Sat",
-          "title": "Strength — heavy lift",
-          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
+          "title": "Strength A + bike",
+          "detail": "Strength A (full gym) + 30 min easy Z2 Peloton spin. No run today.",
           "routines": [
-            "hip_protocol"
+            "pre_bike",
+            "post_bike"
           ],
-          "strength": "BLOCK B (60-75 min, Saturday gym): Trap bar deadlift 4x5 (heavy); Single-leg box step-up 3x10/leg (moderate DBs, controlled descent); Goblet squat 3x10 (tempo: 3 sec down, 1 sec up); Single-leg RDL 3x8/leg (right-side balance focus); Pallof press 3x12/side (anti-rotation); Glute-ham raise OR band pull-through 3x10."
+          "strength": "STRENGTH A (Full Gym, ~50 min): Back squat 3x5-8 (work up); Romanian deadlift 3x6-8; bench press 3x6-8; pull-up or lat pulldown 3x6-10; Pallof press 3x10/side; side plank 3x30s/side. Rest 90-120s between sets."
         },
         {
           "date": "2026-08-02",
           "day_name": "Sun",
-          "title": "Long run 9 mi",
-          "detail": "9 mi as a progression: ease in ~9:15/mi, finish ~8:15/mi.",
+          "title": "LONG RUN",
+          "detail": "9 mi as a progression run: start easy (9:45-10:15), drift to ~9:30 by halfway, close the last 2-3 mi at HM effort (8:15-8:45). Dial in race-day fueling and hydration.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1334,16 +1326,15 @@ const DATA = {
     {
       "num": 15,
       "phase": 4,
-      "mileage": 27,
-      "theme": "NRC base + strength-speed",
+      "mileage": 29,
+      "theme": "12 to go. First hill workout + long 5K reps. Build week.",
       "days": [
         {
           "date": "2026-08-03",
           "day_name": "Mon",
           "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "detail": "5 mi easy @ 9:45-10:30/mi, conversational.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -1352,18 +1343,18 @@ const DATA = {
         {
           "date": "2026-08-04",
           "day_name": "Tue",
-          "title": "Rest / cross-train",
-          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "title": "REST",
+          "detail": "Full rest + daily mobility. 15-min walk or easy spin if restless.",
           "routines": [
-            "hip_protocol"
+            "mobility_daily"
           ],
           "strength": null
         },
         {
           "date": "2026-08-05",
           "day_name": "Wed",
-          "title": "Speed: Runner Up (hills)",
-          "detail": "5:00 WU · 5×[45s @10K effort + 15s best effort] · 1:15/45s recovery · 5:00 CD",
+          "title": "Speed: hills 5x(45s/15s)",
+          "detail": "Hill workout: 5x(45s @10K effort uphill + 15s @best), jog-down recovery. WU 1 mi to hill; CD 1 mi. ~5 mi. Effort > pace. PLYO before intervals (~5 min): pogo hops 2x20s, single-leg pogos 2x10/leg, A-skip 2x20m, broad jumps 2x5.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1374,20 +1365,19 @@ const DATA = {
         {
           "date": "2026-08-06",
           "day_name": "Thu",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Recovery run + Strength B",
+          "detail": "3 mi easy @ 9:45-10:30, then Strength B (home).",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
-          "strength": null
+          "strength": "STRENGTH B (Home, ~35 min): Bulgarian split squat 3x8/leg @ 25-30 lb DBs; DB Romanian deadlift 3x10 @ 30 lb; DB bench press 3x10; single-arm DB row 3x10/side; banded clamshell 3x15/side; banded monster walk 2x15 steps; copenhagen plank 3x20s/side; toe raises 2x20."
         },
         {
           "date": "2026-08-07",
           "day_name": "Fri",
-          "title": "Speed: Triple 7s",
-          "detail": "5:00 WU · 3×7:00 @5K pace · 2:30 jog between · 5:00 CD",
+          "title": "Speed: 3x7:00 @5K",
+          "detail": "3x7:00 @5K pace, 2:30 easy jog between. WU 1.5 mi; CD 1 mi. ~6 mi. Long, honest reps.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1398,18 +1388,19 @@ const DATA = {
         {
           "date": "2026-08-08",
           "day_name": "Sat",
-          "title": "Strength — heavy lift",
-          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
+          "title": "Strength A + bike",
+          "detail": "Strength A (full gym) + 30 min easy Z2 Peloton spin. No run today.",
           "routines": [
-            "hip_protocol"
+            "pre_bike",
+            "post_bike"
           ],
-          "strength": "BLOCK A (60-75 min, Saturday gym): Barbell Romanian Deadlift 4x6 (heavy, hip hinge); Bulgarian split squat 3x8/leg (right leg as REAR to load right glute); Barbell hip thrust 4x8 (drive through right heel); Nordic hamstring curl 3x6 (slow eccentric); Lateral band walk 3x15/side (heavy band); Copenhagen adductor hold 3x8/side (3-sec holds)."
+          "strength": "STRENGTH A (Full Gym, ~50 min): Back squat 3x5-8 (work up); Romanian deadlift 3x6-8; bench press 3x6-8; pull-up or lat pulldown 3x6-10; Pallof press 3x10/side; side plank 3x30s/side. Rest 90-120s between sets."
         },
         {
           "date": "2026-08-09",
           "day_name": "Sun",
-          "title": "Long run 10 mi",
-          "detail": "10 mi as a progression: ease in ~9:15/mi, finish ~8:15/mi.",
+          "title": "LONG RUN",
+          "detail": "10 mi as a progression run: start easy (9:45-10:15), drift to ~9:30 by halfway, close the last 2-3 mi at HM effort (8:15-8:45). Dial in race-day fueling and hydration.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1424,16 +1415,15 @@ const DATA = {
     {
       "num": 16,
       "phase": 4,
-      "mileage": 29,
-      "theme": "NRC base + strength-speed",
+      "mileage": 24,
+      "theme": "11 to go. Cutback week — absorb the work. Lighter volume, quality stays.",
       "days": [
         {
           "date": "2026-08-10",
           "day_name": "Mon",
           "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "detail": "4 mi easy @ 9:45-10:30/mi, conversational.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -1442,18 +1432,18 @@ const DATA = {
         {
           "date": "2026-08-11",
           "day_name": "Tue",
-          "title": "Rest / cross-train",
-          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "title": "REST",
+          "detail": "Full rest + daily mobility. 15-min walk or easy spin if restless.",
           "routines": [
-            "hip_protocol"
+            "mobility_daily"
           ],
           "strength": null
         },
         {
           "date": "2026-08-12",
           "day_name": "Wed",
-          "title": "Speed: The Rundown (ladder)",
-          "detail": "5:00 WU · 3×1:00 mile + 3×2:00 5K · 2×1:00 mile + 2×2:00 5K · 1×1:00 mile + 1×2:00 5K · 1:00/1:30 rec",
+          "title": "Speed: descending intervals",
+          "detail": "3x1:00 @mile/3x2:00 @5K, then 2x/2x, then 1x/1x. 1:00 after mile, 1:30 after 5K. WU 1 mi; CD 1 mi. ~5 mi. PLYO before intervals (~5 min): pogo hops 2x20s, single-leg pogos 2x10/leg, A-skip 2x20m, broad jumps 2x5.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1464,20 +1454,19 @@ const DATA = {
         {
           "date": "2026-08-13",
           "day_name": "Thu",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Recovery run + Strength B",
+          "detail": "3 mi easy @ 9:45-10:30, then Strength B (home).",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
-          "strength": null
+          "strength": "STRENGTH B (Home, ~35 min): Bulgarian split squat 3x8/leg @ 25-30 lb DBs; DB Romanian deadlift 3x10 @ 30 lb; DB bench press 3x10; single-arm DB row 3x10/side; banded clamshell 3x15/side; banded monster walk 2x15 steps; copenhagen plank 3x20s/side; toe raises 2x20."
         },
         {
           "date": "2026-08-14",
           "day_name": "Fri",
-          "title": "Speed: Tempo",
-          "detail": "7:00 WU · 25:00 tempo @ ~8:13-8:28/mi · 5:00 CD",
+          "title": "Speed: 25:00 tempo",
+          "detail": "25:00 continuous tempo @HM pace (8:00-8:15). WU 1 mi; CD 1 mi. ~5 mi. Comfortably hard.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1488,18 +1477,19 @@ const DATA = {
         {
           "date": "2026-08-15",
           "day_name": "Sat",
-          "title": "Strength — heavy lift",
-          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
+          "title": "Strength A + bike",
+          "detail": "Strength A (full gym) + 30 min easy Z2 Peloton spin. No run today.",
           "routines": [
-            "hip_protocol"
+            "pre_bike",
+            "post_bike"
           ],
-          "strength": "BLOCK B (60-75 min, Saturday gym): Trap bar deadlift 4x5 (heavy); Single-leg box step-up 3x10/leg (moderate DBs, controlled descent); Goblet squat 3x10 (tempo: 3 sec down, 1 sec up); Single-leg RDL 3x8/leg (right-side balance focus); Pallof press 3x12/side (anti-rotation); Glute-ham raise OR band pull-through 3x10."
+          "strength": "STRENGTH A (Full Gym, ~50 min): Back squat 3x5-8 (work up); Romanian deadlift 3x6-8; bench press 3x6-8; pull-up or lat pulldown 3x6-10; Pallof press 3x10/side; side plank 3x30s/side. Rest 90-120s between sets."
         },
         {
           "date": "2026-08-16",
           "day_name": "Sun",
-          "title": "Long run 11 mi",
-          "detail": "11 mi as a progression: ease in ~9:15/mi, finish ~8:15/mi.",
+          "title": "LONG RUN",
+          "detail": "8 mi as a progression run: start easy (9:45-10:15), drift to ~9:30 by halfway, close the last 2-3 mi at HM effort (8:15-8:45). Dial in race-day fueling and hydration.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1514,16 +1504,15 @@ const DATA = {
     {
       "num": 17,
       "phase": 4,
-      "mileage": 31,
-      "theme": "NRC base + strength-speed (peak pre-mile long run)",
+      "mileage": 30,
+      "theme": "10 to go. Mile-pace touches + progression tempo. Cross 30 mpw.",
       "days": [
         {
           "date": "2026-08-17",
           "day_name": "Mon",
           "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "detail": "5 mi easy @ 9:45-10:30/mi, conversational.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -1532,18 +1521,18 @@ const DATA = {
         {
           "date": "2026-08-18",
           "day_name": "Tue",
-          "title": "Rest / cross-train",
-          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "title": "REST",
+          "detail": "Full rest + daily mobility. 15-min walk or easy spin if restless.",
           "routines": [
-            "hip_protocol"
+            "mobility_daily"
           ],
           "strength": null
         },
         {
           "date": "2026-08-19",
           "day_name": "Wed",
-          "title": "Speed: Sneaky Speed",
-          "detail": "5:00 WU · [1×1:30 @5K + 3×45s @mile] ×3 · 1:00 jog between · 5:00 CD",
+          "title": "Speed: 5K + mile-pace set",
+          "detail": "3 rounds of [1x1:30 @5K + 3x0:45 @mile], 1:00 easy between everything. WU 1.5; CD 1 mi. ~6 mi. PLYO before intervals (~5 min): pogo hops 2x20s, single-leg pogos 2x10/leg, A-skip 2x20m, broad jumps 2x5.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1554,20 +1543,19 @@ const DATA = {
         {
           "date": "2026-08-20",
           "day_name": "Thu",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Recovery run + Strength B",
+          "detail": "4 mi easy @ 9:45-10:30, then Strength B (home).",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
-          "strength": null
+          "strength": "STRENGTH B (Home, ~35 min): Bulgarian split squat 3x8/leg @ 25-30 lb DBs; DB Romanian deadlift 3x10 @ 30 lb; DB bench press 3x10; single-arm DB row 3x10/side; banded clamshell 3x15/side; banded monster walk 2x15 steps; copenhagen plank 3x20s/side; toe raises 2x20."
         },
         {
           "date": "2026-08-21",
           "day_name": "Fri",
-          "title": "Speed: Out Strong, Back Fast",
-          "detail": "5:00 WU · 23:00 progression tempo (build from easy to ~8:15/mi) · 5:00 CD",
+          "title": "Speed: 23:00 progression tempo",
+          "detail": "23:00 progression — build from easy to HM pace; last 5:00 @10K effort. WU 1 mi; CD 1 mi. ~5 mi.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1578,18 +1566,19 @@ const DATA = {
         {
           "date": "2026-08-22",
           "day_name": "Sat",
-          "title": "Strength — heavy lift",
-          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
+          "title": "Strength A + bike",
+          "detail": "Strength A (full gym) + 30 min easy Z2 Peloton spin. No run today.",
           "routines": [
-            "hip_protocol"
+            "pre_bike",
+            "post_bike"
           ],
-          "strength": "BLOCK A (60-75 min, Saturday gym): Barbell Romanian Deadlift 4x6 (heavy, hip hinge); Bulgarian split squat 3x8/leg (right leg as REAR to load right glute); Barbell hip thrust 4x8 (drive through right heel); Nordic hamstring curl 3x6 (slow eccentric); Lateral band walk 3x15/side (heavy band); Copenhagen adductor hold 3x8/side (3-sec holds)."
+          "strength": "STRENGTH A (Full Gym, ~50 min): Back squat 3x5-8 (work up); Romanian deadlift 3x6-8; bench press 3x6-8; pull-up or lat pulldown 3x6-10; Pallof press 3x10/side; side plank 3x30s/side. Rest 90-120s between sets."
         },
         {
           "date": "2026-08-23",
           "day_name": "Sun",
-          "title": "Long run 12 mi",
-          "detail": "12 mi as a progression: ease in ~9:15/mi, finish ~8:15/mi. Biggest long run before the mile.",
+          "title": "LONG RUN",
+          "detail": "10 mi as a progression run: start easy (9:45-10:15), drift to ~9:30 by halfway, close the last 2-3 mi at HM effort (8:15-8:45). Dial in race-day fueling and hydration.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1604,16 +1593,15 @@ const DATA = {
     {
       "num": 18,
       "phase": 5,
-      "mileage": 26,
-      "theme": "Mile sharpening (cutback)",
+      "mileage": 32,
+      "theme": "9 to go. Speed sharpens (mile-pace volume) + hill ladder. Aerobic build deepens.",
       "days": [
         {
           "date": "2026-08-24",
           "day_name": "Mon",
           "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "detail": "5 mi easy @ 9:45-10:30/mi, conversational.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -1622,18 +1610,18 @@ const DATA = {
         {
           "date": "2026-08-25",
           "day_name": "Tue",
-          "title": "Rest / cross-train",
-          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "title": "REST",
+          "detail": "Full rest + daily mobility. 15-min walk or easy spin if restless.",
           "routines": [
-            "hip_protocol"
+            "mobility_daily"
           ],
           "strength": null
         },
         {
           "date": "2026-08-26",
           "day_name": "Wed",
-          "title": "Speed: Run Fast. Repeat.",
-          "detail": "5:00 WU · 20×0:30 @mile pace (#1 & #11 @5K) · 1:00 jog between · 5:00 CD",
+          "title": "Speed: 20x0:30 @mile",
+          "detail": "20x0:30 @mile pace, 1:00 easy jog between; run #1 and #11 at 5K pace. WU 1.5 + drills; CD 1 mi. ~6 mi. Quick, light feet. PLYO before intervals (~5 min): pogo hops 2x20s, single-leg pogos 2x10/leg, A-skip 2x20m, broad jumps 2x5.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1644,20 +1632,19 @@ const DATA = {
         {
           "date": "2026-08-27",
           "day_name": "Thu",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Recovery run + Strength B",
+          "detail": "4 mi easy @ 9:45-10:30, then Strength B (home).",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
-          "strength": null
+          "strength": "STRENGTH B (Home, ~35 min): Bulgarian split squat 3x8/leg @ 25-30 lb DBs; DB Romanian deadlift 3x10 @ 30 lb; DB bench press 3x10; single-arm DB row 3x10/side; banded clamshell 3x15/side; banded monster walk 2x15 steps; copenhagen plank 3x20s/side; toe raises 2x20."
         },
         {
           "date": "2026-08-28",
           "day_name": "Fri",
-          "title": "Speed: Hill Hillier Hilliest",
-          "detail": "5:00 WU · [1:00 10K + 0:45 5K + 0:30 mile] ×3 · full recovery between · 5:00 CD",
+          "title": "Speed: hill ladder",
+          "detail": "3x(1:00 @10K + 0:45 @5K + 0:30 @mile uphill), jog-down recoveries. WU 1 mi; CD 1 mi. ~6 mi.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1668,18 +1655,19 @@ const DATA = {
         {
           "date": "2026-08-29",
           "day_name": "Sat",
-          "title": "Strength — reduced load",
-          "detail": "Cutback week — drop loads ~30-40%, focus on form.",
+          "title": "Strength A + bike",
+          "detail": "Strength A (full gym) + 30 min easy Z2 Peloton spin. No run today.",
           "routines": [
-            "hip_protocol"
+            "pre_bike",
+            "post_bike"
           ],
-          "strength": "BLOCK B — 60% load (recovery week): Same exercises as full Block B, drop weights 30-40%. Trap bar deadlift 4x5; Single-leg box step-up 3x10/leg; Goblet squat 3x10 (tempo); Single-leg RDL 3x8/leg; Pallof press 3x12/side; GHR or band pull-through 3x10."
+          "strength": "STRENGTH A (Full Gym, ~50 min): Back squat 3x5-8 (work up); Romanian deadlift 3x6-8; bench press 3x6-8; pull-up or lat pulldown 3x6-10; Pallof press 3x10/side; side plank 3x30s/side. Rest 90-120s between sets."
         },
         {
           "date": "2026-08-30",
           "day_name": "Sun",
-          "title": "Long run 10 mi",
-          "detail": "10 mi as a progression: ease in ~9:15/mi, finish ~8:15/mi. Cutback — mile sharpening begins; keep legs fresh.",
+          "title": "LONG RUN",
+          "detail": "11 mi as a progression run: start easy (9:45-10:15), drift to ~9:30 by halfway, close the last 2-3 mi at HM effort (8:15-8:45). Dial in race-day fueling and hydration.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1694,16 +1682,15 @@ const DATA = {
     {
       "num": 19,
       "phase": 5,
-      "mileage": 30,
-      "theme": "Mile sharpening",
+      "mileage": 35,
+      "theme": "8 to go. PEAK build week (~35 mpw). Mixed-pace 'shifter' + power pyramid. Biggest long yet.",
       "days": [
         {
           "date": "2026-08-31",
           "day_name": "Mon",
           "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "detail": "6 mi easy @ 9:45-10:30/mi, conversational.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -1712,18 +1699,18 @@ const DATA = {
         {
           "date": "2026-09-01",
           "day_name": "Tue",
-          "title": "Rest / cross-train",
-          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "title": "REST",
+          "detail": "Full rest + daily mobility. 15-min walk or easy spin if restless.",
           "routines": [
-            "hip_protocol"
+            "mobility_daily"
           ],
           "strength": null
         },
         {
           "date": "2026-09-02",
           "day_name": "Wed",
-          "title": "Speed: The Shifter",
-          "detail": "5:00 WU · descending blocks (recovery→10K→5K) each into a 1:00 mile-pace surge · 5:00 CD",
+          "title": "Speed: the shifter",
+          "detail": "1:00@mile -> 3:00@10K -> 2:00@5K -> 1:00@mile -> 1:00@best, easy float (1:00-2:00) between. WU 1.5; CD 1 mi. ~6 mi. PLYO before intervals (~5 min): pogo hops 2x20s, single-leg pogos 2x10/leg, A-skip 2x20m, broad jumps 2x5.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1734,20 +1721,19 @@ const DATA = {
         {
           "date": "2026-09-03",
           "day_name": "Thu",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Recovery run + Strength B",
+          "detail": "5 mi easy @ 9:45-10:30, then Strength B (home).",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
-          "strength": null
+          "strength": "STRENGTH B (Home, ~35 min): Bulgarian split squat 3x8/leg @ 25-30 lb DBs; DB Romanian deadlift 3x10 @ 30 lb; DB bench press 3x10; single-arm DB row 3x10/side; banded clamshell 3x15/side; banded monster walk 2x15 steps; copenhagen plank 3x20s/side; toe raises 2x20."
         },
         {
           "date": "2026-09-04",
           "day_name": "Fri",
-          "title": "Speed: Power Pyramid",
-          "detail": "5:00 WU · 1:00 mile / 5:00 5K / 10:00 10K / 5:00 5K / 1:00 mile · 5:00 CD",
+          "title": "Speed: power pyramid",
+          "detail": "1:00@mile / 5:00@5K / 10:00@10K / 5:00@5K / 1:00@mile, short recoveries. WU 1.5; CD 1 mi. ~6 mi.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1758,18 +1744,19 @@ const DATA = {
         {
           "date": "2026-09-05",
           "day_name": "Sat",
-          "title": "Strength — heavy lift",
-          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
+          "title": "Strength A + bike",
+          "detail": "Strength A (full gym) + 30 min easy Z2 Peloton spin. No run today.",
           "routines": [
-            "hip_protocol"
+            "pre_bike",
+            "post_bike"
           ],
-          "strength": "BLOCK A (60-75 min, Saturday gym): Barbell Romanian Deadlift 4x6 (heavy, hip hinge); Bulgarian split squat 3x8/leg (right leg as REAR to load right glute); Barbell hip thrust 4x8 (drive through right heel); Nordic hamstring curl 3x6 (slow eccentric); Lateral band walk 3x15/side (heavy band); Copenhagen adductor hold 3x8/side (3-sec holds)."
+          "strength": "STRENGTH A (Full Gym, ~50 min): Back squat 3x5-8 (work up); Romanian deadlift 3x6-8; bench press 3x6-8; pull-up or lat pulldown 3x6-10; Pallof press 3x10/side; side plank 3x30s/side. Rest 90-120s between sets."
         },
         {
           "date": "2026-09-06",
           "day_name": "Sun",
-          "title": "Long run 12 mi",
-          "detail": "12 mi as a progression: ease in ~9:15/mi, finish ~8:15/mi. Last big aerobic week before the mile.",
+          "title": "LONG RUN",
+          "detail": "12 mi as a progression run: start easy (9:45-10:15), drift to ~9:30 by halfway, close the last 2-3 mi at HM effort (8:15-8:45). Dial in race-day fueling and hydration.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1784,16 +1771,15 @@ const DATA = {
     {
       "num": 20,
       "phase": 5,
-      "mileage": 23,
-      "theme": "Mile sharpening + freshen",
+      "mileage": 28,
+      "theme": "7 to go. Cutback into mile week. 5K reps + short fartlek, freshen the legs.",
       "days": [
         {
           "date": "2026-09-07",
           "day_name": "Mon",
           "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "detail": "5 mi easy @ 9:45-10:30/mi, conversational.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -1802,18 +1788,18 @@ const DATA = {
         {
           "date": "2026-09-08",
           "day_name": "Tue",
-          "title": "Rest / cross-train",
-          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "title": "REST",
+          "detail": "Full rest + daily mobility. 15-min walk or easy spin if restless.",
           "routines": [
-            "hip_protocol"
+            "mobility_daily"
           ],
           "strength": null
         },
         {
           "date": "2026-09-09",
           "day_name": "Wed",
-          "title": "Speed: Deuces",
-          "detail": "5:00 WU · 10×2:00 @5K (trim to 6-7 reps if legs are heavy) · 1:00 rec (2:00 after #4 & #8) · 5:00 CD",
+          "title": "Speed: 10x2:00 @5K",
+          "detail": "10x2:00 @5K pace, 1:00 easy between (2:00 after reps #4 and #8). WU 1.5; CD 1 mi. ~5 mi.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1824,20 +1810,19 @@ const DATA = {
         {
           "date": "2026-09-10",
           "day_name": "Thu",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Recovery run + Strength B",
+          "detail": "4 mi easy @ 9:45-10:30, then Strength B (home).",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
-          "strength": null
+          "strength": "STRENGTH B (Home, ~35 min): Bulgarian split squat 3x8/leg @ 25-30 lb DBs; DB Romanian deadlift 3x10 @ 30 lb; DB bench press 3x10; single-arm DB row 3x10/side; banded clamshell 3x15/side; banded monster walk 2x15 steps; copenhagen plank 3x20s/side; toe raises 2x20."
         },
         {
           "date": "2026-09-11",
           "day_name": "Fri",
-          "title": "Speed: One Hard. One Easy. (fartlek)",
-          "detail": "5:00 WU · 15:00 alternating 1:00 hard / 1:00 easy · keep it crisp · 5:00 CD",
+          "title": "Speed: fartlek 15:00",
+          "detail": "15:00 fartlek — 1:00 hard / 1:00 easy. WU 1 mi; CD 1 mi. ~5 mi. Snappy and relaxed.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1848,18 +1833,19 @@ const DATA = {
         {
           "date": "2026-09-12",
           "day_name": "Sat",
-          "title": "Strength — moderate (pre-taper)",
-          "detail": "Last moderate lift before tapering. ~70% load, crisp.",
+          "title": "Strength A + bike",
+          "detail": "Strength A (full gym) + 30 min easy Z2 Peloton spin. No run today.",
           "routines": [
-            "hip_protocol"
+            "pre_bike",
+            "post_bike"
           ],
-          "strength": "BLOCK B — 70% load (last meaningful lift before half taper): Trap bar deadlift 4x5; Single-leg box step-up 3x10/leg; Goblet squat 3x10 (tempo); Single-leg RDL 3x8/leg; Pallof press 3x12/side; GHR or band pull-through 3x10."
+          "strength": "STRENGTH A (Full Gym, ~50 min): Back squat 3x5-8 (work up); Romanian deadlift 3x6-8; bench press 3x6-8; pull-up or lat pulldown 3x6-10; Pallof press 3x10/side; side plank 3x30s/side. Rest 90-120s between sets."
         },
         {
           "date": "2026-09-13",
           "day_name": "Sun",
-          "title": "Long run 8 mi",
-          "detail": "8 mi as a progression: ease in ~9:15/mi, finish ~8:15/mi. Shortened — banking freshness for the mile.",
+          "title": "LONG RUN",
+          "detail": "9 mi as a progression run: start easy (9:45-10:15), drift to ~9:30 by halfway, close the last 2-3 mi at HM effort (8:15-8:45). Dial in race-day fueling and hydration.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1874,16 +1860,15 @@ const DATA = {
     {
       "num": 21,
       "phase": 5,
-      "mileage": 16,
-      "theme": "🏁 Copenhagen Mile race week",
+      "mileage": 28,
+      "theme": "6 to go — MILE TUNE-UP WEEK. Race the Copenhagen 1-mile Sat (Sep 19) as a hard B-effort; no real taper, keep half volume.",
       "days": [
         {
           "date": "2026-09-14",
           "day_name": "Mon",
           "title": "Recovery run",
-          "detail": "Easy 25-30 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "detail": "4 mi easy @ 9:45-10:30/mi, conversational.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -1892,18 +1877,18 @@ const DATA = {
         {
           "date": "2026-09-15",
           "day_name": "Tue",
-          "title": "Rest / cross-train",
-          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "title": "REST",
+          "detail": "Full rest + daily mobility. 15-min walk or easy spin if restless.",
           "routines": [
-            "hip_protocol"
+            "mobility_daily"
           ],
           "strength": null
         },
         {
           "date": "2026-09-16",
           "day_name": "Wed",
-          "title": "Mile sharpener",
-          "detail": "10:00 easy WU · 6×20s @ mile pace (~6:30/mi) FULL recovery · 4 strides · 10:00 easy. Short and snappy.",
+          "title": "Speed: mile sharpener",
+          "detail": "'Rock-n-roller' lite: 5:00@10K / 2:30@5K / 1:00@mile / 2x0:30@best / 1:00@mile, 1:30 recoveries. WU 1.5; CD 1 mi. ~5 mi. Last real speed before the mile.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1914,30 +1899,30 @@ const DATA = {
         {
           "date": "2026-09-17",
           "day_name": "Thu",
-          "title": "Recovery run",
-          "detail": "Easy easy 20-25 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Recovery run + Strength B",
+          "detail": "3 mi easy @ 9:45-10:30, then Strength B (home).",
           "routines": [
-            "hip_protocol",
+            "pre_run",
+            "post_run"
+          ],
+          "strength": "STRENGTH B (Home, ~35 min): Bulgarian split squat 3x8/leg @ 25-30 lb DBs; DB Romanian deadlift 3x10 @ 30 lb; DB bench press 3x10; single-arm DB row 3x10/side; banded clamshell 3x15/side; banded monster walk 2x15 steps; copenhagen plank 3x20s/side; toe raises 2x20."
+        },
+        {
+          "date": "2026-09-18",
+          "day_name": "Fri",
+          "title": "Easy + strides",
+          "detail": "3 mi easy + 4x20s relaxed strides. Legs fresh for tomorrow's mile. ~3 mi.",
+          "routines": [
             "pre_run",
             "post_run"
           ],
           "strength": null
         },
         {
-          "date": "2026-09-18",
-          "day_name": "Fri",
-          "title": "Rest (pre-race)",
-          "detail": "Full rest or 10 min easy + 3 strides. Legs up, hydrate. No lifting.",
-          "routines": [
-            "hip_protocol"
-          ],
-          "strength": null
-        },
-        {
           "date": "2026-09-19",
           "day_name": "Sat",
-          "title": "🏁 COPENHAGEN MILE",
-          "detail": "Race day! 15 min easy WU + drills + 4-6 build-up strides to mile pace. Race the mile (goal sub-6:00). 10-15 min easy CD.",
+          "title": "🏁 COPENHAGEN 1-MILE",
+          "detail": "Race day (B-race). WU 1.5 mi + 4 strides; race the mile by feel (~6:00 target); CD 1 mi easy. ~3 mi. Hard tune-up effort — you didn't taper, so just run honest and have fun.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1948,8 +1933,8 @@ const DATA = {
         {
           "date": "2026-09-20",
           "day_name": "Sun",
-          "title": "Recovery run",
-          "detail": "Easy very easy 3-4 mi (or full rest if sore) min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "LONG RUN",
+          "detail": "10 mi easy/relaxed — legs may be flat from yesterday's mile, so keep it gentle (10:00-10:30), walk breaks fine. Pure aerobic time on feet.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1964,16 +1949,15 @@ const DATA = {
     {
       "num": 22,
       "phase": 6,
-      "mileage": 25,
-      "theme": "Recover + pivot back to the half",
+      "mileage": 33,
+      "theme": "5 to go. Back to half building. '90s' + speedurance, long jumps to 12.",
       "days": [
         {
           "date": "2026-09-21",
           "day_name": "Mon",
           "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "detail": "5 mi easy @ 9:45-10:30/mi, conversational.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -1982,10 +1966,10 @@ const DATA = {
         {
           "date": "2026-09-22",
           "day_name": "Tue",
-          "title": "Rest / cross-train",
-          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "title": "REST",
+          "detail": "Full rest + daily mobility. 15-min walk or easy spin if restless.",
           "routines": [
-            "hip_protocol"
+            "mobility_daily"
           ],
           "strength": null
         },
@@ -1993,7 +1977,7 @@ const DATA = {
           "date": "2026-09-23",
           "day_name": "Wed",
           "title": "Speed: 90s",
-          "detail": "5:00 WU · [1:30 5K / 1:30 10K / 1:30 mile] ×3 · 1:30 jog between · 5:00 CD",
+          "detail": "3 rounds of [1:30 @5K / 1:30 @10K / 1:30 @mile], 1:30 easy between. WU 1.5; CD 1 mi. ~6 mi. PLYO before intervals (~5 min): pogo hops 2x20s, single-leg pogos 2x10/leg, A-skip 2x20m, broad jumps 2x5.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -2004,20 +1988,19 @@ const DATA = {
         {
           "date": "2026-09-24",
           "day_name": "Thu",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Recovery run + Strength B",
+          "detail": "4 mi easy @ 9:45-10:30, then Strength B (home).",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
-          "strength": null
+          "strength": "STRENGTH B (Home, ~35 min): Bulgarian split squat 3x8/leg @ 25-30 lb DBs; DB Romanian deadlift 3x10 @ 30 lb; DB bench press 3x10; single-arm DB row 3x10/side; banded clamshell 3x15/side; banded monster walk 2x15 steps; copenhagen plank 3x20s/side; toe raises 2x20."
         },
         {
           "date": "2026-09-25",
           "day_name": "Fri",
-          "title": "Speed: Speedurance",
-          "detail": "7:00 WU · 3×2:00 @5K · 10:00 tempo · 3×2:00 @5K · 1:00/2:00 rec",
+          "title": "Speed: speedurance",
+          "detail": "3x2:00 @5K / 10:00 @HM tempo / 3x2:00 @5K. 1:00 after 5K reps, 2:00 around tempo. WU 1 mi; CD 1 mi. ~6 mi.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -2028,18 +2011,19 @@ const DATA = {
         {
           "date": "2026-09-26",
           "day_name": "Sat",
-          "title": "Strength — heavy lift",
-          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
+          "title": "Strength A + bike",
+          "detail": "Strength A (full gym) + 30 min easy Z2 Peloton spin. No run today.",
           "routines": [
-            "hip_protocol"
+            "pre_bike",
+            "post_bike"
           ],
-          "strength": "BLOCK B (60-75 min, Saturday gym): Trap bar deadlift 4x5 (heavy); Single-leg box step-up 3x10/leg (moderate DBs, controlled descent); Goblet squat 3x10 (tempo: 3 sec down, 1 sec up); Single-leg RDL 3x8/leg (right-side balance focus); Pallof press 3x12/side (anti-rotation); Glute-ham raise OR band pull-through 3x10."
+          "strength": "STRENGTH A (Full Gym, ~50 min): Back squat 3x5-8 (work up); Romanian deadlift 3x6-8; bench press 3x6-8; pull-up or lat pulldown 3x6-10; Pallof press 3x10/side; side plank 3x30s/side. Rest 90-120s between sets."
         },
         {
           "date": "2026-09-27",
           "day_name": "Sun",
-          "title": "Long run 10 mi",
-          "detail": "10 mi as a progression: ease in ~9:15/mi, finish ~8:15/mi. Rebuild — first real long run after the mile.",
+          "title": "LONG RUN",
+          "detail": "12 mi as a progression run: start easy (9:45-10:15), drift to ~9:30 by halfway, close the last 2-3 mi at HM effort (8:15-8:45). Dial in race-day fueling and hydration.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -2054,16 +2038,15 @@ const DATA = {
     {
       "num": 23,
       "phase": 6,
-      "mileage": 31,
-      "theme": "Half build — peak long run",
+      "mileage": 35,
+      "theme": "4 to go. PEAK long run (13 mi) + 10K-power reps. Top of the build.",
       "days": [
         {
           "date": "2026-09-28",
           "day_name": "Mon",
           "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "detail": "6 mi easy @ 9:45-10:30/mi, conversational.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -2072,18 +2055,18 @@ const DATA = {
         {
           "date": "2026-09-29",
           "day_name": "Tue",
-          "title": "Rest / cross-train",
-          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "title": "REST",
+          "detail": "Full rest + daily mobility. 15-min walk or easy spin if restless.",
           "routines": [
-            "hip_protocol"
+            "mobility_daily"
           ],
           "strength": null
         },
         {
           "date": "2026-09-30",
           "day_name": "Wed",
-          "title": "Speed: 5×5:00 @10K",
-          "detail": "5:00 WU · 5×5:00 @10K pace · 2:00 jog between · 5:00 CD",
+          "title": "Speed: 5x5:00 @10K",
+          "detail": "5x5:00 @10K pace (7:30-7:45), 2:00 easy jog between. WU 1.5; CD 1 mi. ~6 mi. Big aerobic-power day. PLYO before intervals (~5 min): pogo hops 2x20s, single-leg pogos 2x10/leg, A-skip 2x20m, broad jumps 2x5.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -2094,20 +2077,19 @@ const DATA = {
         {
           "date": "2026-10-01",
           "day_name": "Thu",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Recovery run + Strength B",
+          "detail": "4 mi easy @ 9:45-10:30, then Strength B (home).",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
-          "strength": null
+          "strength": "STRENGTH B (Home, ~35 min): Bulgarian split squat 3x8/leg @ 25-30 lb DBs; DB Romanian deadlift 3x10 @ 30 lb; DB bench press 3x10; single-arm DB row 3x10/side; banded clamshell 3x15/side; banded monster walk 2x15 steps; copenhagen plank 3x20s/side; toe raises 2x20."
         },
         {
           "date": "2026-10-02",
           "day_name": "Fri",
-          "title": "Speed: Two Hard. One Easy. (fartlek)",
-          "detail": "5:00 WU · 21:00 alternating 2:00 hard / 1:00 easy · 5:00 CD",
+          "title": "Speed: fartlek 21:00",
+          "detail": "21:00 fartlek — 2:00 hard / 1:00 easy, continuous. WU 1 mi; CD 1 mi. ~6 mi.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -2118,18 +2100,19 @@ const DATA = {
         {
           "date": "2026-10-03",
           "day_name": "Sat",
-          "title": "Strength — heavy lift",
-          "detail": "Heavy gym session (no running today). Posterior chain + single-leg + core.",
+          "title": "Strength A + bike",
+          "detail": "Strength A (full gym) + 30 min easy Z2 Peloton spin. No run today.",
           "routines": [
-            "hip_protocol"
+            "pre_bike",
+            "post_bike"
           ],
-          "strength": "BLOCK A (60-75 min, Saturday gym): Barbell Romanian Deadlift 4x6 (heavy, hip hinge); Bulgarian split squat 3x8/leg (right leg as REAR to load right glute); Barbell hip thrust 4x8 (drive through right heel); Nordic hamstring curl 3x6 (slow eccentric); Lateral band walk 3x15/side (heavy band); Copenhagen adductor hold 3x8/side (3-sec holds)."
+          "strength": "STRENGTH A (Full Gym, ~50 min): Back squat 3x5-8 (work up); Romanian deadlift 3x6-8; bench press 3x6-8; pull-up or lat pulldown 3x6-10; Pallof press 3x10/side; side plank 3x30s/side. Rest 90-120s between sets."
         },
         {
           "date": "2026-10-04",
           "day_name": "Sun",
-          "title": "Long run 13 mi",
-          "detail": "13 mi as a progression: ease in ~9:15/mi, finish ~8:15/mi. Peak long run — last 3-4 mi at half goal pace (~8:00).",
+          "title": "LONG RUN",
+          "detail": "13 mi as a progression run: start easy (9:45-10:15), drift to ~9:30 by halfway, close the last 2-3 mi at HM effort (8:15-8:45). Dial in race-day fueling and hydration.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -2144,16 +2127,15 @@ const DATA = {
     {
       "num": 24,
       "phase": 6,
-      "mileage": 28,
-      "theme": "Half build + half-pace work",
+      "mileage": 30,
+      "theme": "3 to go. Race-specific 'long & strong' + bring-it-down tempo. Volume starts to ease.",
       "days": [
         {
           "date": "2026-10-05",
           "day_name": "Mon",
           "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "detail": "5 mi easy @ 9:45-10:30/mi, conversational.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -2162,18 +2144,18 @@ const DATA = {
         {
           "date": "2026-10-06",
           "day_name": "Tue",
-          "title": "Rest / cross-train",
-          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "title": "REST",
+          "detail": "Full rest + daily mobility. 15-min walk or easy spin if restless.",
           "routines": [
-            "hip_protocol"
+            "mobility_daily"
           ],
           "strength": null
         },
         {
           "date": "2026-10-07",
           "day_name": "Wed",
-          "title": "Speed: Long and Strong and Fast",
-          "detail": "5:00 WU · [8:00 10K + 4:00 5K + 2:00 mile] ×3 · 3:00/2:00 recovery · 5:00 CD",
+          "title": "Speed: long & strong",
+          "detail": "3x(8:00 @10K / 4:00 @5K / 2:00 @mile); 3:00 after 10K, 2:00 after others. WU 1.5; CD 1 mi. ~6 mi.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -2184,20 +2166,19 @@ const DATA = {
         {
           "date": "2026-10-08",
           "day_name": "Thu",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Recovery run + Strength B",
+          "detail": "4 mi easy @ 9:45-10:30, then Strength B (home).",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
-          "strength": null
+          "strength": "STRENGTH B (Home, ~35 min): Bulgarian split squat 3x8/leg @ 25-30 lb DBs; DB Romanian deadlift 3x10 @ 30 lb; DB bench press 3x10; single-arm DB row 3x10/side; banded clamshell 3x15/side; banded monster walk 2x15 steps; copenhagen plank 3x20s/side; toe raises 2x20."
         },
         {
           "date": "2026-10-09",
           "day_name": "Fri",
-          "title": "Speed: Bring It Down (progression tempo)",
-          "detail": "5:00 WU · 15:00 progression: 5:00 recovery → 4:00 10K → 3:00 5K → 2:00 mile → 1:00 best",
+          "title": "Speed: bring it down",
+          "detail": "15:00 progression tempo: 5:00 easy / 4:00@10K / 3:00@5K / 2:00@mile / 1:00@best, continuous. WU 1 mi; CD 1 mi. ~5 mi.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -2208,18 +2189,19 @@ const DATA = {
         {
           "date": "2026-10-10",
           "day_name": "Sat",
-          "title": "Strength — moderate (pre-taper)",
-          "detail": "Last moderate lift before tapering. ~70% load, crisp.",
+          "title": "Strength A + bike",
+          "detail": "Strength A (full gym) + 30 min easy Z2 Peloton spin. No run today.",
           "routines": [
-            "hip_protocol"
+            "pre_bike",
+            "post_bike"
           ],
-          "strength": "BLOCK B — 70% load (last meaningful lift before half taper): Trap bar deadlift 4x5; Single-leg box step-up 3x10/leg; Goblet squat 3x10 (tempo); Single-leg RDL 3x8/leg; Pallof press 3x12/side; GHR or band pull-through 3x10."
+          "strength": "STRENGTH A (Full Gym, ~50 min): Back squat 3x5-8 (work up); Romanian deadlift 3x6-8; bench press 3x6-8; pull-up or lat pulldown 3x6-10; Pallof press 3x10/side; side plank 3x30s/side. Rest 90-120s between sets."
         },
         {
           "date": "2026-10-11",
           "day_name": "Sun",
-          "title": "Long run 12 mi",
-          "detail": "12 mi as a progression: ease in ~9:15/mi, finish ~8:15/mi. Include 5-6 mi at half goal pace.",
+          "title": "LONG RUN",
+          "detail": "11 mi as a progression run: start easy (9:45-10:15), drift to ~9:30 by halfway, close the last 2-3 mi at HM effort (8:15-8:45). Dial in race-day fueling and hydration.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -2234,16 +2216,15 @@ const DATA = {
     {
       "num": 25,
       "phase": 7,
-      "mileage": 21,
-      "theme": "Taper",
+      "mileage": 23,
+      "theme": "2 to go — TAPER. Cut volume, keep the legs sharp. Short, crisp speed only.",
       "days": [
         {
           "date": "2026-10-12",
           "day_name": "Mon",
           "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "detail": "4 mi easy @ 9:45-10:30/mi, conversational.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -2252,18 +2233,18 @@ const DATA = {
         {
           "date": "2026-10-13",
           "day_name": "Tue",
-          "title": "Rest / cross-train",
-          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "title": "REST",
+          "detail": "Full rest + daily mobility. 15-min walk or easy spin if restless.",
           "routines": [
-            "hip_protocol"
+            "mobility_daily"
           ],
           "strength": null
         },
         {
           "date": "2026-10-14",
           "day_name": "Wed",
-          "title": "Speed: Stronger Faster",
-          "detail": "5:00 WU · [3:00 5K + 4×0:30 mile] ×3 · 2:00/1:00 recovery · 5:00 CD",
+          "title": "Speed: stronger faster",
+          "detail": "3x(3:00 @5K + 4x0:30 @mile); 2:00 after 5K, 1:00 after mile set. WU 1 mi; CD 1 mi. ~4 mi. Sharp but short.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -2274,20 +2255,19 @@ const DATA = {
         {
           "date": "2026-10-15",
           "day_name": "Thu",
-          "title": "Recovery run",
-          "detail": "Easy 30-40 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "title": "Recovery run + Strength B",
+          "detail": "3 mi easy, then Strength B (short/maintenance).",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
-          "strength": null
+          "strength": "STRENGTH B (short, ~20 min): Bulgarian split squat 2x8/leg (lighter); banded clamshell 2x15/side; monster walk 2x15; copenhagen plank 2x20s/side. Maintenance only."
         },
         {
           "date": "2026-10-16",
           "day_name": "Fri",
-          "title": "Speed: In Control",
-          "detail": "6:00 WU · 1:00 mile / 3:00 5K / 5:00 10K / 7:00 recovery pace · controlled · CD",
+          "title": "Speed: in control",
+          "detail": "1:00 @mile / 3:00 @5K / 5:00 @10K / 7:00 easy, short recoveries. WU 1 mi; CD 0.5 mi. ~3 mi.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -2298,18 +2278,19 @@ const DATA = {
         {
           "date": "2026-10-17",
           "day_name": "Sat",
-          "title": "Strength — light (taper)",
-          "detail": "Taper week — keep it light and sharp, no heavy loading.",
+          "title": "Strength A (light) + bike",
+          "detail": "Strength A (lighter) + 20-30 min very easy spin. Keep it crisp, not heavy.",
           "routines": [
-            "hip_protocol"
+            "pre_bike",
+            "post_bike"
           ],
-          "strength": "STRENGTH LIGHT (~25 min, bodyweight only — TAPER WEEK): No heavy lifting. Bodyweight squat 2x12; glute bridge 2x15; push-up 2x10-15; band row 2x12; side plank 2x30s/side; dead bug 2x10/side. Maintenance only — keep RPE 5-6."
+          "strength": "STRENGTH A (lighter, ~35 min): Back squat 2x5 (moderate); RDL 2x6; bench 2x6; lat pulldown 2x8; Pallof 2x10/side. Cut volume — taper week, keep it crisp not crushing."
         },
         {
           "date": "2026-10-18",
           "day_name": "Sun",
-          "title": "Long run 8 mi",
-          "detail": "8 mi as a progression: ease in ~9:15/mi, finish ~8:15/mi. Easy — taper has begun.",
+          "title": "LONG RUN",
+          "detail": "9 mi as a progression run: start easy (9:45-10:15), drift to ~9:30 by halfway, close the last 2-3 mi at HM effort (8:15-8:45). Dial in race-day fueling and hydration.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -2324,16 +2305,15 @@ const DATA = {
     {
       "num": 26,
       "phase": 7,
-      "mileage": 20,
-      "theme": "🏁 Dresden Half race week",
+      "mileage": 21,
+      "theme": "1 to go — RACE WEEK. Trust the work. Tiny touches of pace, then 13.1 on Sunday.",
       "days": [
         {
           "date": "2026-10-19",
           "day_name": "Mon",
           "title": "Recovery run",
-          "detail": "Easy 25 min @ ~9:50-10:30/mi — fully conversational. Keep it genuinely easy.",
+          "detail": "3 mi easy @ 9:45-10:30/mi, conversational.",
           "routines": [
-            "hip_protocol",
             "pre_run",
             "post_run"
           ],
@@ -2342,18 +2322,18 @@ const DATA = {
         {
           "date": "2026-10-20",
           "day_name": "Tue",
-          "title": "Rest / cross-train",
-          "detail": "No running. Optional: yoga, core, or an easy 30-min Peloton spin — any of those, or full rest. Daily hip mobility.",
+          "title": "REST",
+          "detail": "Full rest + daily mobility. 15-min walk or easy spin if restless.",
           "routines": [
-            "hip_protocol"
+            "mobility_daily"
           ],
           "strength": null
         },
         {
           "date": "2026-10-21",
           "day_name": "Wed",
-          "title": "Speed: The Speed Run Before…",
-          "detail": "5:00 WU · 1:00 5K / 2:00 10K / 5:00 @half goal pace (~8:00) / 2:00 10K / 1:00 5K · 1:00 jog · primes race rhythm",
+          "title": "Speed: race primer",
+          "detail": "WU 1 mi; 1:00@5K / 2:00@10K / 5:00 @HM pace / 2:00@10K / 1:00@5K, 1:00 easy between; CD 1 mi. ~3 mi. Legs say 'ready'.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -2364,34 +2344,31 @@ const DATA = {
         {
           "date": "2026-10-22",
           "day_name": "Thu",
-          "title": "Easy + strides",
-          "detail": "20 min easy @ ~10:00/mi + 4 strides. Stay loose.",
+          "title": "REST + mobility",
+          "detail": "Full rest. Light mobility, foam roll. Stay off the legs.",
           "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
+            "mobility_daily"
           ],
           "strength": null
         },
         {
           "date": "2026-10-23",
           "day_name": "Fri",
-          "title": "Rest (pre-race)",
-          "detail": "Off your feet, hydrate, carb-load. No lifting.",
+          "title": "Easy shakeout + strides",
+          "detail": "2 mi very easy + 4x20s strides. Loosen up — nothing hard. ~2 mi.",
           "routines": [
-            "hip_protocol"
+            "pre_run",
+            "post_run"
           ],
           "strength": null
         },
         {
           "date": "2026-10-24",
           "day_name": "Sat",
-          "title": "Rest — shakeout",
-          "detail": "Shakeout 10-15 min easy + 3 strides, then rest. Lay out race kit.",
+          "title": "REST (pre-race)",
+          "detail": "Full rest. Lay out kit, hydrate well, carbs in, early night. Optional 10-min shakeout walk.",
           "routines": [
-            "hip_protocol",
-            "pre_run",
-            "post_run"
+            "mobility_daily"
           ],
           "strength": null
         },
