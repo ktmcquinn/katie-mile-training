@@ -888,13 +888,13 @@ const DATA = {
       "num": 10,
       "phase": 3,
       "mileage": 22,
-      "theme": "Base block wk1: rebuild aerobic volume + strength. Easy effort, strides keep legs honest.",
+      "theme": "Base wk1 (pre-block): easy aerobic miles + a little stride work. The goal is to arrive at the 14-week plan healthy and strong - not to train hard yet.",
       "days": [
         {
           "date": "2026-06-29",
           "day_name": "Mon",
           "title": "Recovery run",
-          "detail": "3 mi easy @ 9:45-10:30/mi, conversational. Ease into the base block.",
+          "detail": "3 mi easy @ 9:45-10:30/mi, conversational. Ease in - all easy this block.",
           "routines": [
             "pre_run",
             "post_run"
@@ -915,7 +915,7 @@ const DATA = {
           "date": "2026-07-01",
           "day_name": "Wed",
           "title": "Easy + strides",
-          "detail": "4 mi easy + 6x20s relaxed strides at the end (fast but smooth, full walk-back). ~4 mi.",
+          "detail": "4 mi easy @ 9:45-10:30, then 4x20s relaxed strides (smooth and quick, full walk-back - not a workout). ~4 mi.",
           "routines": [
             "pre_run",
             "post_run"
@@ -959,7 +959,7 @@ const DATA = {
           "date": "2026-07-05",
           "day_name": "Sun",
           "title": "LONG RUN",
-          "detail": "8 mi as a progression run: start easy (9:45-10:15), drift to ~9:30 by halfway, close the last 2-3 mi at HM effort (8:15-8:45). Dial in race-day fueling and hydration.",
+          "detail": "8 mi easy/steady @ 9:45-10:15, relaxed and conversational. Just aerobic time on feet - no fast finish during the base block.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -975,7 +975,7 @@ const DATA = {
       "num": 11,
       "phase": 3,
       "mileage": 24,
-      "theme": "Base block wk2: nudge volume. Strength stays heavy — this is your build-strength window.",
+      "theme": "Base wk2: a touch more volume, same easy effort. Strides keep the legs springy without any real quality work.",
       "days": [
         {
           "date": "2026-07-06",
@@ -1002,7 +1002,7 @@ const DATA = {
           "date": "2026-07-08",
           "day_name": "Wed",
           "title": "Easy + strides",
-          "detail": "5 mi easy + 6x20s strides. ~5 mi.",
+          "detail": "5 mi easy @ 9:45-10:30, then 5x20s relaxed strides (smooth and quick, full walk-back - not a workout). ~5 mi.",
           "routines": [
             "pre_run",
             "post_run"
@@ -1046,7 +1046,7 @@ const DATA = {
           "date": "2026-07-12",
           "day_name": "Sun",
           "title": "LONG RUN",
-          "detail": "8 mi as a progression run: start easy (9:45-10:15), drift to ~9:30 by halfway, close the last 2-3 mi at HM effort (8:15-8:45). Dial in race-day fueling and hydration.",
+          "detail": "8 mi easy/steady @ 9:45-10:15, relaxed and conversational. Just aerobic time on feet - no fast finish during the base block.",
           "routines": [
             "hip_protocol",
             "pre_run",
@@ -1062,7 +1062,7 @@ const DATA = {
       "num": 12,
       "phase": 3,
       "mileage": 24,
-      "theme": "Base block wk3: hold volume, add a light fartlek to wake up turnover before the NRC plan.",
+      "theme": "Base wk3: last easy week before the block. A few relaxed strides, nothing structured. Show up fresh - the quality starts next week.",
       "days": [
         {
           "date": "2026-07-13",
@@ -1088,8 +1088,8 @@ const DATA = {
         {
           "date": "2026-07-15",
           "day_name": "Wed",
-          "title": "Easy + light fartlek",
-          "detail": "5 mi: after 1.5 mi warmup, 8x(0:30 quick / 1:30 easy), then easy home. Stay relaxed. ~5 mi.",
+          "title": "Easy + strides",
+          "detail": "5 mi easy @ 9:45-10:30, then 6x20s relaxed strides (smooth and quick, full walk-back - not a workout). ~5 mi.",
           "routines": [
             "pre_run",
             "post_run"
@@ -1133,7 +1133,7 @@ const DATA = {
           "date": "2026-07-19",
           "day_name": "Sun",
           "title": "LONG RUN",
-          "detail": "8 mi as a progression run: start easy (9:45-10:15), drift to ~9:30 by halfway, close the last 2-3 mi at HM effort (8:15-8:45). Dial in race-day fueling and hydration.",
+          "detail": "8 mi easy/steady @ 9:45-10:15, relaxed and conversational. Just aerobic time on feet - no fast finish during the base block.",
           "routines": [
             "hip_protocol",
             "pre_run",
