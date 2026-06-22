@@ -4197,3 +4197,23 @@ body.fuel-log-open { overflow: hidden; }
 }
 .modal-swap-day-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+/* Uniform day-card size across the Plan section (full detail still in the day modal) */
+.week .day {
+  height: 130px;
+  min-height: 0;
+  overflow: hidden;
+}
+.week .day .dt {
+  flex: 0 0 auto;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.week .day .day-specs {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
