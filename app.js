@@ -1276,9 +1276,21 @@
 
       // ---- Serving-size popup for a previously-eaten food ----
       let RS_ITEM = null;
+      let RS_BASE_GRAMS = null; // grams behind one logged portion (null if unknown)
+      // Pull a gram/ml weight out of a serving string: "100 g", "2 × 30 g", "240 ml".
+      function parseServingGrams(serving) {
+        if (!serving) return null;
+        let mult = 1;
+        const m1 = String(serving).match(/^\s*([\d.]+)\s*[×x*]/);
+        if (m1) mult = parseFloat(m1[1]) || 1;
+        const g = String(serving).match(/([\d.]+)\s*(g|ml)\b/i);
+        if (g) { const v = parseFloat(g[1]); return v > 0 ? v * mult : null; }
+        return null;
+      }
       function openRecentServe(item) {
         if (!item) return;
         RS_ITEM = item;
+        RS_BASE_GRAMS = parseServingGrams(item.serving);
         const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
         set("rsName", item.name || "Food");
         const subBits = [];
@@ -1286,7 +1298,34 @@
         if (item.serving) subBits.push(item.serving);
         set("rsSub", subBits.join(" · "));
         const qty = document.getElementById("rsQty");
-        if (qty) { qty.value = "1"; qty.oninput = renderRsPreview; }
+        const unit = document.getElementById("rsUnit");
+        const unitLbl = document.getElementById("rsUnitLbl");
+        if (unit) {
+          if (RS_BASE_GRAMS) {
+            unit.style.display = "";
+            unit.value = "g";
+            if (unitLbl) unitLbl.textContent = "Amount";
+            if (qty) qty.value = String(Math.round(RS_BASE_GRAMS));
+          } else {
+            unit.style.display = "none";
+            unit.value = "serving";
+            if (unitLbl) unitLbl.textContent = "Servings";
+            if (qty) qty.value = "1";
+          }
+          unit.onchange = () => {
+            if (!qty) return;
+            const cur = parseFloat(qty.value) || 0;
+            if (unit.value === "g") {
+              qty.value = String(Math.round((cur || 1) * (RS_BASE_GRAMS || 1)));
+              if (unitLbl) unitLbl.textContent = "Amount";
+            } else {
+              qty.value = String(RS_BASE_GRAMS ? +(cur / RS_BASE_GRAMS).toFixed(2) : 1);
+              if (unitLbl) unitLbl.textContent = "Servings";
+            }
+            renderRsPreview();
+          };
+        }
+        if (qty) qty.oninput = renderRsPreview;
         const close = document.getElementById("rsClose"); if (close) close.onclick = closeRecentServe;
         const add = document.getElementById("rsAdd"); if (add) add.onclick = addRecentServe;
         renderRsPreview();
@@ -1298,9 +1337,13 @@
         if (pop) pop.style.display = "none";
         RS_ITEM = null;
       }
+      // Scale multiplier relative to one logged portion (grams -> ratio, else servings).
       function rsScale() {
-        const q = parseFloat((document.getElementById("rsQty") || {}).value);
-        return q > 0 ? q : null;
+        const amt = parseFloat((document.getElementById("rsQty") || {}).value);
+        if (!(amt > 0)) return null;
+        const unit = document.getElementById("rsUnit");
+        if (unit && unit.value === "g" && RS_BASE_GRAMS) return amt / RS_BASE_GRAMS;
+        return amt;
       }
       function renderRsPreview() {
         const el = document.getElementById("rsPreview");
@@ -1315,13 +1358,18 @@
         if (!RS_ITEM || k == null) return;
         const it = RS_ITEM;
         const sc = (v) => v == null ? null : +(v * k).toFixed(1);
+        const unit = document.getElementById("rsUnit");
+        const amt = parseFloat((document.getElementById("rsQty") || {}).value) || 0;
+        const byWeight = !!(unit && unit.value === "g" && RS_BASE_GRAMS);
+        const serving = byWeight ? `${Math.round(amt)} g`
+          : (k === 1 ? (it.serving || "1 serving") : `${+k.toFixed(2)} × ${it.serving || "serving"}`);
         const meal = {
           id: (crypto.randomUUID ? crypto.randomUUID() : Date.now() + "-" + Math.random().toString(36).slice(2)),
-          name: k === 1 ? it.name : `${k} × ${it.name}`,
+          name: it.name,
           cal: Math.round((it.cal || 0) * k),
           p: sc(it.p), c: sc(it.c), f: sc(it.f), fiber: sc(it.fiber),
           na: it.na != null ? Math.round(it.na * k) : null,
-          foodId: it.foodId || null, brand: it.brand || null, serving: it.serving || null,
+          foodId: it.foodId || null, brand: it.brand || null, serving: serving,
           source: it.source || (it.foodId ? "usda" : "manual"),
           loggedAt: new Date().toISOString(),
         };

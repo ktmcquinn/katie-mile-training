@@ -437,8 +437,14 @@
                 </div>
                 <div class="serve-sub" id="rsSub"></div>
                 <label class="serve-field">
-                  <span>Servings</span>
-                  <input type="text" inputmode="decimal" id="rsQty" value="1">
+                  <span id="rsUnitLbl">Amount</span>
+                  <span class="serve-amt">
+                    <input type="text" inputmode="decimal" id="rsQty" value="1">
+                    <select id="rsUnit">
+                      <option value="g">g</option>
+                      <option value="serving">serving</option>
+                    </select>
+                  </span>
                 </label>
                 <div class="serve-preview" id="rsPreview"></div>
                 <button type="button" class="btn btn-primary serve-add" id="rsAdd">Add</button>

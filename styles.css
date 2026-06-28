@@ -4217,3 +4217,11 @@ body.fuel-log-open { overflow: hidden; }
   overflow: hidden;
 }
 
+/* Serving popup: amount + unit (g / serving) */
+.serve-amt { display: inline-flex; align-items: center; gap: 8px; }
+.serve-amt input { width: 78px; }
+.serve-amt select {
+  border: 1px solid var(--border); border-radius: 8px; background: var(--bg);
+  color: var(--ink); font-size: 14px; font-weight: 600; padding: 8px 6px;
+}
+
