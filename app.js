@@ -927,7 +927,7 @@
         const baseCal = pcr[cat] || pcr.easy;
         const luteal = !!FUEL_PREFS.luteal;
         const targetCal = baseCal + (luteal ? LUTEAL_BUMP : 0);
-        const targetP = 150;
+        const targetP = 110;
         const targetF = luteal ? 70 : 60;
         const targetFi = 30;
         const targetNa = (cat === "quality" || cat === "long" || cat === "race") ? 2600 : 2300;
@@ -4510,7 +4510,7 @@
     <div><b>P5 (W19-21):</b> 1,650-1,950 cal/day. ~150-200 cal mild taper deficit. P 110-120g · F 55-65g · C 130-150g.</div>
     <div style="margin-top:8px"><b>Day cycling (key for PCOS):</b> quality / long-run days → top of range (+100-200 on long days). Easy / bike / strength → middle. Rest day → bottom (not lower). Place carbs around training — that's when insulin sensitivity is highest.</div>
     <div style="margin-top:6px"><b>Luteal phase:</b> +150-250 cal/day in the 7-10 days before your period (mostly carbs + protein, not fat). Toggle "Luteal" in the Fuel tab to apply this automatically.</div>
-    <div style="margin-top:6px"><b>Always:</b> protein 4 meals @ 30-40g (target 150g/day) · 75+ oz water · 25-35g fiber (5-10g soluble for PCOS) · 7-9 hr sleep.</div>
+    <div style="margin-top:6px"><b>Always:</b> protein 4 meals @ 25-30g (target 110g/day) · 75+ oz water · 25-35g fiber (5-10g soluble for PCOS) · 7-9 hr sleep.</div>
     <div style="margin-top:6px"><b>LEA warning signs:</b> cycle gets longer or disappears, sleep degrades, workouts feel harder at same RPE, persistent cold hands/feet, mood crashes. Eat more, not less.</div>
     <div style="margin-top:6px;font-size:11px;color:#6B7280"><b>BIA caveat:</b> home-scale body fat % is ±3-5% off DEXA. Trust 4-week rolling averages over the daily number. Check-in every 2 weeks, not weekly — long runs and your cycle add noise.</div>
   `;
