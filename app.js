@@ -555,6 +555,7 @@
           const log = LOGS[date];
           if (!log || !log.distance) continue;
           if (log.avgSpeedMph != null || log.avgSpeedLabel || log.avgPower) continue; // skip rides
+          if (log.activity === "walk" || log.activity === "hike") continue; // walks/hikes are not run miles
           total += parseFloat(log.distance) || 0;
         }
         return total;
@@ -917,6 +918,7 @@
         const actualCatMap = {
           nothing:  "rest",
           walk:     "easy",
+          hike:     "easy",
           easy_run: "easy",
           bike:     "bike",
           done:     plannedCat,
@@ -3682,6 +3684,7 @@
           // Skip rides: a bike log carries avg speed/power and no run pace, so
           // a ride done on a run-planned day must not count toward run mileage.
           if (log.avgSpeedMph != null || log.avgSpeedLabel || log.avgPower) continue;
+          if (log.activity === "walk" || log.activity === "hike") continue;
           total += parseFloat(log.distance) || 0;
         }
         return total;
@@ -4170,15 +4173,25 @@
 
       // Workout log sub-modal — opens from the "Log workout" / "Edit log"
       // button inside the day modal. Replaces the old inline log form.
-      function openWorkoutLogModal(day, week) {
+      function openWorkoutLogModal(day, week, typeOverride, draft) {
         const cat = categorize(day);
-        const log = getLog(day.date) || {};
-        const isBike = cat === "bike";
+        const log = draft || getLog(day.date) || {};
+        const activity = typeOverride || log.activity || (cat === "bike" ? "bike" : "run");
+        const isBike = activity === "bike";
         const m = document.getElementById("logModal");
         let html = `<button class="close" onclick="closeWorkoutLogModal()" style="float:right;cursor:pointer;border:0;background:none;font-size:24px;color:var(--muted);line-height:1;padding:0 4px">×</button>`;
         html += `<h2>${isBike ? "Bike log" : "Workout log"}</h2>`;
         html += `<div class="ex-meta">${fmtDate(day.date, { weekday: "long", month: "long", day: "numeric" })} · ${day.title}</div>`;
         html += `<div class="ex-desc">${isBike ? "Log your bike session. Avg speed auto-calculates from distance + time." : "Log what you actually did. Pace auto-calculates from distance + duration."}</div>`;
+        html += `<div class="log-field">
+          <label>Activity</label>
+          <select id="logActivity">
+            <option value="run"${activity === "run" ? " selected" : ""}>Run</option>
+            <option value="bike"${activity === "bike" ? " selected" : ""}>Bike</option>
+            <option value="walk"${activity === "walk" ? " selected" : ""}>Walk</option>
+            <option value="hike"${activity === "hike" ? " selected" : ""}>Hike</option>
+          </select>
+        </div>`;
         html += `<div class="log-grid">
           <div class="log-field">
             <label>Distance (mi)</label>
@@ -4235,7 +4248,24 @@
         const paceEl = document.getElementById("logPaceDisplay");
         const statusEl = document.getElementById("logStatus");
         const powerEl = document.getElementById("logPower");
-        let selectedRpe = (getLog(day.date) || {}).rpe ?? null;
+        let selectedRpe = (log.rpe != null ? log.rpe : (getLog(day.date) || {}).rpe) ?? null;
+        const actEl = document.getElementById("logActivity");
+        if (actEl) actEl.addEventListener("change", () => {
+          const newIsBike = actEl.value === "bike";
+          if (newIsBike !== isBike) {
+            const d = {
+              distance: distEl.value ? parseFloat(distEl.value) : null,
+              minutes: minEl.value ? parseInt(minEl.value, 10) : null,
+              seconds: secEl.value ? parseInt(secEl.value, 10) : null,
+              heartRate: hrEl.value ? parseInt(hrEl.value, 10) : null,
+              notes: notesEl.value || null,
+              rpe: selectedRpe,
+              avgPower: powerEl && powerEl.value ? parseInt(powerEl.value, 10) : null,
+              activity: actEl.value,
+            };
+            openWorkoutLogModal(day, week, actEl.value, d);
+          }
+        });
 
         function updatePace() {
           const dist = parseFloat(distEl.value);
@@ -4283,6 +4313,7 @@
             notes: notesEl.value.trim() || null,
             loggedAt: new Date().toISOString(),
           };
+          newLog.activity = (document.getElementById("logActivity") || {}).value || activity;
           if (isBike) {
             const mph = calcSpeed(dist, totalSec);
             newLog.avgSpeedMph = mph || null;
@@ -5249,6 +5280,8 @@
         const sportType = (a.sport_type || "").toLowerCase();
         const name = (a.name || "").toLowerCase();
         if (type.includes("run") || sportType.includes("run")) return "run";
+        if (type.includes("walk") || sportType.includes("walk") || name.includes("walk")) return "walk";
+        if (type.includes("hike") || sportType.includes("hike") || name.includes("hike")) return "hike";
         if (type.includes("ride") || type.includes("bike") || type.includes("velo")
           || sportType.includes("ride") || sportType.includes("bike") || sportType.includes("velo")
           || name.includes("peloton") || name.includes("bike") || name.includes("cycl")
@@ -5341,6 +5374,8 @@
                 <select class="si-type">
                   <option value="run"${guess === "run" ? " selected" : ""}>Run</option>
                   <option value="bike"${guess === "bike" ? " selected" : ""}>Bike</option>
+                  <option value="walk"${guess === "walk" ? " selected" : ""}>Walk</option>
+                  <option value="hike"${guess === "hike" ? " selected" : ""}>Hike</option>
                   <option value="strength"${guess === "strength" ? " selected" : ""}>Strength</option>
                 </select>
               </div>
@@ -5456,6 +5491,7 @@
           notes: `Imported from Strava (${a.name}). Manually assigned.`.trim(),
           loggedAt: new Date().toISOString(),
         };
+        newLog.activity = type;
         if (type === "bike") {
           const mph = calcSpeed(distanceMi, durationSec);
           newLog.avgSpeedMph = mph || null;
@@ -7183,6 +7219,7 @@
           const l = LOGS[date];
           if (!l || !l.distance || !l.durationSec) continue;
           if (l.avgSpeedMph != null) continue;            // bike — not a run-fitness signal
+          if (l.activity === "walk" || l.activity === "hike") continue; // walks/hikes aren't fitness signals
           const d = parseFloat(l.distance);
           if (!d || d < 1.5 || date < cutoffISO) continue; // sustained efforts only
           logged.push({ distMi: d, sec: l.durationSec, date, genuine: false, vdot: vdotOf(d, l.durationSec) });
