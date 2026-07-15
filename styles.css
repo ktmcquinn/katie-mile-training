@@ -1599,8 +1599,12 @@
         position: fixed; inset: 0;
         background: var(--modal-overlay);
         display: none; align-items: flex-start; justify-content: center;
-        z-index: 200; padding: 20px;
+        z-index: 200;
+        /* Match the day modal: equal top/bottom gutters plus iPhone safe-areas
+           so the sheet never hugs the notch or home indicator. */
+        padding: calc(20px + env(safe-area-inset-top, 0px)) 20px calc(20px + env(safe-area-inset-bottom, 0px));
         overflow-y: auto;
+        overscroll-behavior: contain;
       }
       .ex-modal-bg.show { display: flex; }
       .ex-modal {
