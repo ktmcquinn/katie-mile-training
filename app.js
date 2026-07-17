@@ -1124,6 +1124,14 @@
           supaClient.from("meals").delete().eq("id", id).then(() => {});
         }
       }
+      function updateMeal(date, id, patch) {
+        const arr = MEALS[date];
+        if (!arr) return;
+        const m = arr.find((x) => x.id === id);
+        if (!m) return;
+        Object.assign(m, patch);
+        persistMeals();
+      }
 
       // Sum macros for a list of meals
       // sumMacros() now lives in lib/format.js (loaded first, shared scope).
@@ -1535,6 +1543,45 @@
       }
 
       // ---------- Meal-slot list (the "Log meals" card) ----------
+      // ---- Edit a logged food (rename, set brand, or delete) ----
+      let EF_ID = null;
+      function openEditFood(id) {
+        const m = todaysMeals().find((x) => x.id === id);
+        if (!m) return;
+        EF_ID = id;
+        const brand = document.getElementById("efBrand");
+        const name = document.getElementById("efName");
+        if (brand) brand.value = m.brand || "";
+        if (name) name.value = m.name || "";
+        const cls = document.getElementById("efClose"); if (cls) cls.onclick = closeEditFood;
+        const sv = document.getElementById("efSave"); if (sv) sv.onclick = saveEditFood;
+        const dl = document.getElementById("efDelete"); if (dl) dl.onclick = deleteEditFood;
+        const pop = document.getElementById("editFoodPopup");
+        if (pop) pop.style.display = "";
+        if (name) name.focus();
+      }
+      function closeEditFood() {
+        const pop = document.getElementById("editFoodPopup");
+        if (pop) pop.style.display = "none";
+        EF_ID = null;
+      }
+      function saveEditFood() {
+        if (!EF_ID) return;
+        const brand = ((document.getElementById("efBrand") || {}).value || "").trim() || null;
+        const name = ((document.getElementById("efName") || {}).value || "").trim() || "(unnamed)";
+        updateMeal(todayISO(), EF_ID, { name, brand });
+        closeEditFood();
+        renderFuel();
+        showToast("Food updated.");
+      }
+      function deleteEditFood() {
+        if (!EF_ID) return;
+        deleteMeal(todayISO(), EF_ID);
+        closeEditFood();
+        renderFuel();
+        showToast("Food removed.");
+      }
+
       function renderFuelSlots() {
         const host = document.getElementById("mealSlots");
         if (!host) return;
@@ -1554,8 +1601,8 @@
               <button type="button" class="ms-add" data-slot-add="${slot.key}" aria-label="Add to ${slot.label}">+</button>
             </div>
             ${items.length ? `<div class="ms-items">` + items.map((m) => `
-              <div class="ms-item">
-                <span class="ms-item-name">${esc(m.name || "(unnamed)")}</span>
+              <div class="ms-item" data-edit-id="${m.id}" title="Tap to edit or delete">
+                <span class="ms-item-name">${m.brand ? `<span class="ms-item-brand">${esc(m.brand)}</span> ` : ""}${esc(m.name || "(unnamed)")}</span>
                 <span class="ms-item-cal">${Math.round(parseFloat(m.cal) || 0)} cal</span>
                 <button type="button" class="ms-item-del" data-del-id="${m.id}" aria-label="Delete">×</button>
               </div>`).join("") + `</div>` : ""}
@@ -1566,6 +1613,8 @@
           b.addEventListener("click", (e) => { e.stopPropagation(); openFuelLog(b.dataset.slotAdd); }));
         host.querySelectorAll(".ms-item-del").forEach((b) =>
           b.addEventListener("click", (e) => { e.stopPropagation(); deleteMeal(todayISO(), b.dataset.delId); renderFuel(); }));
+        host.querySelectorAll(".ms-item[data-edit-id]").forEach((row) =>
+          row.addEventListener("click", (e) => { e.stopPropagation(); openEditFood(row.dataset.editId); }));
         host.querySelectorAll(".meal-slot").forEach((row) =>
           row.addEventListener("click", () => openFuelLog(row.dataset.slot)));
       }

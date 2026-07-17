@@ -4229,3 +4229,17 @@ body.fuel-log-open { overflow: hidden; }
   color: var(--ink); font-size: 14px; font-weight: 600; padding: 8px 6px;
 }
 
+/* Logged food items: brand prefix + tap-to-edit */
+.ms-item { cursor: pointer; }
+.ms-item-brand { color: var(--accent); font-weight: 700; }
+/* Edit-food popup fields */
+.ef-field { display: block; margin: 14px 0; }
+.ef-field > span { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.ef-field input {
+  width: 100%; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg); color: var(--ink); font-size: 15px; padding: 10px 12px;
+}
+.ef-actions { display: flex; gap: 10px; margin-top: 18px; }
+.ef-actions .btn { flex: 1; padding: 12px; border-radius: 999px; font-size: 15px; }
+.ef-delete { background: var(--error-bg); color: #B85450; border: 1px solid var(--error-border); }
+

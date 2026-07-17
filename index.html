@@ -315,6 +315,28 @@
         <div class="meal-slots" id="mealSlots"></div>
       </div>
 
+      <!-- Edit a logged food (rename / set brand / delete) -->
+      <div class="serve-popup" id="editFoodPopup" style="display:none">
+        <div class="serve-card">
+          <div class="serve-head">
+            <div class="serve-name">Edit food</div>
+            <button type="button" class="serve-close" id="efClose" aria-label="Close">×</button>
+          </div>
+          <label class="ef-field">
+            <span>Brand (optional — shows before the name)</span>
+            <input type="text" id="efBrand" placeholder="e.g. Fage" autocomplete="off">
+          </label>
+          <label class="ef-field">
+            <span>Food name</span>
+            <input type="text" id="efName" placeholder="e.g. Greek yogurt" autocomplete="off">
+          </label>
+          <div class="ef-actions">
+            <button type="button" class="btn ef-delete" id="efDelete">Delete</button>
+            <button type="button" class="btn btn-primary ef-save" id="efSave">Save</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Progress -->
       <div class="fuel-card" id="fuelProgressCard">
         <h3>Progress</h3>
