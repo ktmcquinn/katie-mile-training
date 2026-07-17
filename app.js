@@ -7733,13 +7733,20 @@
         }
 
         window.swUpdateAndReload = function () {
+          // Hide the banner right away so it doesn't get "stuck".
+          const banner = document.getElementById("sw-update-banner");
+          if (banner) banner.classList.remove("visible");
+          let reloaded = false;
+          const doReload = () => { if (reloaded) return; reloaded = true; window.location.reload(); };
           if (_waitingSW) {
-            _waitingSW.postMessage({ type: "SKIP_WAITING" });
-            navigator.serviceWorker.addEventListener("controllerchange", () => {
-              window.location.reload();
-            });
+            navigator.serviceWorker.addEventListener("controllerchange", doReload);
+            try { _waitingSW.postMessage({ type: "SKIP_WAITING" }); } catch (e) {}
+            // iOS / standalone PWAs often never fire controllerchange, so don't
+            // depend on it — reload anyway. The new files are already cached via
+            // stale-while-revalidate, so a plain reload surfaces them.
+            setTimeout(doReload, 1200);
           } else {
-            window.location.reload();
+            doReload();
           }
         };
 
