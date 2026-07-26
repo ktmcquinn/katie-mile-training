@@ -850,14 +850,19 @@
       // Calorie ranges by phase + day type (nutritionist's revised numbers).
       // For each phase: { rest, easy, bike, quality, long, race }.
       // Strength is handled as a +250 cal adjustment via exercise math, not target.
+      // Weight-loss adjustment (goal 135 lb): a conservative, EA-aware deficit
+      // taken ONLY on non-running days — rest days -150 and bike/cross days -100.
+      // Easy-run, quality, long, and race days stay fully fueled to protect
+      // energy availability and training. If the EA card reads clinical
+      // repeatedly, ease the deficit back.
       const PHASE_CAL_RANGES = {
-        1: { rest: 1650, easy: 1750, bike: 1750, quality: 1850, long: 2050, race: 2200 },
-        2: { rest: 1700, easy: 1800, bike: 1800, quality: 1900, long: 2100, race: 2200 },
-        3: { rest: 1700, easy: 1800, bike: 1800, quality: 1950, long: 2150, race: 2200 },
-        4: { rest: 1750, easy: 1850, bike: 1850, quality: 2000, long: 2200, race: 2200 },
-        5: { rest: 1650, easy: 1750, bike: 1750, quality: 1850, long: 1950, race: 2100 },
-        6: { rest: 1750, easy: 1850, bike: 1850, quality: 2000, long: 2200, race: 2200 },
-        7: { rest: 1700, easy: 1800, bike: 1800, quality: 1900, long: 2050, race: 2200 },
+        1: { rest: 1500, easy: 1750, bike: 1650, quality: 1850, long: 2050, race: 2200 },
+        2: { rest: 1550, easy: 1800, bike: 1700, quality: 1900, long: 2100, race: 2200 },
+        3: { rest: 1550, easy: 1800, bike: 1700, quality: 1950, long: 2150, race: 2200 },
+        4: { rest: 1600, easy: 1850, bike: 1750, quality: 2000, long: 2200, race: 2200 },
+        5: { rest: 1500, easy: 1750, bike: 1650, quality: 1850, long: 1950, race: 2100 },
+        6: { rest: 1600, easy: 1850, bike: 1750, quality: 2000, long: 2200, race: 2200 },
+        7: { rest: 1550, easy: 1800, bike: 1700, quality: 1900, long: 2050, race: 2200 },
       };
 
       // EA zones (kcal/kg LBM)
