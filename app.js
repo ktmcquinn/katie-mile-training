@@ -989,6 +989,29 @@
       }
       let SAVED_FOODS = loadSavedFoods();
 
+      // Foods swiped-to-delete from the "recently consumed" list. Hidden by a
+      // dedup key so they stop appearing — logged history / calorie totals are
+      // never touched.
+      const HIDDEN_FOODS_KEY = "katie-mile-hidden-foods";
+      function loadHiddenFoods() { try { const r = localStorage.getItem(HIDDEN_FOODS_KEY); return r ? JSON.parse(r) : []; } catch (e) { return []; } }
+      function persistHiddenFoods() { try { localStorage.setItem(HIDDEN_FOODS_KEY, JSON.stringify(HIDDEN_FOODS)); } catch (e) {} if (typeof scheduleSync === "function") scheduleSync(); }
+      let HIDDEN_FOODS = loadHiddenFoods();
+      function recentFoodKey(m) {
+        return `${(m.name || "").toLowerCase().trim()}|${m.cal || 0}|${m.p || 0}|${m.c || 0}|${m.f || 0}|${m.fiber || 0}|${m.na || 0}|${m.serving || ""}`;
+      }
+      function deleteRecentFood(item) {
+        if (!item) return;
+        const key = recentFoodKey(item);
+        if (!HIDDEN_FOODS.includes(key)) HIDDEN_FOODS.push(key);
+        persistHiddenFoods();
+        // Also drop any matching saved-scan so it leaves the search results too.
+        const nm = (item.name || "").toLowerCase().trim();
+        const cal = Math.round(item.cal || 0);
+        const before = SAVED_FOODS.length;
+        SAVED_FOODS = SAVED_FOODS.filter((f) => !((f.name || "").toLowerCase().trim() === nm && Math.round(f.cal || 0) === cal));
+        if (SAVED_FOODS.length !== before) persistSavedFoods();
+      }
+
       // Identity for a saved food so re-scanning the same product updates one
       // entry instead of piling up duplicates.
       function savedFoodKey(r) {
@@ -1407,7 +1430,7 @@
         const el = document.getElementById("recentFoods");
         if (!el) return;
         const q = (filter == null ? "" : String(filter)).toLowerCase().trim();
-        let items = recentUniqueFoods(100);
+        let items = recentUniqueFoods(100).filter((m) => !HIDDEN_FOODS.includes(recentFoodKey(m)));
         if (q) items = items.filter((m) =>
           (m.name || "").toLowerCase().includes(q) || (m.brand || "").toLowerCase().includes(q));
         const esc = (s) => String(s || "").replace(/</g, "&lt;");
@@ -1417,19 +1440,64 @@
             `<div class="recent-empty">${q ? "Nothing you've eaten matches “" + esc(filter) + "”. Use Scan barcode to add a new food." : "Foods you log will show up here."}</div>`;
           return;
         }
-        let html = `<div class="recent-label">${q ? "Your foods" : "Recently consumed"}</div><div class="recent-list">`;
+        let html = `<div class="recent-label">${q ? "Your foods" : "Recently consumed"} <span class="recent-hint">— swipe left to delete</span></div><div class="recent-list">`;
         for (let i = 0; i < items.length; i++) {
           const m = items[i];
           const sub = m.brand ? `<span class="recent-sub">${esc(m.brand)}</span>` : "";
-          html += `<button type="button" class="recent-row" data-idx="${i}">
-            <span class="recent-row-name">${esc(m.name || "(unnamed)")}${sub}</span>
-            <span class="recent-row-cal">${Math.round(m.cal || 0)} cal</span>
-          </button>`;
+          html += `<div class="recent-swipe" data-idx="${i}">
+            <div class="recent-del-bg" data-idx="${i}"><span>Delete</span></div>
+            <button type="button" class="recent-row" data-idx="${i}">
+              <span class="recent-row-name">${esc(m.name || "(unnamed)")}${sub}</span>
+              <span class="recent-row-cal">${Math.round(m.cal || 0)} cal</span>
+            </button>
+          </div>`;
         }
         html += `</div>`;
         el.innerHTML = html;
-        el.querySelectorAll(".recent-row").forEach((btn) => {
-          btn.addEventListener("click", () => openRecentServe(items[parseInt(btn.dataset.idx, 10)]));
+        wireRecentRows(el, items, filter);
+      }
+
+      // Tap a row -> serving popup. Swipe left -> reveal Delete -> hides the
+      // food from the list (logged history untouched).
+      function wireRecentRows(el, items, filter) {
+        let openRow = null;
+        const closeOpen = () => { if (openRow) { openRow.style.transform = ""; openRow.classList.remove("swiped"); openRow = null; } };
+        el.querySelectorAll(".recent-swipe").forEach((wrap) => {
+          const row = wrap.querySelector(".recent-row");
+          const del = wrap.querySelector(".recent-del-bg");
+          const idx = parseInt(wrap.dataset.idx, 10);
+          let startX = 0, startY = 0, dx = 0, dragging = false, axis = null;
+          row.addEventListener("touchstart", (e) => {
+            if (openRow && openRow !== row) closeOpen();
+            const t = e.touches[0]; startX = t.clientX; startY = t.clientY; dx = 0; dragging = true; axis = null;
+            row.style.transition = "none";
+          }, { passive: true });
+          row.addEventListener("touchmove", (e) => {
+            if (!dragging) return;
+            const t = e.touches[0]; const mx = t.clientX - startX, my = t.clientY - startY;
+            if (axis === null) axis = Math.abs(mx) > Math.abs(my) ? "h" : "v";
+            if (axis === "v") return;
+            e.preventDefault();
+            dx = Math.max(Math.min(mx, 0), -88);
+            row.style.transform = `translateX(${dx}px)`;
+          }, { passive: false });
+          row.addEventListener("touchend", () => {
+            if (!dragging) return; dragging = false; row.style.transition = "";
+            if (axis === "h") {
+              if (dx < -44) { row.style.transform = "translateX(-88px)"; row.classList.add("swiped"); openRow = row; }
+              else { row.style.transform = ""; row.classList.remove("swiped"); if (openRow === row) openRow = null; }
+            }
+          });
+          row.addEventListener("click", (e) => {
+            if (row.classList.contains("swiped")) { e.preventDefault(); closeOpen(); return; }
+            if (Math.abs(dx) > 6) { e.preventDefault(); return; }
+            openRecentServe(items[idx]);
+          });
+          del.addEventListener("click", (e) => {
+            e.stopPropagation();
+            deleteRecentFood(items[idx]);
+            renderRecentChips(filter);
+          });
         });
       }
 

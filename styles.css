@@ -4243,3 +4243,16 @@ body.fuel-log-open { overflow: hidden; }
 .ef-actions .btn { flex: 1; padding: 12px; border-radius: 999px; font-size: 15px; }
 .ef-delete { background: var(--error-bg); color: #B85450; border: 1px solid var(--error-border); }
 
+/* Swipe-left-to-delete on the recently-consumed food list */
+.recent-hint { font-weight: 400; color: var(--muted); font-size: 11px; text-transform: none; letter-spacing: 0; }
+.recent-swipe { position: relative; overflow: hidden; }
+.recent-del-bg {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end;
+  background: #B85450; color: #fff; font-weight: 700; font-size: 13px; cursor: pointer;
+}
+.recent-del-bg span { padding: 0 24px; }
+.recent-swipe .recent-row {
+  position: relative; background: var(--bg);
+  transition: transform 0.2s ease; will-change: transform; touch-action: pan-y;
+}
+
