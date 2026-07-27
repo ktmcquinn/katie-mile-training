@@ -982,7 +982,7 @@
 
       .days {
         display: grid;
-        grid-template-columns: repeat(7, 1fr);
+        grid-template-columns: repeat(7, minmax(0, 1fr));
         gap: 6px;
         padding: 0 12px 14px;
       }
@@ -3413,7 +3413,7 @@
           grid-template-columns: 1fr;
         }
         .days {
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
       }
 
@@ -4255,4 +4255,8 @@ body.fuel-log-open { overflow: hidden; }
   position: relative; background: var(--bg);
   transition: transform 0.2s ease; will-change: transform; touch-action: pan-y;
 }
+
+/* Prevent long, space-free workout specs from blowing out the day card width */
+.day { min-width: 0; }
+.day .dt, .day .day-specs { overflow-wrap: anywhere; word-break: break-word; }
 
