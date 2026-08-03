@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>The Dresden Half</title>
+    <title>Copenhagen Mile & Dresden Half</title>
     <meta
       name="viewport"
       content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"
@@ -89,7 +89,7 @@
         >
           🌙
         </button>
-        <h1>The Dresden Half</h1>
+        <h1>Copenhagen Mile & Dresden Half</h1>
         <div class="sub">
           Goal: 5:30-6:30 mile · Race: Saturday Sept 19, 2026 · Plan: Apr 27 -
           Sept 19, 2026
@@ -330,6 +330,10 @@
             <span>Food name</span>
             <input type="text" id="efName" placeholder="e.g. Greek yogurt" autocomplete="off">
           </label>
+          <label class="ef-field">
+            <span>Serving size</span>
+            <input type="text" id="efServing" placeholder="e.g. 1 cup" autocomplete="off">
+          </label>
           <div class="ef-actions">
             <button type="button" class="btn ef-delete" id="efDelete">Delete</button>
             <button type="button" class="btn btn-primary ef-save" id="efSave">Save</button>
@@ -479,6 +483,14 @@
               <div class="ff-field name-field">
                 <label>What you ate</label>
                 <input type="text" id="mealName" placeholder="e.g. oatmeal + banana + PB" required>
+              </div>
+              <div class="ff-field">
+                <label>Brand (optional)</label>
+                <input type="text" id="mealBrand" placeholder="e.g. Fage" autocomplete="off">
+              </div>
+              <div class="ff-field">
+                <label>Serving size (optional)</label>
+                <input type="text" id="mealServing" placeholder="e.g. 1 cup" autocomplete="off">
               </div>
               <div class="ff-field">
                 <label>Cal</label>

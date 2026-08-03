@@ -253,15 +253,13 @@
       // Routines (mobility / warmup / cooldown), exercise-by-exercise.
       DATA.routine_exercises = {
         pre_run: [
+          { key: "hip_90_90", name: "90/90 hip stretch", prescription: "10/side", note: "" },
           { key: "clamshells", name: "Clamshells", prescription: "10/side", note: "" },
-          { key: "single_leg_bridges", name: "Single-leg bridges", prescription: "10/side", note: "" },
-          { key: "leg_swings_fwd", name: "Leg swings front/back", prescription: "10 each leg", note: "" },
-          { key: "leg_swings_side", name: "Leg swings side/side", prescription: "10 each leg", note: "" },
-          { key: "walking_lunges", name: "Walking lunges", prescription: "10 total", note: "" },
-          { key: "high_knees", name: "High knees", prescription: "30 sec", note: "" },
-          { key: "butt_kicks", name: "Butt kicks", prescription: "30 sec", note: "" },
-          { key: "a_skips", name: "A-skips", prescription: "20m x 2", note: "" },
-          { key: "ankle_circles", name: "Ankle circles", prescription: "10 each direction", note: "" },
+          { key: "lateral_banded_walks", name: "Lateral banded walks", prescription: "10/side", note: "" },
+          { key: "single_leg_bridges", name: "Single-leg bridges", prescription: "10/leg", note: "" },
+          { key: "leg_swings_fwd", name: "Leg swings front/back", prescription: "10/leg", note: "" },
+          { key: "leg_swings_side", name: "Leg swings side/side", prescription: "10/leg", note: "" },
+          { key: "walking_lunges", name: "Walking lunges", prescription: "10/leg", note: "" },
         ],
         post_run: [
           { key: "easy_walk_5", name: "Easy walk to drop HR", prescription: "5 min", note: "" },
@@ -1624,8 +1622,10 @@
         EF_ID = id;
         const brand = document.getElementById("efBrand");
         const name = document.getElementById("efName");
+        const serving = document.getElementById("efServing");
         if (brand) brand.value = m.brand || "";
         if (name) name.value = m.name || "";
+        if (serving) serving.value = m.serving || "";
         const cls = document.getElementById("efClose"); if (cls) cls.onclick = closeEditFood;
         const sv = document.getElementById("efSave"); if (sv) sv.onclick = saveEditFood;
         const dl = document.getElementById("efDelete"); if (dl) dl.onclick = deleteEditFood;
@@ -1642,7 +1642,8 @@
         if (!EF_ID) return;
         const brand = ((document.getElementById("efBrand") || {}).value || "").trim() || null;
         const name = ((document.getElementById("efName") || {}).value || "").trim() || "(unnamed)";
-        updateMeal(todayISO(), EF_ID, { name, brand });
+        const serving = ((document.getElementById("efServing") || {}).value || "").trim() || null;
+        updateMeal(todayISO(), EF_ID, { name, brand, serving });
         closeEditFood();
         renderFuel();
         showToast("Food updated.");
@@ -1713,7 +1714,7 @@
         } else { b.style.display = "none"; }
       }
       function resetSearchPanel() {
-        ["mealName", "mealCal", "mealP", "mealC", "mealF", "mealFi", "mealNa", "foodSearchInput"].forEach((id) => {
+        ["mealName", "mealBrand", "mealServing", "mealCal", "mealP", "mealC", "mealF", "mealFi", "mealNa", "foodSearchInput"].forEach((id) => {
           const el = document.getElementById(id); if (el) el.value = "";
         });
         ["foodSearchResults", "foodServingPicker", "scanPortion"].forEach((id) => {
@@ -1893,10 +1894,12 @@
           const name = document.getElementById("mealName").value.trim();
           const cal = document.getElementById("mealCal").value;
           if (!cal) return;
-          // PENDING_FOOD_PICK carries forward the FatSecret metadata
-          // (food_id / brand / serving) when the user filled the form via
-          // search. For manual entries it's null and those fields stay empty.
+          // PENDING_FOOD_PICK carries forward the FatSecret/USDA foodId + source
+          // when the user filled the form via search. Brand + serving are now
+          // editable fields on the form itself (still pre-filled from search).
           const pending = PENDING_FOOD_PICK || {};
+          const brand = document.getElementById("mealBrand").value.trim();
+          const serving = document.getElementById("mealServing").value.trim();
           const meal = {
             id: (crypto.randomUUID ? crypto.randomUUID() : Date.now() + "-" + Math.random().toString(36).slice(2)),
             name: name || "(unnamed)",
@@ -1906,15 +1909,15 @@
             f: parseFloat(document.getElementById("mealF").value) || null,
             fiber: parseFloat(document.getElementById("mealFi").value) || null,
             na: parseFloat(document.getElementById("mealNa").value) || null,
-            // FatSecret-sourced metadata (null for manual entries)
+            brand: brand || null,
+            serving: serving || null,
+            // FatSecret/USDA-sourced metadata (null for manual entries)
             foodId: pending.foodId || null,
-            brand: pending.brand || null,
-            serving: pending.serving || null,
             source: pending.source || (pending.foodId ? "usda" : "manual"),
             loggedAt: new Date().toISOString(),
           };
           const clearForm = () => {
-            ["mealName", "mealCal", "mealP", "mealC", "mealF", "mealFi", "mealNa"].forEach((id) => {
+            ["mealName", "mealBrand", "mealServing", "mealCal", "mealP", "mealC", "mealF", "mealFi", "mealNa"].forEach((id) => {
               const el = document.getElementById(id); if (el) el.value = "";
             });
             PENDING_FOOD_PICK = null;
@@ -2167,10 +2170,9 @@
           const el = document.getElementById(id);
           if (el) el.value = v == null ? "" : (dp != null ? Number(v).toFixed(dp).replace(/\.0$/, "") : String(v));
         };
-        let name = r.name || "Scanned food";
-        if (r.basis === "per_100g") name += " (per 100 g)";
-        else if (r.basis !== "scaled" && r.serving) name += ` (${r.serving})`;
-        set("mealName", name);
+        set("mealName", r.name || "Scanned food");
+        set("mealBrand", r.brand || "");
+        set("mealServing", r.basis === "per_100g" ? "100 g" : (r.serving || ""));
         set("mealCal", Math.round(r.cal));
         set("mealP", r.protein_g, 1);
         set("mealC", r.carbs_g, 1);
@@ -2179,8 +2181,6 @@
         set("mealNa", r.sodium_mg != null ? Math.round(r.sodium_mg) : null);
         PENDING_FOOD_PICK = {
           foodId: r.foodId || null,
-          brand: r.brand || null,
-          serving: r.serving || null,
           source: r.source,
         };
         const nameEl = document.getElementById("mealName");
@@ -2442,23 +2442,23 @@
           const scale = qty;
           const round0 = (v) => v == null ? "" : String(Math.round(v * scale));
           const round1 = (v) => v == null ? "" : (v * scale).toFixed(1);
-          // Build the displayed name: include qty/serving for clarity
+          // Build the displayed name: include qty for clarity, serving lives
+          // in its own field so it stays independently editable.
           const qtyLabel = (qty === 1) ? "" : `${qty} × `;
           const servingLabel = s.description || "";
-          const displayName = `${qtyLabel}${currentFoodDetail.name}${servingLabel ? ` (${servingLabel})` : ""}`;
-          document.getElementById("mealName").value = displayName;
+          document.getElementById("mealName").value = `${qtyLabel}${currentFoodDetail.name}`;
+          document.getElementById("mealBrand").value = currentFoodDetail.brand || "";
+          document.getElementById("mealServing").value = servingLabel;
           document.getElementById("mealCal").value = round0(s.calories);
           document.getElementById("mealP").value = round1(s.protein);
           document.getElementById("mealC").value = round1(s.carbs);
           document.getElementById("mealF").value = round1(s.fat);
           document.getElementById("mealFi").value = round1(s.fiber);
           document.getElementById("mealNa").value = round0(s.sodium);
-          // Stash the FatSecret metadata so the form-submit handler can
-          // attach it to the meal row without losing the brand/serving.
+          // Stash the USDA foodId so the form-submit handler can attach it
+          // to the meal row (brand/serving now come from the form fields).
           PENDING_FOOD_PICK = {
             foodId: currentFoodDetail.food_id,
-            brand: currentFoodDetail.brand || null,
-            serving: qtyLabel + servingLabel,
           };
           // Remember this USDA pick as a re-searchable saved food. Store the
           // single-serving base values (basis per_serving) so re-logging via
@@ -4305,6 +4305,7 @@
         html += `<h2>${isBike ? "Bike log" : "Workout log"}</h2>`;
         html += `<div class="ex-meta">${fmtDate(day.date, { weekday: "long", month: "long", day: "numeric" })} · ${day.title}</div>`;
         html += `<div class="ex-desc">${isBike ? "Log your bike session. Avg speed auto-calculates from distance + time." : "Log what you actually did. Pace auto-calculates from distance + duration."}</div>`;
+        if (day.detail) html += `<div class="log-plan-detail"><b>Planned:</b> ${day.detail}</div>`;
         html += `<div class="log-field">
           <label>Activity</label>
           <select id="logActivity">

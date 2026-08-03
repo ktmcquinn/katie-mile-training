@@ -1617,6 +1617,7 @@
       .ex-modal h2 { margin: 0 0 4px; font-size: 20px; }
       .ex-modal .ex-meta { color: var(--muted); font-size: 13px; margin-bottom: 6px; }
       .ex-modal .ex-desc { font-size: 13px; color: var(--ink); margin-bottom: 14px; padding: 10px 12px; background: var(--routine-bg); border-radius: 8px; border-left: 3px solid var(--accent); }
+.ex-modal .log-plan-detail { font-size: 13px; color: var(--ink); margin: -6px 0 14px; padding: 10px 12px; background: var(--routine-bg); border-radius: 8px; border-left: 3px solid var(--accent); }
       .ex-modal .ex-progress { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 10px; }
       .ex-row {
         padding: 12px;
