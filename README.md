@@ -39,7 +39,9 @@ supabase-setup.sql      # one-time DB schema + RLS policies
 tests/                  # node:test unit tests for lib/
 scripts/build.js        # optional esbuild minify (opt-in; not required)
 *_SETUP.md              # setup notes for each integration
-Dresden-Half-Training-Plan.md  # the NRC-based dual-race plan writeup
+Riga-Half-Training-Plan.md     # current plan writeup (NRC-based, sub-1:40)
+plan-dresden-2026.js           # archived Dresden plan data (not loaded)
+Dresden-Half-Training-Plan.md  # archived Dresden plan writeup
 ```
 
 ## Local development

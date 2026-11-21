@@ -129,6 +129,8 @@
         plyo: "Plyometrics",
         hip_protocol: "Hip protocol",
         yoga: "Yoga",
+        achilles_iso: "Achilles prep",
+        pilates: "Pilates",
       };
 
       // Chronological category for each routine — drives modal display order.
@@ -146,6 +148,8 @@
         post_run: "post",
         post_bike: "post",
         desk_breaks: "after_hours",
+        achilles_iso: "pre",
+        pilates: "core",
       };
 
       // Short one-line descriptions for each routine (full prescription lives
@@ -161,6 +165,8 @@
         core: "10-12 min runner core: plank, dead bug, Pallof, glute bridge.",
         plyo: "5-min plyo block after warmup, before intervals. ~15-20 foot contacts: pogos, A-skip, broad jumps. Builds tendon stiffness for the mile.",
         hip_protocol: "10 min daily: 90/90, couch stretch, clamshells, side-lying abduction, single-leg glute bridge, dead bug. Priority right side.",
+        achilles_iso: "4 min before every run: 5x45s wall calf isometric holds + 1 bent-knee hold/side.",
+        pilates: "Pilates class (every other Sunday). Counts as core + hip mobility.",
         yoga: "45-60 min Friday hip-focused flow: pigeon, lizard, figure-4, twisted root, low lunge w/ twist, legs up the wall. Replaces an easy run.",
       };
 
@@ -171,55 +177,69 @@
       // raises directly train the patterns and imbalances that cause running injuries.
       DATA.strength_routines = {
         A_full_gym: {
-          label: "Strength A — Full Gym",
+          label: "Strength A — Gym",
           duration: "~50 min",
-          description: "Heavy bilateral + single-leg foundation. Rest 90-120s between heavy sets. Total exercise count is 9: do all of the main 9, OR swap 1-2 of the alternates at the bottom in place of similar-pattern exercises to keep the rotation fresh.",
+          description: "Tuesday gym day (no run). Heavy-but-controlled lower body + calf/Achilles loading + hip mobility and hip strength. Leave 2-3 reps in the tank — Wednesday's run should feel fine.",
           exercises: [
-            { key: "back_squat", name: "Back squat", prescription: "3x5-8", note: "The bilateral king lift — work up to a top set at RPE 7-8." },
-            { key: "single_leg_rdl", name: "Single-leg Romanian deadlift", prescription: "3x8/leg", note: "The most running-specific lift you'll do. Single-leg posterior chain + balance. Slow eccentric." },
-            { key: "bulgarian_split_squat", name: "Bulgarian split squat", prescription: "3x8/leg", note: "Foundation single-leg quad/glute work. Front shin vertical, drop straight down." },
-            { key: "step_up_knee_drive", name: "Step-up with knee drive", prescription: "3x6/leg", note: "Mimics the running drive phase — drive opposite knee up explosively at the top." },
-            { key: "pull_up_or_pulldown", name: "Pull-up or lat pulldown", prescription: "3x6-10", note: "Upper-body pull keeps shoulders balanced." },
-            { key: "bench_press", name: "Bench press", prescription: "3x6-8", note: "Upper-body push for posture and shoulder health." },
-            { key: "pallof_press", name: "Pallof press", prescription: "3x10/side", note: "Anti-rotation core. Slow + controlled." },
-            { key: "side_plank", name: "Side plank", prescription: "3x30s/side", note: "Lateral core — hips drive sideways stability when running." },
-            { key: "single_leg_calf_raise", name: "Single-leg calf raise", prescription: "2x15/leg", note: "Each running stride is a calf rep. Build calf power directly." },
-            { key: "goblet_squat", name: "Goblet squat (alternate)", prescription: "Alt for back squat — 3x8-10", note: "Lower-back-friendly squat pattern. Hold a heavy DB or KB at the chest, knees tracking over toes. Good week to swap in when the spine wants a break from barbell loading.", alternate: true },
-            { key: "single_leg_hip_thrust", name: "Single-leg hip thrust (alternate)", prescription: "Alt for any glute work — 3x10/leg", note: "Shoulders on a bench, one foot on the floor with knee bent ~90°. Drive through the heel, squeeze the glute at the top. Direct glute strength = better push-off.", alternate: true },
-            { key: "lateral_lunge", name: "Lateral lunge (alternate)", prescription: "Alt for Bulgarian split squat — 3x8/side", note: "Step wide to the side, sit into that hip with the other leg straight. Trains adductors + frontal-plane control — the plane running never touches but ankles/hips need.", alternate: true },
+            { key: "hip_90_90_switch", name: "90/90 hip switches", prescription: "2x6/side", note: "Warm-up. Sit tall, rotate both knees side to side without using your hands. Pause in each 90/90." },
+            { key: "trap_bar_deadlift", name: "Trap-bar deadlift", prescription: "3x5 @ RPE 7", note: "Drive the floor away. Back squat is a fine swap." },
+            { key: "bulgarian_split_squat", name: "Bulgarian split squat", prescription: "3x6-8/leg", note: "Front shin vertical, drop straight down. DBs or Smith machine." },
+            { key: "standing_calf_raise_heavy", name: "Heavy standing calf raise", prescription: "4x6-8", note: "Machine or Smith. 1s up, pause, 3s down. The single best Achilles exercise — go heavy and slow." },
+            { key: "seated_calf_raise", name: "Seated calf raise", prescription: "3x10-12", note: "Bent knee = soleus, the muscle that takes most of the load when running. Slow lower." },
+            { key: "hip_airplane", name: "Hip airplane", prescription: "3x5/side", note: "Stand on one leg, hinge to flat back, rotate the pelvis open then closed. Hold a rack at first; slow and controlled." },
+            { key: "copenhagen_plank", name: "Copenhagen plank", prescription: "3x20-30s/side", note: "Top leg on a bench. Start knee-on-bench (short lever), progress to ankle-on-bench." },
+            { key: "pull_up_or_pulldown", name: "Pull-up or lat pulldown", prescription: "3x6-10", note: "Upper-body pull for posture and arm drive." },
+            { key: "pallof_press", name: "Pallof press", prescription: "3x10/side", note: "Anti-rotation core. Hold 1-2s at full extension." },
+            { key: "back_squat", name: "Back squat (alternate)", prescription: "Alt for trap-bar — 3x5 @ RPE 7", note: "Swap in if the trap bar is busy." },
+            { key: "hip_thrust", name: "Hip thrust (alternate)", prescription: "Alt for split squat — 3x8", note: "Squeeze and pause 1s at the top." },
           ],
         },
         B_home: {
           label: "Strength B — Home",
           duration: "~35 min",
-          description: "Single-leg dominant, dumbbell-friendly. 25-30 lb DBs + a band. Total exercise count is 9: do all of the main 9, OR swap 1-2 of the alternates at the bottom in place of similar-pattern exercises to keep variety in the rotation.",
+          description: "Thursday at home, after the run. Single-leg strength, eccentric Achilles loading, and hip mobility + hip strength. DBs, a step, a band, and a couch.",
           exercises: [
-            { key: "bulgarian_split_squat", name: "Bulgarian split squat", prescription: "3x8/leg @ 25-30 lb DBs", note: "Foundation single-leg lift. Drop straight down, front shin vertical." },
-            { key: "single_leg_db_rdl", name: "Single-leg DB Romanian deadlift", prescription: "3x8/leg @ 25 lb", note: "Hinge from the hip. Keep moving leg straight back. Slow eccentric." },
-            { key: "step_up_knee_drive", name: "Step-up with knee drive", prescription: "3x8/leg @ 20 lb DBs", note: "Drive opposite knee up at the top. Use a 12-18 inch box." },
-            { key: "db_bench_press", name: "DB bench press", prescription: "3x10", note: "On floor or bench. Upper push." },
-            { key: "db_row", name: "Single-arm DB row", prescription: "3x10/side", note: "Brace core, don't twist. Pull elbow back along the ribs." },
-            { key: "single_leg_glute_bridge", name: "Single-leg glute bridge", prescription: "3x12/leg", note: "Squeeze glutes hard at the top. Elevate feet on a couch if too easy." },
-            { key: "copenhagen_plank", name: "Copenhagen plank", prescription: "3x20s/side", note: "Top leg on couch. Brutal but builds groin/adductor strength runners need." },
-            { key: "single_leg_calf_raise", name: "Single-leg calf raise", prescription: "2x15/leg", note: "On a step, drop heel below, drive up. Eccentric: 1s up, 3s down." },
-            { key: "tibialis_raise", name: "Tibialis raise (toe raise)", prescription: "2x20", note: "Heels on floor, lift toes — shin pain prevention." },
-            { key: "reverse_lunge", name: "Reverse lunge (alternate)", prescription: "Alt for Bulgarian split squat — 3x10/leg @ 20-25 lb DBs", note: "Step BACK into the lunge (knee-friendlier than forward). Drive through the front heel. Easier balance demand than BSS so you can chase a slightly heavier load.", alternate: true },
-            { key: "lateral_lunge_db", name: "Lateral lunge w/ DB (alternate)", prescription: "Alt for step-up — 3x8/side @ 20-25 lb DB goblet", note: "Step wide to one side, sit into that hip, other leg stays straight. Adductor + frontal-plane strength — exactly the plane running ignores but ankles/hips need.", alternate: true },
-            { key: "hip_airplane", name: "Hip airplane (alternate)", prescription: "Alt for any single-leg lift — 3x6/leg, no weight", note: "Stand on one leg, hinge forward, rotate hips open/closed (toes up to ceiling, then down). Brutal single-leg balance + hip rotational control. Bodyweight is enough.", alternate: true },
+            { key: "hip_90_90_liftoff", name: "90/90 hip lift-offs", prescription: "2x5/side", note: "In 90/90, lift the back knee off the floor without leaning. Hard on the hip rotators — that's the point." },
+            { key: "single_leg_db_rdl", name: "Single-leg DB RDL", prescription: "3x8/leg", note: "Hinge from the hip, back leg straight. Slow lower." },
+            { key: "db_step_up", name: "DB step-up or split squat", prescription: "3x8/leg", note: "Knee-height step. Control the way down." },
+            { key: "heel_drop_straight", name: "Eccentric heel drop — straight knee", prescription: "3x12/side", note: "Up on two feet, lower on one over 3s off a step. Some tightness OK (≤3/10)." },
+            { key: "heel_drop_bent", name: "Eccentric heel drop — bent knee", prescription: "3x12/side", note: "Same, with a soft bent knee to load the soleus." },
+            { key: "single_leg_glute_bridge", name: "Single-leg glute bridge", prescription: "3x10/leg", note: "Pause 2s at the top. Feet on the couch to progress." },
+            { key: "hip_airplane", name: "Hip airplane", prescription: "2x5/side", note: "Hand on a wall for balance. Slow rotation open and closed." },
+            { key: "copenhagen_plank", name: "Copenhagen plank", prescription: "3x20s/side", note: "Top leg on the couch. Knee-supported if needed." },
+            { key: "monster_walk", name: "Banded monster walk", prescription: "2x15 steps", note: "Band above the knees, stay low, push the floor sideways." },
+            { key: "tibialis_raise", name: "Tibialis raise", prescription: "2x20", note: "Back against a wall, heels down, lift toes." },
+          ],
+        },
+        C_gym: {
+          label: "Strength C — Gym",
+          duration: "~40 min",
+          description: "Rebuild phase only (Sundays opposite Pilates). Second calf/Achilles + hip day. Drops out when the 5th run starts in January.",
+          exercises: [
+            { key: "hip_90_90_switch", name: "90/90 hip switches", prescription: "2x6/side", note: "Warm-up." },
+            { key: "leg_press", name: "Leg press", prescription: "3x8-10", note: "Moderate-heavy, full range." },
+            { key: "step_up_knee_drive", name: "Step-up with knee drive", prescription: "3x8/leg", note: "Drive the opposite knee up at the top." },
+            { key: "seated_calf_raise_heavy", name: "Heavy seated calf raise", prescription: "4x8", note: "3s lower, pause at the bottom." },
+            { key: "single_leg_calf_raise", name: "Single-leg calf raise", prescription: "3x10/leg", note: "On a step, full range, slow lower." },
+            { key: "hip_thrust", name: "Hip thrust", prescription: "3x8", note: "Barbell or machine. Pause 1s at the top." },
+            { key: "cable_hip_abduction", name: "Cable hip abduction", prescription: "2x12/side", note: "Standing, ankle cuff. Glute med — keeps the knee and hip stable." },
+            { key: "hip_airplane", name: "Hip airplane", prescription: "3x5/side", note: "Hold a rack. Slow." },
+            { key: "copenhagen_plank", name: "Copenhagen plank", prescription: "3x20s/side", note: "Bench. Progress the lever as it gets easy." },
+            { key: "seated_cable_row", name: "Seated cable row", prescription: "3x10", note: "" },
           ],
         },
         light_taper: {
           label: "Strength LIGHT — Taper",
           duration: "~25 min",
-          description: "Maintenance only — keep RPE 5-6. Goal is sharp, not sore.",
+          description: "Maintenance only — RPE 5-6. Goal is sharp, not sore.",
           exercises: [
-            { key: "single_leg_squat", name: "Single-leg bodyweight squat", prescription: "2x8/leg", note: "Pistol regression to a chair. Slow + controlled." },
-            { key: "single_leg_glute_bridge", name: "Single-leg glute bridge", prescription: "2x12/leg", note: "Light activation, not maximal." },
-            { key: "push_up", name: "Push-up", prescription: "2x10-15", note: "On knees if needed." },
-            { key: "band_row", name: "Band row", prescription: "2x12", note: "Light." },
+            { key: "hip_90_90_switch", name: "90/90 hip switches", prescription: "2x5/side", note: "" },
+            { key: "single_leg_glute_bridge", name: "Single-leg glute bridge", prescription: "2x10/leg", note: "Light activation." },
+            { key: "hip_airplane", name: "Hip airplane", prescription: "2x4/side", note: "" },
+            { key: "copenhagen_plank", name: "Copenhagen plank", prescription: "2x15s/side", note: "Short lever." },
+            { key: "single_leg_calf_raise", name: "Calf raise", prescription: "2x12", note: "Light and smooth." },
             { key: "side_plank", name: "Side plank", prescription: "2x30s/side", note: "" },
-            { key: "dead_bug", name: "Dead bug", prescription: "2x10/side", note: "Slow + controlled. Low back pressed to floor." },
-            { key: "single_leg_calf_raise", name: "Single-leg calf raise", prescription: "1x15/leg", note: "Feel-good sets only." },
+            { key: "push_up", name: "Push-up", prescription: "2x10", note: "" },
           ],
         },
         block_a: {
@@ -252,6 +272,13 @@
 
       // Routines (mobility / warmup / cooldown), exercise-by-exercise.
       DATA.routine_exercises = {
+        achilles_iso: [
+          { key: "calf_iso_straight", name: "Wall calf isometric hold (straight knee)", prescription: "5 x 45s", note: "Heel lifted mid-range, push ~70% effort into the floor. 30s rest. Alternate legs if single-leg." },
+          { key: "calf_iso_bent", name: "Bent-knee calf hold", prescription: "1 x 45s/side", note: "Soft bent knee — loads the soleus." },
+        ],
+        pilates: [
+          { key: "pilates_class", name: "Pilates class", prescription: "~50 min", note: "Every other Sunday, 10 or 11am." },
+        ],
         pre_run: [
           { key: "hip_90_90", name: "90/90 hip stretch", prescription: "10/side", note: "" },
           { key: "clamshells", name: "Clamshells", prescription: "10/side", note: "" },
@@ -335,6 +362,7 @@
         // "STRENGTH A/B" so the new prefix wins when both could match.
         if (t.startsWith("BLOCK A")) return "block_a";
         if (t.startsWith("BLOCK B")) return "block_b";
+        if (t.startsWith("STRENGTH C")) return "C_gym";
         if (t.startsWith("STRENGTH B") || t.includes("(HOME")) return "B_home";
         if (t.startsWith("STRENGTH A") || t.includes("(FULL GYM")) return "A_full_gym";
         return null;
@@ -2622,13 +2650,19 @@
         svg += `<text class="legend-text" x="${xRace - 4}" y="${PAD_T + 10}" text-anchor="end" fill="#B85450">race</text>`;
 
         // X-axis: month labels
-        const months = [
-          { label: "May", d: "2026-05-01" },
-          { label: "Jun", d: "2026-06-01" },
-          { label: "Jul", d: "2026-07-01" },
-          { label: "Aug", d: "2026-08-01" },
-          { label: "Sep", d: "2026-09-01" },
-        ];
+        // Month labels: the 1st of every month between plan start and race.
+        const months = [];
+        {
+          const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+          const c = new Date(planStart.getFullYear(), planStart.getMonth() + 1, 1);
+          while (c <= raceDate) {
+            months.push({
+              label: MON[c.getMonth()],
+              d: c.getFullYear() + "-" + String(c.getMonth() + 1).padStart(2, "0") + "-01",
+            });
+            c.setMonth(c.getMonth() + 1);
+          }
+        }
         for (const m of months) {
           const d = parseISO(m.d);
           if (d < planStart || d > raceDate) continue;
@@ -3419,7 +3453,7 @@
         // Strength-only / cross-training days (no run) read as rest-from-running
         // so they don't mislabel as "Easy Run"; the strength + mobility blocks
         // still render in their own sections.
-        if (/^(STRENGTH|BLOCK [AB]|YOGA)/i.test(day.title)) return "rest";
+        if (/^(STRENGTH|BLOCK [AB]|YOGA|PILATES)/i.test(day.title)) return "rest";
         if (
           /TRACK:|FARTLEK|TEMPO|HILL STRIDE|VO2|TT |TIME TRIAL|MILE-PACE|RACE-PACE|TUNE-UP|SPEED:|INTERVAL|SHARPENER/i.test(
             t,
@@ -3471,6 +3505,10 @@
         } else {
           base = "Easy Run";
         }
+        // Non-running strength / Pilates days get their own label instead of
+        // "Rest Day + Strength".
+        if (cat === "rest" && /^PILATES/i.test(day.title || "")) return "Pilates";
+        if (cat === "rest" && day.strength) return "Strength Day";
         // Append strength when the day has a strength block scheduled
         if (day.strength) base = `${base} + Strength`;
         return base;
@@ -3479,7 +3517,12 @@
         const detail = (day.detail || "").trim();
         if (!detail) return "";
         const cat = categorize(day);
-        if (cat === "rest") return "Recovery";
+        if (cat === "rest") {
+          if (/^PILATES/i.test(day.title || "")) return "Pilates class";
+          const sk = day.strength ? detectStrengthKey(day.strength) : null;
+          if (sk && DATA.strength_routines[sk]) return DATA.strength_routines[sk].label;
+          return "Recovery";
+        }
         if (cat === "race") return detail;
         // Quality: prefer the "MAIN:" segment of the prescription; fall back
         // to the first meaningful phrase. Track + interval workouts use
@@ -4688,6 +4731,7 @@
           "mobility_daily",
           "desk_breaks",
           "shin_protocol",
+          "achilles_iso",
         ]) {
           const el = document.getElementById("ref_" + k);
           if (el) el.innerHTML = formatRoutine(DATA.routines[k]);
@@ -4696,6 +4740,8 @@
           DATA.strength.A_full_gym;
         document.getElementById("ref_strength_B").textContent =
           DATA.strength.B_home;
+        const refC = document.getElementById("ref_strength_C");
+        if (refC) refC.textContent = DATA.strength.C_gym || "";
         document.getElementById("ref_strength_L").textContent =
           DATA.strength.light_taper;
         let paces = "";
@@ -7275,7 +7321,7 @@
       // engine / time formatters now live in lib/training-math.js, which loads
       // before this script and shares the global scope. See that file.
       const GOAL_MILE_SEC = 6 * 60;   // Sub-6:00 mile (Copenhagen B-race)
-      const GOAL_HALF_SEC = 105 * 60; // Sub-1:45 half (Dresden A-race)
+      const GOAL_HALF_SEC = 100 * 60; // Sub-1:40 half (Riga, May 16 2027)
       const GARMIN_VO2MAX = 48; // from your watch — shown as a cross-check only;
                                 // race-derived VDOT drives the actual projections.
       const TT_KEY = "katie-mile-tt-result";    // legacy single result (auto-migrated)
@@ -7473,7 +7519,7 @@
         const tiles = [];
         if (proj.mile)  tiles.push(predTile("Mile", proj.mile.sec, GOAL_MILE_SEC, "Sub-6:00", proj.mile.calibrated));
         if (proj.fiveK) tiles.push(predTile("5K", proj.fiveK.sec, null, "", proj.fiveK.calibrated));
-        if (proj.half)  tiles.push(predTile("Half", proj.half.sec, GOAL_HALF_SEC, "Sub-1:45", proj.half.calibrated));
+        if (proj.half)  tiles.push(predTile("Half", proj.half.sec, GOAL_HALF_SEC, "Sub-1:40", proj.half.calibrated));
         grid.innerHTML = tiles.join("");
         const fit = proj.fitV;
         const calAny = [proj.mile, proj.fiveK, proj.half].some((p) => p && p.calibrated);
@@ -7723,11 +7769,9 @@
       // Snapshot original DATA before applying any overrides (needed for "reset plan")
       snapshotOriginalDays();
       applyOverrides();
-      // Layer the runner-core routine onto Tuesday + Friday after overrides apply
-      injectCoreRoutine();
-      // Layer a short plyo block onto quality days in phases 1-3 (skipped during
-      // peak + taper). Builds tendon stiffness + economy for the mile.
-      injectPlyometrics();
+      // (injectCoreRoutine / injectPlyometrics were Dresden-plan helpers for its
+      // weeks 1-7. The Riga plan lists every day's routines explicitly in
+      // plan.js, so they're no longer called.)
       // Re-apply theme so the toggle button picks up its label/icon
       applyTheme(loadTheme());
       document

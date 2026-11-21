@@ -184,6 +184,15 @@
         justify-content: center;
         letter-spacing: -0.5px;
       }
+      .top-bar-logo-mark svg {
+        display: block;
+      }
+      .top-bar-logo-mark .logo-laces {
+        fill: none;
+        stroke: var(--accent);
+        stroke-width: 1;
+        stroke-linecap: round;
+      }
       .top-bar-title {
         font-size: 15px;
         font-weight: 700;
