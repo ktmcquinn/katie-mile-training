@@ -1,4 +1,4 @@
--- Katie's Mile Training - Supabase schema
+-- Cadence (Katie's training app) - Supabase schema
 -- Run this once in your Supabase project's SQL Editor (New query → paste → Run).
 -- Creates five tables and Row Level Security policies so each authenticated
 -- user can only read/write their own training data.

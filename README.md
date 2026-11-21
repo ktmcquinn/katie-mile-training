@@ -1,9 +1,8 @@
-# The Dresden Half 🏃‍♀️
+# Cadence 🏃‍♀️
 
-A personal training PWA for Katie's two 2026 goal races:
-
-- **B-race:** Copenhagen 1-Mile — Sep 19, 2026 (goal sub-6:00)
-- **A-race:** Dresden Half Marathon — Oct 25, 2026 (goal sub-1:45)
+Katie's personal fitness and race training PWA. Previous goal races:
+Copenhagen 1-Mile (Sep 19, 2026) and Dresden Half Marathon (Oct 25, 2026).
+Next up: Riga Half Marathon (May 2027).
 
 It tracks the day-by-day plan, workouts, strength, mobility, fueling/macros,
 weight, morning check-ins, and a VDOT-based race predictor — all offline-capable

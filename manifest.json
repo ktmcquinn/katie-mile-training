@@ -1,7 +1,7 @@
 {
-  "name": "The Dresden Half",
-  "short_name": "Dresden Half",
-  "description": "Katie's half marathon training app — workouts, weight, and progress tracking.",
+  "name": "Cadence",
+  "short_name": "Cadence",
+  "description": "Cadence — Katie's training app: workouts, fuel, weight, and progress tracking.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

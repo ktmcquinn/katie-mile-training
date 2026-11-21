@@ -1,4 +1,4 @@
-// The Dresden Half — application logic. Extracted from the main HTML file.
+// Cadence — application logic. Extracted from the main HTML file.
 // Loaded at the end of <body>, so the DOM is fully parsed when this runs.
       // =========================================================================
       // Supabase config — fill these in ONCE with your project's values.
