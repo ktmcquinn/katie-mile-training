@@ -3567,6 +3567,93 @@
         return detail;
       }
 
+      // ---------- Today poster (Bold Type home) ----------
+      // Big two-line headline: "2 MI" / "EASY." for runs, a word for
+      // non-running days. Falls back to the category label.
+      function posterParts(day) {
+        const cat = categorize(day);
+        const title = (day.title || "").trim();
+        const miMatch = (day.detail || "").match(/(\d+(?:\.\d+)?)\s*mi\b/i);
+        if (cat === "race") return { big: title.replace(/^🏁\s*/, ""), word: "RACE DAY.", long: true };
+        if (cat === "quality") {
+          const name = title.replace(/^Speed:\s*/i, "");
+          return { big: name, word: "SPEED.", long: true };
+        }
+        if (cat === "long") return { big: (miMatch ? miMatch[1] : "") + " MI", word: "LONG.", long: !miMatch };
+        if (cat === "easy") return { big: (miMatch ? miMatch[1] : "") + " MI", word: /strides/i.test(title) ? "+ STRIDES." : "EASY.", long: !miMatch };
+        if (cat === "bike") return { big: "BIKE", word: "EASY.", long: false };
+        if (/^PILATES/i.test(title)) return { big: "PILATES", word: "CLASS.", long: true };
+        if (day.strength) {
+          const sk = detectStrengthKey(day.strength);
+          const letter = sk === "A_full_gym" ? "A" : sk === "B_home" ? "B" : sk === "C_gym" ? "C" : sk === "light_taper" ? "LIGHT" : "";
+          return { big: "GYM", word: ("STRENGTH " + letter).trim() + ".", long: false };
+        }
+        return { big: "REST", word: "& MOBILITY.", long: false };
+      }
+      function renderPosterTitle(day) {
+        const el = document.getElementById("todayTitle");
+        if (!el) return;
+        const p = posterParts(day);
+        el.innerHTML = "";
+        const big = document.createElement("span");
+        big.className = "poster-big" + (p.long ? " poster-long-text" : "");
+        big.textContent = p.big;
+        const word = document.createElement("span");
+        word.className = "poster-word";
+        word.textContent = p.word;
+        el.appendChild(big);
+        el.appendChild(word);
+        el.setAttribute("aria-label", labelForDay(day));
+      }
+      // Numbered list of the day's sections in the order you'd do them:
+      // prep routines → the run → cooldown → strength / core.
+      function renderTodaySteps(day) {
+        const card = document.getElementById("todayCard");
+        if (!card) return;
+        let ol = document.getElementById("todaySteps");
+        if (!ol) {
+          ol = document.createElement("ol");
+          ol.id = "todaySteps";
+          ol.className = "today-steps";
+          const detail = document.getElementById("todayDetail");
+          const hint = document.getElementById("todayPaceHint");
+          (hint || detail).insertAdjacentElement("afterend", ol);
+        }
+        const cat = categorize(day);
+        const steps = [];
+        const routines = day.routines || [];
+        const phaseOf = (r) => ROUTINE_PHASE[r] || "anytime";
+        for (const r of routines) if (phaseOf(r) === "anytime" && r !== "mobility_daily") steps.push({ key: "routine_" + r, label: ROUTINE_LABELS[r] || r });
+        for (const r of routines) if (phaseOf(r) === "pre") steps.push({ key: "routine_" + r, label: ROUTINE_LABELS[r] || r });
+        if (cat !== "rest") {
+          const spec = specsForDay(day);
+          const runLabel = cat === "race" ? "Race" : cat === "quality" ? "Speed run" : cat === "long" ? "Long run" : cat === "bike" ? "Bike" : "Run";
+          steps.push({ key: "workout", label: runLabel, meta: cat === "quality" ? "" : spec });
+        }
+        for (const r of routines) if (phaseOf(r) === "post") steps.push({ key: "routine_" + r, label: ROUTINE_LABELS[r] || r });
+        if (day.strength) {
+          const sk = detectStrengthKey(day.strength);
+          const meta = sk && DATA.strength_routines[sk] ? DATA.strength_routines[sk] : null;
+          steps.push({ key: "strength", label: meta ? meta.label.replace(/\s*—\s*/, " · ") : "Strength", meta: meta ? meta.duration : "" });
+        }
+        for (const r of routines) if (phaseOf(r) === "core") steps.push({ key: "routine_" + r, label: ROUTINE_LABELS[r] || r });
+        for (const r of routines) if (r === "mobility_daily") steps.push({ key: "routine_" + r, label: "Daily mobility" });
+        if (cat === "rest" && !day.strength && !routines.length) steps.push({ key: "workout", label: "Rest" });
+        let nextMarked = false;
+        ol.innerHTML = "";
+        steps.forEach((st, i) => {
+          const done = isSectionDone(day, st.key);
+          const li = document.createElement("li");
+          if (done) li.className = "done";
+          else if (!nextMarked) { li.className = "next"; nextMarked = true; }
+          const n = document.createElement("span"); n.className = "n"; n.textContent = String(i + 1).padStart(2, "0");
+          const s2 = document.createElement("span"); s2.className = "s"; s2.textContent = st.label;
+          const m = document.createElement("span"); m.className = "m"; m.textContent = st.meta || "";
+          li.appendChild(n); li.appendChild(s2); li.appendChild(m);
+          ol.appendChild(li);
+        });
+      }
+
       // ---------- Hero countdown ----------
       function renderCountdown() {
         const race = parseISO(DATA.meta.race_date);
@@ -3653,8 +3740,9 @@
           `${fmtDate(day.date, { weekday: "long", month: "long", day: "numeric" })} · Week ${week.num} · Phase ${ph.num}`;
         // Title shows the new category label ("Easy Run + Strength", "Quality Run", etc.)
         // Detail stays as the full workout description from the plan.
-        document.getElementById("todayTitle").textContent = labelForDay(day);
+        renderPosterTitle(day);
         document.getElementById("todayDetail").textContent = day.detail;
+        renderTodaySteps(day);
         const badges = document.getElementById("todayBadges");
         badges.innerHTML = "";
         badges.innerHTML += `<span class="phase-pill pp${week.phase}">${ph.name}</span>`;
