@@ -5112,3 +5112,75 @@ html #checkinCard { display: none !important; }
 .ftc-week:empty { display: none; }
 .ftc-week .wk-under { color: var(--rn-ink); }
 .ftc-week .wk-over { color: var(--rn-accent-text); }
+
+/* =========================================================================
+   Decluttered day sheet (View workout / Before / After) — Nov 2026
+   One flat checklist: title + small meta per row, no description text
+   (full details live in each item's tracker), lighter header.
+   ========================================================================= */
+html .modal .modal-meta-short { font-size: 13px; color: var(--rn-sub); margin-top: 2px; }
+html .modal .modal-child-desc { display: none; }
+html .modal .group-check { display: none; }
+html .modal .modal-group {
+  background: var(--rn-page);
+  border: 0;
+  border-radius: 20px !important;
+  padding: 4px 14px;
+  margin: 12px 0;
+}
+html .modal .modal-group-head { padding: 10px 0 2px; border: 0; cursor: default; }
+html .modal .modal-group-head h3 {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rn-sub);
+  margin: 0;
+}
+html .modal .modal-group-head h3:empty { display: none; }
+html .modal .modal-group-head:has(h3:empty) { display: none; }
+html .modal .modal-child {
+  background: transparent;
+  border: 0 !important;
+  border-bottom: 1px solid var(--rn-line) !important;
+  border-radius: 0 !important;
+  padding: 12px 0;
+  margin: 0;
+  align-items: center;
+  min-height: 48px;
+}
+html .modal .modal-child:last-child { border-bottom: 0 !important; }
+html .modal .modal-child-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+html .modal .modal-child-meta,
+html .modal .modal-child-progress {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rn-sub);
+  background: none;
+  padding: 0;
+  margin-left: auto;
+}
+html .modal .modal-child.child-done .modal-child-title { color: var(--rn-sub); text-decoration: line-through; }
+html .modal .modal-check-row { border-radius: 16px !important; }
+html .modal .rn-text-btn {
+  display: block;
+  margin: 8px auto 4px;
+  background: none;
+  border: 0;
+  color: var(--rn-sub);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 10px;
+}
+html .modal .modal-hint { font-size: 13px; color: var(--rn-sub); text-align: center; margin: 4px 0 8px; }
+/* keep the row's meta text clear of the tap-for-details arrow */
+html .modal .modal-child.is-clickable .modal-child-title { padding-right: 22px; }

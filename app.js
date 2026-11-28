@@ -3808,7 +3808,7 @@
             rnSyncDayCards(day);
             renderToday();
           };
-          row.onclick = () => openModal(day, week);
+          row.onclick = () => openModal(day, week, { focus: row.dataset.rnGroup });
         });
       }
 
@@ -4636,16 +4636,21 @@
         }
         return key;
       }
-      function openModal(day, week) {
+      // opts.focus = "before" | "after" shows only that checklist (from the
+      // Today "Before you run" / "After your run" rows).
+      function openModal(day, week, opts) {
         const ph = DATA.phases[week.phase - 1];
         const cat = categorize(day);
         const m = document.getElementById("modal");
         const counts = sectionCounts(day);
-        let html = `<div class="modal-head"><button class="close" onclick="closeModal()">×</button>`;
-        html += `<h2>${typeof rnTitle === "function" ? rnEsc(rnTitle(day)) : day.title}</h2></div>`;
-        html += `<div class="meta">${fmtDate(day.date, { weekday: "long", month: "long", day: "numeric", year: "numeric" })} · Week ${week.num} · Phase ${ph.num}: ${ph.name} · <b>${cat.toUpperCase()}</b> · <span class="section-progress" id="modalSectionProgress"><b>${counts.done}</b>/${counts.total} sections done</span></div>`;
+        const focus = opts && opts.focus ? opts.focus : null;
+        const focusKeys = focus && typeof rnGroupKeys === "function" ? rnGroupKeys(day, focus) : null;
+        const heading = focus ? (focus === "before" ? "Before you run" : "After your run") : typeof rnTitle === "function" ? rnEsc(rnTitle(day)) : day.title;
+        let html = `<div class="modal-head"><button class="close" onclick="closeModal()" aria-label="Close">×</button>`;
+        html += `<h2>${heading}</h2></div>`;
+        html += `<div class="meta modal-meta-short">${fmtDate(day.date, { weekday: "short", month: "short", day: "numeric" })} · Week ${week.num}${focus ? "" : ` · <span class="section-progress" id="modalSectionProgress"><b>${counts.done}</b>/${counts.total} done</span>`}</div>`;
         // Runna-style workout breakdown (steps + effort chart) for run days
-        if (typeof rnWorkoutBlockHtml === "function") html += rnWorkoutBlockHtml(day);
+        if (!focus && typeof rnWorkoutBlockHtml === "function") html += rnWorkoutBlockHtml(day);
 
         // Group routines by chronological phase
         const byPhase = { anytime: [], pre: [], core: [], post: [], after_hours: [] };
@@ -4665,7 +4670,8 @@
           const rDone = isSectionDone(day, rKey);
           const hasTracker = !!DATA.routine_exercises[r];
           const rCounts = hasTracker ? exerciseProgress(day.date, rKey) : null;
-          const progressPill = rCounts ? `<span class="modal-child-progress">${rCounts.done}/${rCounts.total}</span>` : "";
+          const mins = typeof RN_ROUTINE_MIN !== "undefined" && RN_ROUTINE_MIN[r] ? `${RN_ROUTINE_MIN[r]} min` : "";
+          const progressPill = rCounts && rCounts.done ? `<span class="modal-child-progress">${rCounts.done}/${rCounts.total}</span>` : mins ? `<span class="modal-child-meta">${mins}</span>` : "";
           const clickableAttrs = hasTracker
             ? ` is-clickable" data-tracker-kind="routine" data-tracker-key="${r}`
             : "";
@@ -4690,7 +4696,7 @@
           return `<div class="modal-child ${wDone ? "child-done" : ""}${clickableAttrs}" data-section-key="workout">
               <input type="checkbox" class="task-check child-check" data-section="workout" ${wDone ? "checked" : ""}>
               <div class="modal-child-body">
-                <div class="modal-child-title">${day.title}</div>
+                <div class="modal-child-title">${cat === "quality" ? "Speed run" : cat === "long" ? "Long run" : cat === "race" ? "Race" : cat === "bike" ? "Bike" : cat === "rest" ? "Logged activity" : "Run"}<span class="modal-child-meta">${cat === "quality" ? "" : specsForDay(day)}</span></div>
                 <div class="modal-child-desc">${day.detail}</div>
               </div>
             </div>`;
@@ -4700,8 +4706,8 @@
           const sDone = isSectionDone(day, "strength");
           const sKey = detectStrengthKey(day.strength);
           const sCounts = sKey ? exerciseProgress(day.date, "strength_" + sKey) : null;
-          const progressPill = sCounts ? `<span class="modal-child-progress">${sCounts.done}/${sCounts.total}</span>` : "";
           const meta = sKey ? DATA.strength_routines[sKey] : null;
+          const progressPill = sCounts && sCounts.done ? `<span class="modal-child-progress">${sCounts.done}/${sCounts.total}</span>` : meta ? `<span class="modal-child-meta">${meta.duration}</span>` : "";
           const title = meta ? meta.label : "Strength";
           const desc = meta ? `${meta.description} (${meta.duration})` : day.strength.split(":")[0];
           const clickableAttrs = sKey
@@ -4727,44 +4733,30 @@
           </div>`;
         }
 
-        // ---- Build top-level groups ----
-        // 1. Morning Mobility (anytime routines: mobility_daily, shin_protocol)
-        if (byPhase.anytime.length) {
-          html += renderGroup("morning", "Morning Mobility", byPhase.anytime.map(childRoutineHtml).join(""));
-        }
-
-        // 2. Cardio (pre-warmup + workout + post-cooldown)
+        // ---- One flat checklist, in the order you'd do things ----
         const hasWorkout = cat !== "rest";
-        if (byPhase.pre.length || hasWorkout || byPhase.post.length || hasLog(day.date)) {
-          let cardioChildren = "";
-          for (const r of byPhase.pre) cardioChildren += childRoutineHtml(r);
-          if (hasWorkout || hasLog(day.date)) cardioChildren += workoutChildHtml();
-          for (const r of byPhase.post) cardioChildren += childRoutineHtml(r);
-          html += renderGroup("cardio", "Cardio", cardioChildren);
-        }
-
-        // 3. Strength (formal strength routine + core)
-        if (day.strength || byPhase.core.length) {
-          let strengthChildren = "";
-          if (day.strength) strengthChildren += strengthChildHtml();
-          for (const r of byPhase.core) strengthChildren += childRoutineHtml(r);
-          html += renderGroup("strength-group", "Strength", strengthChildren);
-        }
-
-        // 4. Throughout the Day (desk breaks)
-        if (byPhase.after_hours.length) {
-          html += renderGroup("anytime-group", "Throughout the Day", byPhase.after_hours.map(childRoutineHtml).join(""));
-        }
+        const items = [];
+        for (const r of byPhase.anytime) if (r !== "mobility_daily") items.push(["routine_" + r, () => childRoutineHtml(r)]);
+        for (const r of byPhase.pre) items.push(["routine_" + r, () => childRoutineHtml(r)]);
+        if (hasWorkout || hasLog(day.date)) items.push(["workout", workoutChildHtml]);
+        for (const r of byPhase.post) items.push(["routine_" + r, () => childRoutineHtml(r)]);
+        if (day.strength) items.push(["strength", strengthChildHtml]);
+        for (const r of byPhase.core) items.push(["routine_" + r, () => childRoutineHtml(r)]);
+        if (byPhase.anytime.includes("mobility_daily")) items.push(["routine_mobility_daily", () => childRoutineHtml("mobility_daily")]);
+        for (const r of byPhase.after_hours) items.push(["routine_" + r, () => childRoutineHtml(r)]);
+        const shown = focusKeys ? items.filter(([k]) => focusKeys.includes(k)) : items;
+        html += renderGroup("checklist", focus ? "" : "Checklist", shown.map(([, fn]) => fn()).join(""));
+        if (focus) html += `<p class="modal-hint">Tap an item to see its moves.</p>`;
 
         // Master "all complete" checkbox at the bottom
         const allDone = isDone(day);
-        html += `<label class="modal-check-row ${allDone ? "is-done" : ""}" id="modalCheckRow">
+        if (!focus) html += `<label class="modal-check-row ${allDone ? "is-done" : ""}" id="modalCheckRow">
             <input type="checkbox" class="task-check" id="modalCheck" ${allDone ? "checked" : ""}>
             <span class="lbl" id="modalCheckLbl">${allDone ? "Workout complete - all sections done" : "Mark all sections complete"}</span>
           </label>`;
 
         // Swap this whole day's workouts with another day
-        html += `<button type="button" class="btn modal-swap-day-btn" id="modalSwapDay">⇄ Swap whole day with another day</button>`;
+        if (!focus) html += `<button type="button" class="modal-swap-day-btn rn-text-btn" id="modalSwapDay">⇄ Swap this day</button>`;
 
         m.innerHTML = html;
         document.getElementById("modalBg").classList.add("show");
@@ -4784,7 +4776,7 @@
               ? "Workout complete - all sections done"
               : "Mark all sections complete";
           const sp = document.getElementById("modalSectionProgress");
-          if (sp) sp.innerHTML = `<b>${c.done}</b>/${c.total} sections done`;
+          if (sp) sp.innerHTML = `<b>${c.done}</b>/${c.total} done`;
           // sync week-grid card
           const dayCard = document.querySelector(
             `.day[data-date="${day.date}"]`,
