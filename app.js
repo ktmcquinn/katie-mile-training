@@ -953,8 +953,8 @@
       }
 
       // Build today's target object (cal + macros + meta)
-      function buildTodayTarget() {
-        const dateStr = todayClampedISO();
+      function buildTodayTarget(forDate) {
+        const dateStr = forDate || todayClampedISO();
         const ctx = findDayForDate(dateStr);
         if (!ctx) return null;
         const day = ctx.day;
@@ -1222,6 +1222,7 @@
       };
 
       function renderFuelTarget() {
+        try { renderWeekBudget(); } catch (e) { console.error(e); }
         const target = buildTodayTarget();
         if (!target) return;
 
@@ -1929,6 +1930,7 @@
       }
 
       function renderFuel() {
+        try { renderWeighIn(); } catch (e) { console.error(e); }
         const target = renderFuelTarget();
         if (!target) return;
         renderFuelSlots();
@@ -2535,8 +2537,8 @@
 
       // ---------- Weight tracking ----------
       const WEIGHT_KEY = "katie-mile-weight-logs";
-      const WEIGHT_START = 147.9; // from your reference panel
-      const WEIGHT_GOAL = 135.0;
+      const WEIGHT_START = 140.0; // start of the Riga cut (Nov 2026)
+      const WEIGHT_GOAL = 128.0;
       const BF_START = 28.7;
       const BF_GOAL = 22.5;
 
@@ -3916,6 +3918,132 @@
             if (f) openModal(f.day, f.week);
           };
         });
+      }
+
+
+      // ---------- Daily weigh-in + weekly budget (Fuel tab) ----------
+      // Weigh-ins use the same WEIGHTS store as before (synced to the cloud
+      // "weights" table), just daily and on the Fuel tab. The morning check-in
+      // card is hidden, but CHECKINS data and sync are untouched.
+      function wiFmt(n) { return n == null || isNaN(n) ? "—" : (Math.round(n * 10) / 10).toFixed(1); }
+      function wiAvgAround(endISO, days) {
+        const vals = [];
+        for (let i = 0; i < days; i++) {
+          const w = WEIGHTS[rnAddDays(endISO, -i)];
+          if (w && !isNaN(w.weight)) vals.push(w.weight);
+        }
+        return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+      }
+      function renderWeighIn() {
+        const card = document.getElementById("weighinCard");
+        if (!card) return;
+        const today = todayISO();
+        const input = document.getElementById("wiWeight");
+        const todayW = WEIGHTS[today];
+        if (input && document.activeElement !== input) input.value = todayW ? todayW.weight : "";
+        const dateEl = document.getElementById("wiDate");
+        if (dateEl) dateEl.textContent = todayW ? "Logged today ✓" : fmtDate(today, { weekday: "short", month: "short", day: "numeric" });
+        const btn = document.getElementById("wiSave");
+        if (btn) btn.textContent = todayW ? "Update" : "Save";
+
+        const avgNow = wiAvgAround(today, 7);
+        const avgPrev = wiAvgAround(rnAddDays(today, -7), 7);
+        const weekly = avgNow != null && avgPrev != null ? avgNow - avgPrev : null;
+        const latest = sortedWeights().slice(-1)[0];
+        const current = avgNow != null ? avgNow : latest ? latest.weight : WEIGHT_START;
+        const toGo = Math.max(0, current - WEIGHT_GOAL);
+        const weeksLeft = Math.max(1, (parseISO(DATA.meta.race_date) - parseISO(today)) / (7 * 86400000));
+        const needed = toGo / weeksLeft;
+        let status = "";
+        if (weekly != null) {
+          if (toGo <= 0) status = '<span class="wi-ok">Goal reached — switch to maintenance</span>';
+          else if (-weekly >= needed * 0.8) status = '<span class="wi-ok">On track</span>';
+          else if (weekly < 0) status = '<span class="wi-warn">A little slow</span>';
+          else status = '<span class="wi-warn">Trend is flat or up</span>';
+        }
+        const stats = document.getElementById("wiStats");
+        if (stats) {
+          stats.innerHTML = `
+            <div><span class="wi-v">${wiFmt(avgNow)}</span><span class="wi-l">7-DAY AVG (LB)</span></div>
+            <div><span class="wi-v">${weekly == null ? "—" : (weekly > 0 ? "+" : "") + wiFmt(weekly)}</span><span class="wi-l">VS LAST WEEK</span></div>
+            <div><span class="wi-v">${wiFmt(toGo)}</span><span class="wi-l">TO ${WEIGHT_GOAL} LB</span></div>`;
+        }
+        const note = document.getElementById("wiNote");
+        if (note) {
+          note.innerHTML = `${status ? status + " · " : ""}Needs ~${wiFmt(needed)} lb/week to reach ${WEIGHT_GOAL} by Riga. Day-to-day jumps of 1–3 lb are water — watch the 7-day average.`;
+        }
+        // 30-day chart: daily points + 7-day average line
+        const spark = document.getElementById("wiSpark");
+        if (spark) {
+          const pts = [];
+          for (let i = 29; i >= 0; i--) {
+            const d = rnAddDays(today, -i);
+            pts.push({ d, w: WEIGHTS[d] ? WEIGHTS[d].weight : null, a: wiAvgAround(d, 7) });
+          }
+          const vals = pts.flatMap((p) => [p.w, p.a]).filter((v) => v != null);
+          if (vals.length < 2) {
+            spark.innerHTML = '<div class="wi-empty">Weigh in each morning — your trend line appears after a few days.</div>';
+          } else {
+            const lo = Math.min(...vals) - 0.6, hi = Math.max(...vals) + 0.6;
+            const goalOnChart = WEIGHT_GOAL >= lo && WEIGHT_GOAL <= hi;
+            const W = 320, H = 80;
+            const x = (i) => (i / 29) * W;
+            const y = (v) => H - ((v - lo) / (hi - lo)) * H;
+            let dots = "", line = "";
+            pts.forEach((p, i) => {
+              if (p.w != null) dots += `<circle cx="${x(i).toFixed(1)}" cy="${y(p.w).toFixed(1)}" r="2.5" class="wi-dot"/>`;
+              if (p.a != null) line += `${line ? "L" : "M"}${x(i).toFixed(1)},${y(p.a).toFixed(1)}`;
+            });
+            const gy = y(WEIGHT_GOAL).toFixed(1);
+            spark.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="wi-svg" role="img" aria-label="Weight over the last 30 days with 7-day average">
+              ${goalOnChart ? `<line x1="0" x2="${W}" y1="${gy}" y2="${gy}" class="wi-goal"/>` : ""}${dots}<path d="${line}" class="wi-line"/></svg>
+              <div class="wi-axis"><span>30 days ago</span><span>${goalOnChart ? "- - goal " + WEIGHT_GOAL : "goal " + WEIGHT_GOAL + " lb ↓"}</span><span>today</span></div>`;
+          }
+        }
+      }
+      function initWeighIn() {
+        const btn = document.getElementById("wiSave");
+        const input = document.getElementById("wiWeight");
+        if (!btn || !input) return;
+        const save = () => {
+          const v = parseFloat(String(input.value).replace(",", "."));
+          if (isNaN(v) || v < 70 || v > 400) {
+            showToast("Enter your weight in lb (e.g. 139.4).", "error");
+            return;
+          }
+          const existing = WEIGHTS[todayISO()];
+          setWeight(todayISO(), v, existing ? existing.bodyFat : null);
+          input.blur();
+          renderWeighIn();
+          if (typeof renderWeightChart === "function") { try { renderWeightChart(); } catch (e) {} }
+          showToast("Weigh-in saved.");
+        };
+        btn.addEventListener("click", save);
+        input.addEventListener("keydown", (e) => { if (e.key === "Enter") save(); });
+        renderWeighIn();
+      }
+
+      // Week-so-far calorie budget: only counts days with food logged, so an
+      // unlogged day doesn't look like a huge "under".
+      function renderWeekBudget() {
+        const el = document.getElementById("ftcWeek");
+        if (!el) return;
+        const today = todayISO();
+        const wk = rnWeekOf(today);
+        let budget = 0, eaten = 0, days = 0;
+        for (const d of wk.days) {
+          if (d.date > today) break;
+          const meals = MEALS[d.date] || [];
+          if (!meals.length) continue;
+          const t = buildTodayTarget(d.date);
+          if (!t) continue;
+          budget += t.targetCal;
+          eaten += sumMacros(meals).cal;
+          days++;
+        }
+        if (!days) { el.innerHTML = ""; return; }
+        const diff = Math.round(eaten - budget);
+        el.innerHTML = `<span>This week · ${days} day${days === 1 ? "" : "s"} logged</span><span class="${diff > 0 ? "wk-over" : "wk-under"}">${Math.round(eaten).toLocaleString()} / ${budget.toLocaleString()} kcal · ${Math.abs(diff).toLocaleString()} ${diff > 0 ? "over" : "under"}</span>`;
       }
 
       // ---------- Today poster (Bold Type home) ----------
@@ -8231,6 +8359,7 @@
       initDataExport();
       initCloudUI();
       initCheckin();
+      initWeighIn();
       initFuel();
       // ── European decimal comma support ───────────────────────
       // Replaces comma with period in real-time on any decimal input

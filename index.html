@@ -287,6 +287,7 @@
             <span id="ftcTarget">0 target</span>
           </div>
         </div>
+        <div class="ftc-week" id="ftcWeek"></div>
 
         <div class="ftc-macros">
           <div class="ftc-macro">
@@ -321,6 +322,25 @@
             <button class="ftc-pill" data-actual="done">Did the planned workout</button>
           </div>
         </div>
+      </div>
+
+      <!-- Daily weigh-in (moved here from the morning check-in) -->
+      <div class="fuel-card weighin-card" id="weighinCard">
+        <div class="wi-head">
+          <span class="ftc-label">DAILY WEIGH-IN</span>
+          <span class="ftc-meta" id="wiDate">—</span>
+        </div>
+        <div class="wi-entry">
+          <label for="wiWeight" class="wi-entry-lbl">Morning weight</label>
+          <div class="wi-entry-row">
+            <input type="text" inputmode="decimal" id="wiWeight" placeholder="e.g. 139.4" autocomplete="off">
+            <span class="wi-unit">lb</span>
+            <button type="button" class="btn btn-primary" id="wiSave">Save</button>
+          </div>
+        </div>
+        <div class="wi-stats" id="wiStats"></div>
+        <div class="wi-spark" id="wiSpark"></div>
+        <div class="wi-note" id="wiNote"></div>
       </div>
 
       <!-- Log meals — tap a slot to add food (Noom-style) -->
