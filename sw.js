@@ -11,7 +11,7 @@
 //
 // CACHE_VERSION only needs bumping if you want to force-purge old caches
 // (e.g. after renaming/removing files), not on every content change.
-const CACHE_VERSION = "v7.0.0";
+const CACHE_VERSION = "v7.1.0";
 const CACHE_NAME = `mile-training-${CACHE_VERSION}`;
 
 // Files to pre-cache on install so the app can boot offline immediately.
@@ -25,11 +25,11 @@ const PRECACHE_URLS = [
   "./lib/training-math.js",
   "./lib/format.js",
   "./manifest.json",
-  "./icon-192.png",
-  "./icon-512.png",
-  "./icon-192-maskable.png",
-  "./icon-512-maskable.png",
-  "./apple-touch-icon.png",
+  "./icon-192-v2.png",
+  "./icon-512-v2.png",
+  "./icon-192-maskable-v2.png",
+  "./icon-512-maskable-v2.png",
+  "./apple-touch-icon-v2.png",
   "./favicon.png"
 ];
 
