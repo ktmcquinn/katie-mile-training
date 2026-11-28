@@ -1,4 +1,4 @@
-# Cadence 🏃‍♀️
+# Kadence 🏃‍♀️
 
 Katie's personal fitness and race training PWA. Previous goal races:
 Copenhagen 1-Mile (Sep 19, 2026) and Dresden Half Marathon (Oct 25, 2026).

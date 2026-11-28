@@ -1,4 +1,4 @@
-// Cadence — application logic. Extracted from the main HTML file.
+// Kadence — application logic. Extracted from the main HTML file.
 // Loaded at the end of <body>, so the DOM is fully parsed when this runs.
       // =========================================================================
       // Supabase config — fill these in ONCE with your project's values.
@@ -84,7 +84,7 @@
 
       // ---------- Tabs (bottom nav) ----------
       const TAB_KEY = "katie-mile-active-tab";
-      const TAB_LABELS = { today: "Home", fuel: "Fuel", plan: "Plan", trends: "Trends" };
+      const TAB_LABELS = { today: "Today", plan: "Plan", calendar: "Calendar", fuel: "Fuel", trends: "Trends", more: "Settings" };
       function switchTab(name) {
         document.querySelectorAll(".tab-page").forEach((p) => {
           p.classList.toggle("active", p.id === `tab-${name}`);
@@ -95,8 +95,9 @@
         const pageEl = document.getElementById("topBarPage");
         if (pageEl) pageEl.textContent = TAB_LABELS[name] || name;
         try { localStorage.setItem(TAB_KEY, name); } catch (e) {}
-        // Scroll to top of the newly active tab
+        // Scroll to top of the newly active tab (Calendar jumps to this week)
         window.scrollTo({ top: 0, behavior: "instant" });
+        if (name === "calendar") scrollCalendarToCurrentWeek();
         // If switching to Trends, render the whole Trends tab (stats, sparklines,
         // period strip, weight chart) so it's always up-to-date when viewed.
         if (name === "trends" && typeof renderTrends === "function") {
@@ -106,6 +107,25 @@
         if (name === "fuel" && typeof renderFuel === "function") {
           renderFuel();
         }
+      }
+      // Open the Calendar tab and bring a week into view (optionally opening it).
+      function scrollCalendarToCurrentWeek() {
+        const now = todayClampedISO();
+        const w = DATA.weeks.find((wk) => now >= wk.start_date && now <= wk.end_date);
+        if (!w) return;
+        setTimeout(() => {
+          const t = document.getElementById(`week-${w.num}`);
+          if (t) t.scrollIntoView({ behavior: "instant", block: "start" });
+        }, 30);
+      }
+      function openCalendarWeek(num) {
+        switchTab("calendar");
+        setTimeout(() => {
+          const target = document.getElementById(`week-${num}`);
+          if (!target) return;
+          if (!target.classList.contains("open")) target.querySelector(".week-head").click();
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 60);
       }
       function initTabs() {
         document.querySelectorAll(".tab-btn").forEach((b) => {
@@ -3701,13 +3721,7 @@
           seg.style.flex = phaseWeeks.length;
           if (todayD >= first.start_date && todayD <= last.end_date)
             seg.classList.add("active");
-          seg.addEventListener("click", () => {
-            const target = document.getElementById(`week-${first.num}`);
-            if (target) {
-              target.scrollIntoView({ behavior: "smooth", block: "start" });
-              target.querySelector(".week-head").click();
-            }
-          });
+          seg.addEventListener("click", () => openCalendarWeek(first.num));
           bar.appendChild(seg);
         }
       }
@@ -3912,14 +3926,7 @@
           lbl.textContent = planned;
           bar.appendChild(lbl);
 
-          bar.addEventListener("click", () => {
-            const target = document.getElementById(`week-${w.num}`);
-            if (target) {
-              target.scrollIntoView({ behavior: "smooth", block: "start" });
-              if (!target.classList.contains("open"))
-                target.querySelector(".week-head").click();
-            }
-          });
+          bar.addEventListener("click", () => openCalendarWeek(w.num));
           chart.appendChild(bar);
           const a = document.createElement("div");
           a.textContent = w.num;

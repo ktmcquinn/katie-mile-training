@@ -1,4 +1,4 @@
-/* Cadence — styles. Extracted from the main HTML file.
+/* Kadence — styles. Extracted from the main HTML file.
    ============================================================================
    CONTENTS  (search the marker text, e.g. "Toasts", to jump)
    ----------------------------------------------------------------------------
@@ -4665,3 +4665,6 @@ html .modal h2 { font-weight: 900; letter-spacing: -0.02em; }
 html .phase-pill,
 html .chip,
 html .pill { border-radius: 0; }
+
+/* Calendar tab: leave room under the fixed top bar when jumping to a week */
+html .week { scroll-margin-top: calc(64px + env(safe-area-inset-top, 0px)); }

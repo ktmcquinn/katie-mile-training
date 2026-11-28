@@ -1,4 +1,4 @@
-// Cadence - Service Worker
+// Kadence - Service Worker
 //
 // Strategy:
 //   - App code (HTML, JS, CSS, manifest): STALE-WHILE-REVALIDATE. Serve the
@@ -11,7 +11,7 @@
 //
 // CACHE_VERSION only needs bumping if you want to force-purge old caches
 // (e.g. after renaming/removing files), not on every content change.
-const CACHE_VERSION = "v7.1.0";
+const CACHE_VERSION = "v7.2.0";
 const CACHE_NAME = `mile-training-${CACHE_VERSION}`;
 
 // Files to pre-cache on install so the app can boot offline immediately.
