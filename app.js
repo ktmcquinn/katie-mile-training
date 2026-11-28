@@ -98,6 +98,7 @@
         // Scroll to top of the newly active tab (Calendar jumps to this week)
         window.scrollTo({ top: 0, behavior: "instant" });
         if (name === "calendar") scrollCalendarToCurrentWeek();
+        if (name === "plan" && typeof renderRunnaPlan === "function") renderRunnaPlan();
         // If switching to Trends, render the whole Trends tab (stats, sparklines,
         // period strip, weight chart) so it's always up-to-date when viewed.
         if (name === "trends" && typeof renderTrends === "function") {
@@ -3587,6 +3588,336 @@
         return detail;
       }
 
+
+      // ==================================================================
+      // Runna-style views (Nov 2026): Today session card + week strip,
+      // workout breakdown (steps + effort chart), and the Plan week list.
+      // Structure comes from lib/workout.js (parseWorkout).
+      // ==================================================================
+      function rnEsc(s) {
+        return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+      }
+      function rnWeekOf(iso) {
+        for (const w of DATA.weeks) if (iso >= w.start_date && iso <= w.end_date) return w;
+        return iso < DATA.weeks[0].start_date ? DATA.weeks[0] : DATA.weeks[DATA.weeks.length - 1];
+      }
+      function rnDayOf(iso) {
+        for (const w of DATA.weeks) for (const d of w.days) if (d.date === iso) return { day: d, week: w };
+        return null;
+      }
+      function rnAddDays(iso, n) {
+        const d = parseISO(iso);
+        d.setDate(d.getDate() + n);
+        return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+      }
+      function rnChartHtml(w, height) {
+        if (!w || !w.segments || !w.segments.length) return "";
+        let html = `<div class="rn-chart" style="height:${height}px" role="img" aria-label="Effort profile of this workout">`;
+        for (const s of w.segments) {
+          html += `<div class="rn-bar rn-${s.kind}" style="flex:${s.min.toFixed(2)} 1 0;height:${Math.max(4, Math.round(s.level * height))}px"></div>`;
+        }
+        return html + "</div>";
+      }
+      function rnTag(day, w) {
+        const cat = categorize(day);
+        const t = (day.title || "") + " " + (day.detail || "");
+        if (cat === "race") return "RACE";
+        if (cat === "quality") {
+          if (/hill/i.test(t)) return "HILLS";
+          if (/fartlek/i.test(t)) return "FARTLEK";
+          if (/tempo|progression/i.test(t)) return "TEMPO";
+          return "INTERVALS";
+        }
+        if (cat === "long") return /DRESS/i.test(t) ? "DRESS REHEARSAL" : "LONG RUN";
+        if (cat === "easy") return /strides/i.test(t) ? "EASY + STRIDES" : "EASY RUN";
+        if (cat === "bike") return "BIKE";
+        if (/^PILATES/i.test(day.title || "")) return "PILATES";
+        if (day.strength) return "STRENGTH";
+        return "REST";
+      }
+      function rnTitle(day) {
+        const cat = categorize(day);
+        let t = String(day.title || "").replace(/^Speed:\s*/i, "").replace(/^🏁\s*/, "");
+        if (cat === "long") return /DRESS/i.test(day.detail || "") ? "Dress rehearsal" : "Long run";
+        if (cat === "race") return t.replace(/\b([A-Z])([A-Z]+)\b/g, (m, a, b) => a + b.toLowerCase());
+        if (cat === "rest" && day.strength) {
+          const sk = detectStrengthKey(day.strength);
+          if (sk && DATA.strength_routines[sk]) return DATA.strength_routines[sk].label.replace(/\s*—\s*/, " · ");
+        }
+        if (/^REST$/i.test(t)) return "Rest day";
+        return t;
+      }
+      function rnSubtitle(day, w) {
+        if (w && w.kind !== "none") {
+          const main = w.steps.find((s) => s.type === "repeat" || s.type === "work" || s.type === "main");
+          if (w.kind === "speed" && main) {
+            if (main.type === "repeat") return `${main.n} × ${main.work.amount} · ${main.work.sub}`;
+            if (main.type === "work") return `${main.title} · ${main.amount}${w.repPace ? " · " + w.repPace + "/mi" : ""}`;
+            return "Mixed paces — see the steps";
+          }
+          if (w.kind === "long") return w.steps.length === 3 ? "8 mi at goal half pace" : "Easy, finish the last bit quicker";
+          if (w.kind === "easy") return w.steps[0].sub + (day.strength ? " · then strength" : "");
+          if (w.kind === "race") return (DATA.meta.race_goal || "").replace(/^Sub/, "Goal sub");
+        }
+        if (/^PILATES/i.test(day.title || "")) return "Class at 10 or 11am · core + hips";
+        if (day.strength) {
+          const sk = detectStrengthKey(day.strength);
+          const meta = sk && DATA.strength_routines[sk];
+          return meta ? `${meta.exercises.length} moves · ${meta.duration} · no run` : "Strength · no run";
+        }
+        return "Full rest + 10 min mobility";
+      }
+      const RN_ROUTINE_MIN = { achilles_iso: 4, hip_protocol: 10, pre_run: 10, post_run: 10, pre_bike: 5, post_bike: 8, mobility_daily: 10, core: 12, plyo: 5 };
+      function rnGroupKeys(day, which) {
+        const keys = [];
+        for (const r of day.routines || []) {
+          const ph = ROUTINE_PHASE[r] || "anytime";
+          if (which === "before" && (ph === "pre" || (ph === "anytime" && r !== "mobility_daily"))) keys.push("routine_" + r);
+          if (which === "after" && ph === "post") keys.push("routine_" + r);
+        }
+        if (which === "after" && day.strength && categorize(day) !== "rest") keys.push("strength");
+        return keys;
+      }
+      function rnGroupRow(day, which) {
+        const keys = rnGroupKeys(day, which);
+        if (!keys.length) return "";
+        const labels = keys.map((k) => (k === "strength" ? "strength" : (ROUTINE_LABELS[k.slice(8)] || k).toLowerCase()));
+        let mins = 0;
+        for (const k of keys) {
+          if (k === "strength") {
+            const sk = detectStrengthKey(day.strength);
+            const d = sk && DATA.strength_routines[sk] ? parseInt(String(DATA.strength_routines[sk].duration).replace(/\D/g, ""), 10) : 30;
+            mins += d || 30;
+          } else mins += RN_ROUTINE_MIN[k.slice(8)] || 5;
+        }
+        const done = keys.every((k) => isSectionDone(day, k));
+        const title = which === "before" ? "Before you run" : "After your run";
+        const text = labels.join(" · ");
+        return `<div class="rn-row rn-group${done ? " is-done" : ""}" data-rn-group="${which}">
+          <span class="rn-row-icon">${which === "before" ? "↑" : "↓"}</span>
+          <span class="rn-row-main"><span class="rn-row-title">${title}</span><span class="rn-row-sub">${rnEsc(text.charAt(0).toUpperCase() + text.slice(1))} · ${mins} min</span></span>
+          <button type="button" class="rn-check${done ? " on" : ""}" aria-label="${done ? "Mark" : "Mark"} ${title.toLowerCase()} ${done ? "not done" : "done"}" aria-pressed="${done}"></button>
+        </div>`;
+      }
+      function rnSyncDayCards(day) {
+        const done = isDone(day);
+        document.querySelectorAll(`.day[data-date="${day.date}"]`).forEach((el) => {
+          el.classList.toggle("completed", done);
+          const cb = el.querySelector(".task-check");
+          if (cb) cb.checked = done;
+        });
+      }
+
+      function renderRunnaToday() {
+        const host = document.getElementById("rnToday");
+        if (!host) return;
+        const todayD = todayClampedISO();
+        const found = rnDayOf(todayD);
+        if (!found) { host.innerHTML = ""; return; }
+        const { day, week } = found;
+        const ph = DATA.phases[week.phase - 1];
+        const w = parseWorkout(day);
+        const daysToRace = Math.max(0, Math.ceil((parseISO(DATA.meta.race_date) - parseISO(todayISO())) / 86400000));
+        const done = isDone(day);
+
+        // Week strip
+        let strip = "";
+        for (const d of week.days) {
+          const cat = categorize(d);
+          const dot = cat === "rest" ? (d.strength || /^PILATES/i.test(d.title) ? "rn-dot-light" : "rn-dot-none") : cat === "quality" || cat === "race" ? "rn-dot-accent" : "rn-dot-ink";
+          const cls = ["rn-strip-day"];
+          if (d.date === todayD) cls.push("is-today");
+          if (isDone(d)) cls.push("is-done");
+          strip += `<button type="button" class="${cls.join(" ")}" data-rn-date="${d.date}" aria-label="${fmtDate(d.date, { weekday: "long", month: "short", day: "numeric" })}: ${rnEsc(rnTitle(d))}">
+            <span class="rn-strip-dn">${d.day_name.charAt(0)}</span><span class="rn-strip-num">${parseISO(d.date).getDate()}</span><span class="rn-dot ${dot}"></span></button>`;
+        }
+
+        // Stats
+        let stats = "";
+        if (w.kind !== "none") {
+          const pace = w.repPace || (w.kind === "easy" || w.kind === "long" ? ((day.detail || "").match(/(\d{1,2}:\d{2})\/mi/) || [])[1] : null);
+          const paceLbl = w.kind === "speed" ? "REP PACE /MI" : w.kind === "race" ? "GOAL /MI" : "EASY PACE /MI";
+          const paceVal = w.kind === "race" ? "7:35" : pace ? (w.kind === "speed" ? pace : pace + "+") : "—";
+          stats = `<div class="rn-stats">
+            <div><span class="rn-stat-v">${w.miles} mi</span><span class="rn-stat-l">DISTANCE</span></div>
+            <div><span class="rn-stat-v">~${w.minutes} min</span><span class="rn-stat-l">DURATION</span></div>
+            <div><span class="rn-stat-v">${paceVal}</span><span class="rn-stat-l">${paceLbl}</span></div>
+          </div>`;
+        }
+
+        // Coming up (next 2 days)
+        let upcoming = "";
+        for (let i = 1; i <= 2; i++) {
+          const f = rnDayOf(rnAddDays(todayD, i));
+          if (!f) continue;
+          const fw = parseWorkout(f.day);
+          const amt = fw.kind !== "none" ? `${fw.miles} mi` : f.day.strength ? (DATA.strength_routines[detectStrengthKey(f.day.strength)] || {}).duration || "" : "";
+          upcoming += `<button type="button" class="rn-up-row" data-rn-date="${f.day.date}"><span class="rn-up-dn">${f.day.day_name.toUpperCase()}</span><span class="rn-up-t">${rnEsc(rnTitle(f.day))}</span><span class="rn-up-a">${rnEsc(amt)}</span></button>`;
+        }
+
+        // Week progress
+        const planned = week.mileage;
+        const actual = typeof actualWeekMiles === "function" ? actualWeekMiles(week) : 0;
+        const pct = planned ? Math.min(100, Math.round((actual / planned) * 100)) : 0;
+        const fmtN = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
+
+        host.innerHTML = `
+          <div class="rn-head">
+            <div><div class="rn-kicker">Week ${week.num} of ${DATA.weeks.length} · ${rnEsc(ph.name)}</div><h1 class="rn-h1">Today</h1></div>
+            <div class="rn-pill"><span class="rn-pill-v">${daysToRace}</span><span class="rn-pill-l">DAYS TO RIGA</span></div>
+          </div>
+          <div class="rn-strip">${strip}</div>
+          <div class="rn-session${done ? " is-done" : ""}">
+            <div class="rn-session-top"><span class="rn-tag">${rnTag(day, w)}</span><span class="rn-session-date">${fmtDate(day.date, { weekday: "short", day: "numeric", month: "short" })}</span></div>
+            <div class="rn-session-title">${rnEsc(rnTitle(day))}</div>
+            <div class="rn-session-sub">${rnEsc(rnSubtitle(day, w))}</div>
+            ${rnChartHtml(w, 60)}
+            ${stats}
+            <div class="rn-session-actions">
+              <button type="button" class="rn-btn rn-btn-light" id="rnViewWorkout">View workout</button>
+              <button type="button" class="rn-btn ${done ? "rn-btn-accent" : "rn-btn-ghost"}" id="rnMarkDone" aria-pressed="${done}">${done ? "✓ Done" : "Mark done"}</button>
+            </div>
+          </div>
+          ${rnGroupRow(day, "before")}
+          ${rnGroupRow(day, "after")}
+          <div class="rn-section-label">THIS WEEK <span>${fmtN(actual)} / ${planned} mi</span></div>
+          <div class="rn-progress"><div style="width:${pct}%"></div></div>
+          ${upcoming ? `<div class="rn-section-label">COMING UP</div><div class="rn-card rn-up">${upcoming}</div>` : ""}
+        `;
+
+        host.querySelector("#rnViewWorkout").onclick = () => openModal(day, week);
+        host.querySelector("#rnMarkDone").onclick = () => {
+          setDayDone(day, !isDone(day));
+          rnSyncDayCards(day);
+          renderToday();
+        };
+        host.querySelectorAll("[data-rn-date]").forEach((el) => {
+          el.onclick = () => {
+            const f = rnDayOf(el.dataset.rnDate);
+            if (f) openModal(f.day, f.week);
+          };
+        });
+        host.querySelectorAll("[data-rn-group]").forEach((row) => {
+          const keys = rnGroupKeys(day, row.dataset.rnGroup);
+          row.querySelector(".rn-check").onclick = (e) => {
+            e.stopPropagation();
+            const allDone = keys.every((k) => isSectionDone(day, k));
+            for (const k of keys) setSectionDone(day, k, !allDone);
+            rnSyncDayCards(day);
+            renderToday();
+          };
+          row.onclick = () => openModal(day, week);
+        });
+      }
+
+      // Steps + chart block for the day modal.
+      function rnWorkoutBlockHtml(day) {
+        const w = parseWorkout(day);
+        if (w.kind === "none") return "";
+        const stepHtml = (s) => {
+          if (s.type === "repeat") {
+            return `<div class="rn-step rn-step-repeat"><div class="rn-repeat-head"><span>REPEAT ${s.n}×</span></div>
+              <div class="rn-step-line"><span class="rn-step-bar rn-work"></span><span class="rn-step-main"><b>${rnEsc(s.work.title)}</b><small>${rnEsc(s.work.sub)}</small></span><span class="rn-step-amt">${rnEsc(s.work.amount)}</span></div>
+              <div class="rn-step-line"><span class="rn-step-bar rn-recovery"></span><span class="rn-step-main"><b>${rnEsc(s.rec.title)}</b><small>${rnEsc(s.rec.sub)}</small></span><span class="rn-step-amt">${rnEsc(s.rec.amount)}</span></div></div>`;
+          }
+          const bar = s.type === "easy" ? "rn-easy" : "rn-work";
+          return `<div class="rn-step"><div class="rn-step-line"><span class="rn-step-bar ${bar}"></span><span class="rn-step-main"><b>${rnEsc(s.title)}</b><small>${rnEsc(s.sub)}</small></span><span class="rn-step-amt">${rnEsc(s.amount)}</span></div></div>`;
+        };
+        return `<div class="rn-modal-workout">
+          <div class="rn-chips"><span class="rn-tag">${rnTag(day, w)}</span><span class="rn-chip">${w.miles} mi</span><span class="rn-chip">~${w.minutes} min</span>${w.repPace ? `<span class="rn-chip">${w.repPace}/mi</span>` : ""}</div>
+          <div class="rn-card rn-chart-card">${rnChartHtml(w, 64)}</div>
+          <div class="rn-section-label">WORKOUT STEPS</div>
+          <div class="rn-card rn-steps">${w.steps.map(stepHtml).join("")}</div>
+        </div>`;
+      }
+
+      function renderRunnaPlan() {
+        const host = document.getElementById("rnPlan");
+        if (!host) return;
+        const todayD = todayClampedISO();
+        const cur = rnWeekOf(todayD);
+        const daysToRace = Math.max(0, Math.ceil((parseISO(DATA.meta.race_date) - parseISO(todayISO())) / 86400000));
+        const ph = DATA.phases[cur.phase - 1];
+
+        // Phase progress (segments sized by week count, current one partly filled)
+        let segs = "";
+        for (const p of DATA.phases) {
+          const wks = DATA.weeks.filter((w) => w.phase === p.num);
+          const doneW = wks.filter((w) => w.end_date < todayD).length + (p.num === cur.phase ? 0.5 : 0);
+          const pct = Math.round((doneW / wks.length) * 100);
+          segs += `<div class="rn-phase-seg" style="flex:${wks.length}" title="${rnEsc(p.name)}"><div style="width:${p.num < cur.phase ? 100 : p.num > cur.phase ? 0 : pct}%"></div></div>`;
+        }
+
+        const fmtN = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
+        const shortRange = (w) => `${fmtDate(w.start_date, { month: "short", day: "numeric" })}–${fmtDate(w.end_date, { day: "numeric" })}`;
+        let list = "";
+        let pastList = "";
+        let pastCount = 0;
+        const milesByWeek = DATA.weeks.map((x) => x.days.map((d) => parseWorkout(d).miles || 0));
+        const maxMi = Math.max(1, ...milesByWeek.flat().filter((m) => m < 14));
+        DATA.weeks.forEach((w, i) => {
+          const dayMiles = milesByWeek[i];
+          const past = w.end_date < todayD;
+          const isCur = w === cur;
+          const prev = DATA.weeks[i - 1];
+          let tag = "";
+          if (w.days.some((d) => categorize(d) === "race")) tag = w.num === DATA.weeks.length ? "RACE WEEK" : "10K RACE";
+          else if (prev && w.mileage < prev.mileage && w.phase < 5) tag = "LIGHTER WEEK";
+          else if (w.phase === 5) tag = "TAPER";
+          if (isCur) {
+            const actual = typeof actualWeekMiles === "function" ? actualWeekMiles(w) : 0;
+            let rows = "";
+            for (const d of w.days) {
+              const pw = parseWorkout(d);
+              const amt = pw.kind !== "none" ? `${pw.miles} mi` : "";
+              const cls = ["rn-cw-row"];
+              if (d.date === todayD) cls.push("is-today");
+              if (isDone(d)) cls.push("is-done");
+              rows += `<button type="button" class="${cls.join(" ")}" data-rn-date="${d.date}"><span class="rn-cw-dn">${d.day_name.toUpperCase()}</span><span class="rn-cw-t">${rnEsc(rnTitle(d))}</span><span class="rn-cw-a">${amt}</span></button>`;
+            }
+            list += `<div class="rn-week rn-week-current" id="rn-week-${w.num}">
+              <div class="rn-week-cur-head"><div><div class="rn-week-title">Week ${w.num} · this week</div><div class="rn-week-sub">${shortRange(w)}${w.theme ? " · " + rnEsc(w.theme.split(".")[0]) : ""}</div></div><div class="rn-week-mi">${fmtN(actual)} / ${w.mileage} mi</div></div>
+              ${rows}</div>`;
+          } else {
+            let spark = '<div class="rn-spark" aria-hidden="true">';
+            for (const m of dayMiles) spark += `<div style="height:${m ? Math.max(4, Math.round((m / maxMi) * 26)) : 3}px" class="${m ? "" : "is-zero"}"></div>`;
+            spark += "</div>";
+            const allDone = w.days.every((d) => isDone(d));
+            const rowHtml = `<button type="button" class="rn-week${past ? " is-past" : ""}" data-rn-week="${w.num}">
+              <span class="rn-week-main"><span class="rn-week-title">Week ${w.num}${tag ? ` <span class="rn-week-tag">${tag}</span>` : ""}</span><span class="rn-week-sub">${shortRange(w)} · ${w.mileage} mi</span></span>
+              ${spark}
+              ${past && allDone ? '<span class="rn-check on" aria-label="Week complete"></span>' : '<span class="rn-chev" aria-hidden="true">›</span>'}
+            </button>`;
+            if (past) { pastList += rowHtml; pastCount++; }
+            else list += rowHtml;
+          }
+        });
+        if (pastCount) {
+          list = `<details class="rn-past"><summary><span>Weeks 1–${pastCount} · done</span><span class="rn-chev" aria-hidden="true">›</span></summary><div class="rn-weeks">${pastList}</div></details>` + list;
+        }
+
+        host.innerHTML = `
+          <div class="rn-race-card">
+            <div class="rn-race-top">
+              <div><div class="rn-race-kicker">GOAL RACE</div><div class="rn-race-name">${rnEsc(DATA.meta.race_name)}</div><div class="rn-race-sub">${fmtDate(DATA.meta.race_date, { weekday: "short", day: "numeric", month: "short" })} · ${rnEsc(DATA.meta.race_goal || "")}</div></div>
+              <div class="rn-race-days"><span>${daysToRace}</span><small>DAYS</small></div>
+            </div>
+            <div class="rn-phase-bar">${segs}</div>
+            <div class="rn-race-foot"><span>Week ${cur.num} of ${DATA.weeks.length} · ${rnEsc(ph.name)}</span><span>${rnEsc(DATA.meta.b_race_name || "")}${DATA.meta.b_race_date ? " · " + fmtDate(DATA.meta.b_race_date, { month: "short", day: "numeric" }) : ""}</span></div>
+          </div>
+          <div class="rn-weeks">${list}</div>
+        `;
+        host.querySelectorAll("[data-rn-week]").forEach((el) => {
+          el.onclick = () => openCalendarWeek(parseInt(el.dataset.rnWeek, 10));
+        });
+        host.querySelectorAll("[data-rn-date]").forEach((el) => {
+          el.onclick = () => {
+            const f = rnDayOf(el.dataset.rnDate);
+            if (f) openModal(f.day, f.week);
+          };
+        });
+      }
+
       // ---------- Today poster (Bold Type home) ----------
       // Big two-line headline: "2 MI" / "EASY." for runs, a word for
       // non-running days. Falls back to the category label.
@@ -3728,6 +4059,7 @@
 
       // ---------- Today card ----------
       function renderToday() {
+        try { renderRunnaToday(); renderRunnaPlan(); } catch (e) { console.error("Runna views:", e); }
         const todayD = todayClampedISO();
         const beforeStart = todayISO() < DATA.weeks[0].days[0].date;
         const afterRace = todayISO() > DATA.meta.race_date;
@@ -4182,8 +4514,10 @@
         const m = document.getElementById("modal");
         const counts = sectionCounts(day);
         let html = `<div class="modal-head"><button class="close" onclick="closeModal()">×</button>`;
-        html += `<h2>${day.title}</h2></div>`;
+        html += `<h2>${typeof rnTitle === "function" ? rnEsc(rnTitle(day)) : day.title}</h2></div>`;
         html += `<div class="meta">${fmtDate(day.date, { weekday: "long", month: "long", day: "numeric", year: "numeric" })} · Week ${week.num} · Phase ${ph.num}: ${ph.name} · <b>${cat.toUpperCase()}</b> · <span class="section-progress" id="modalSectionProgress"><b>${counts.done}</b>/${counts.total} sections done</span></div>`;
+        // Runna-style workout breakdown (steps + effort chart) for run days
+        if (typeof rnWorkoutBlockHtml === "function") html += rnWorkoutBlockHtml(day);
 
         // Group routines by chronological phase
         const byPhase = { anytime: [], pre: [], core: [], post: [], after_hours: [] };
@@ -7872,6 +8206,12 @@
       document
         .getElementById("themeToggle")
         .addEventListener("click", toggleTheme);
+      // Top-bar moon button (the hero with the original toggle is hidden in the Runna layout)
+      const topTheme = document.getElementById("topBarThemeBtn");
+      if (topTheme) {
+        topTheme.addEventListener("click", toggleTheme);
+        topTheme.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleTheme(); } });
+      }
       // Wire reset-plan button
       document.getElementById("resetPlan").addEventListener("click", resetPlan);
       // Esc cancels any armed swap

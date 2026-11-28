@@ -37,6 +37,7 @@
     <script src="plan.js"></script>
     <script src="lib/training-math.js"></script>
     <script src="lib/format.js"></script>
+    <script src="lib/workout.js"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -66,6 +67,9 @@
       </div>
       <span class="top-bar-page" id="topBarPage">Today</span>
       <div class="top-bar-actions">
+        <div class="top-bar-btn" id="topBarThemeBtn" title="Light / dark mode" aria-label="Toggle dark mode" role="button" tabindex="0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        </div>
         <div class="top-bar-btn" id="topBarSyncBtn" title="Sync Strava" aria-label="Sync Strava" role="button" tabindex="0">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="23 4 23 10 17 10"></polyline>
@@ -89,6 +93,8 @@
            Other tabs remain on the original styling until we decide to
            roll the new look out further. -->
       <div class="tab-page active brand-v2" id="tab-today">
+      <!-- Runna-style Today view, rendered by renderRunnaToday() -->
+      <div id="rnToday" class="rn-today"></div>
       <div class="hero">
         <button
           class="theme-toggle"
@@ -562,6 +568,8 @@
       <!-- ========== TAB: PLAN ========== -->
       <div class="tab-page" id="tab-plan">
       <h2 class="page-title">Training Plan</h2>
+      <!-- Runna-style race card + week list, rendered by renderRunnaPlan() -->
+      <div id="rnPlan" class="rn-plan"></div>
 
       <div class="phase-bar-card">
         <div class="phase-bar" id="phaseBar"></div>
